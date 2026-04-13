@@ -1,6 +1,13 @@
 # Final Scoring
 
+
 Final Scoring is a board game reviews and criticism aggregation platform.
+
+## Start here
+
+- Read `AGENTS.md` for the repository handoff guide and working rules
+- Read `docs/current-priority.md` for the active implementation focus
+- Read `docs/mvp.md` and `docs/decisions.md` before making major architectural or product changes
 
 ## Repo structure
 
@@ -8,6 +15,18 @@ Final Scoring is a board game reviews and criticism aggregation platform.
 - `apps/worker` – background jobs and CLI tasks
 - `apps/web` – Next.js frontend
 - `packages/py/finalscoring` – shared Python domain, DB, scraping, processing, scoring
+
+## Key documentation
+
+- `AGENTS.md` – entry point for coding agents and contributors
+- `docs/current-priority.md` – what to work on now
+- `docs/roadmap.md` – development phases and sequencing
+- `docs/product.md` – product intent and MVP boundaries
+- `docs/architecture.md` – repository and system structure
+- `docs/data-model.md` – canonical entity model
+- `docs/source-strategy.md` – source inclusion and ingestion policy
+- `docs/score-normalisation.md` – score mapping principles
+- `docs/entity-resolution.md` – conservative matching policy
 
 ## Prerequisites
 
