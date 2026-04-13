@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17
+    container_name: finalscoring-db
+    environment:
+      POSTGRES_DB: finalscoring
+      POSTGRES_USER: finalscoring
+      POSTGRES_PASSWORD: finalscoring
+    ports:
+      - "5432:5432"
+    volumes:
+      - finalscoring_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  finalscoring_postgres_data:

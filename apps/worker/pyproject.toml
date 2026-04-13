@@ -1,0 +1,23 @@
+[project]
+name = "finalscoring-worker"
+version = "0.1.0"
+description = "Worker and CLI jobs for Final Scoring"
+requires-python = ">=3.12"
+dependencies = [
+  "typer>=0.16.0",
+  "pydantic-settings>=2.8.0",
+  "finalscoring",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+  "ruff>=0.11.0",
+]
+
+[tool.uv.sources]
+finalscoring = { path = "../../packages/py/finalscoring", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
