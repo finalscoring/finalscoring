@@ -50,7 +50,7 @@ packages/
   py/
     finalscoring/
 docs/
-prompts/
+agents/
 ```
 
 ## Local setup
@@ -179,7 +179,7 @@ In particular:
 
 ## AI-assisted development
 
-The repo includes guidance for AI coding tools under `prompts/`.
+The repo includes guidance for AI coding tools under `agents/`.
 
 Those documents should help coding assistants understand:
 

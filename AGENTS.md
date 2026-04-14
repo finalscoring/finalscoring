@@ -6,6 +6,7 @@ This repository is intended to be workable by coding agents, but agents should o
 
 Before making substantial changes, read these documents:
 
+- `docs/current-priority.md`
 - `docs/product.md`
 - `docs/architecture.md`
 - `docs/data-model.md`
@@ -15,6 +16,11 @@ Before making substantial changes, read these documents:
 - `docs/source-strategy.md`
 - `docs/score-normalisation.md`
 - `docs/entity-resolution.md`
+
+Also read the agent-specific guidance in `agents/`:
+
+- `agents/project-overview.md`
+- `agents/coding-guidelines.md`
 
 Then consult task-specific docs such as:
 
