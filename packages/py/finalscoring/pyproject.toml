@@ -2,7 +2,7 @@
 name = "finalscoring"
 version = "0.1.0"
 description = "Shared Python core for Final Scoring"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
   "alembic>=1.16.0",
   "pydantic>=2.11.0",

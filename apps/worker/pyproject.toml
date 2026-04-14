@@ -2,7 +2,7 @@
 name = "finalscoring-worker"
 version = "0.1.0"
 description = "Worker and CLI jobs for Final Scoring"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
   "typer>=0.16.0",
   "pydantic-settings>=2.8.0",

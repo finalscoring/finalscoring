@@ -35,4 +35,4 @@ Score normalisation, entity resolution, and source inclusion are easy to get wro
 
 ## Python
 
-3.12+, type hints, Ruff; Polars, Pydantic, SQLAlchemy, Alembic, Scrapy as in **`docs/development.md`**.
+3.13+, type hints, Ruff, ty; Polars, Pydantic, SQLAlchemy, Alembic, Scrapy as in **`docs/development.md`**.

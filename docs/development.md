@@ -8,7 +8,7 @@ Favour simplicity, readability, and a coherent vertical slice over generic frame
 
 ### Backend and data
 
-- Python 3.12+
+- Python 3.13+
 - FastAPI
 - PostgreSQL
 - SQLAlchemy
@@ -46,7 +46,7 @@ docs/
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.13+
 - `uv`
 - Node.js 22+
 - `pnpm`
