@@ -35,7 +35,7 @@ This is not a general board game community product. The MVP focus is critic aggr
 
 The project is early.
 
-The current priority is to build a coherent MVP vertical slice across:
+Immediate implementation focus is **Phase 1 — Canonical DB foundation** (`docs/current-priority.md`). The broader goal is a coherent MVP vertical slice across:
 
 - source ingestion
 - canonical data modelling

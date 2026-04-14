@@ -44,18 +44,15 @@ Final Scoring is a board game reviews and criticism aggregation platform.
 docker compose up -d db
 ```
 
-### Install Python packages
+### Install dependencies
+
+From the repository root:
 
 ```bash
 cd packages/py/finalscoring && uv sync
 cd ../../../apps/api && uv sync
 cd ../worker && uv sync
-```
-
-### Install web dependencies
-
-```bash
-cd apps/web && pnpm install
+cd ../web && pnpm install
 ```
 
 ### Run the API

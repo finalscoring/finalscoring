@@ -50,7 +50,6 @@ packages/
   py/
     finalscoring/
 docs/
-agents/
 ```
 
 ## Local setup
@@ -69,18 +68,15 @@ agents/
 docker compose up -d db
 ```
 
-### Install Python dependencies
+### Install dependencies
+
+From the repository root:
 
 ```bash
 cd packages/py/finalscoring && uv sync
 cd ../../../apps/api && uv sync
 cd ../worker && uv sync
-```
-
-### Install frontend dependencies
-
-```bash
-cd apps/web && pnpm install
+cd ../web && pnpm install
 ```
 
 ## Running the applications

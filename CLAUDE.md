@@ -24,11 +24,11 @@ All core business logic lives in `packages/py/finalscoring`, not in apps.
 ### Setup
 
 ```bash
-docker compose up -d db                          # start PostgreSQL
+docker compose up -d db                          # start PostgreSQL (from repo root)
 cd packages/py/finalscoring && uv sync
-cd apps/api && uv sync
-cd apps/worker && uv sync
-cd apps/web && pnpm install
+cd ../../../apps/api && uv sync
+cd ../worker && uv sync
+cd ../web && pnpm install
 ```
 
 ### Run
