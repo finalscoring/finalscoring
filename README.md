@@ -7,7 +7,7 @@ Final Scoring is a board game reviews and criticism aggregation platform.
 
 - Read `AGENTS.md` for the repository handoff guide and working rules
 - Read `docs/current-priority.md` for the active implementation focus
-- Read `docs/mvp.md` and `docs/decisions.md` before making major architectural or product changes
+- Read `docs/product.md` and `docs/decisions.md` before making major architectural or product changes
 
 ## Repo structure
 

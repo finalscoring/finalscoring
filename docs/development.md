@@ -177,15 +177,14 @@ In particular:
 - update `data-model.md` when core entities or relationships change
 - update `architecture.md` when component boundaries change materially
 
+## What to avoid
+
+- speculative architecture
+- framework-driven complexity
+- hidden magic in configuration or dependency injection
+- spreading business logic across route handlers, scripts, or frontend code
+- broad refactors with weak product justification
+
 ## AI-assisted development
 
-The repo includes guidance for AI coding tools under `agents/`.
-
-Those documents should help coding assistants understand:
-
-- the product goal
-- architectural boundaries
-- coding conventions
-- the preference for simple and maintainable solutions
-
-AI-generated changes should still be reviewed critically.
+The primary guidance for coding agents is in `AGENTS.md`. AI-generated changes should still be reviewed critically.

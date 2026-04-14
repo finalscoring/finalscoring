@@ -31,34 +31,6 @@ Board game criticism is scattered across many sites, blogs, channels, and public
 
 Today, users often need to manually search multiple sources and reconcile inconsistent score scales and formats.
 
-## MVP goals
-
-The MVP should prove that Final Scoring can deliver a useful, credible, and maintainable critic aggregation experience.
-
-The MVP should include:
-
-- a canonical database of games, publications, and reviews
-- ingestion of review data from at least one real source
-- score normalisation into a common comparable scale
-- simple game pages showing aggregated critic information
-- simple listing or ranking pages
-- a small but coherent API and frontend
-
-## MVP non-goals
-
-The MVP should explicitly avoid trying to become a full board game platform.
-
-Out of scope for the MVP:
-
-- user accounts
-- user ratings or reviews
-- recommendation systems
-- social/community features
-- marketplace or collection management features
-- complex personalisation
-- full coverage of every review source
-- rich critic profiles unless clearly needed
-
 ## Product principles
 
 ### 1. Critical opinion first
@@ -91,16 +63,99 @@ The first version should revolve around three core entities:
 
 A `Critic` entity may be added later if it becomes useful to distinguish publications from individual authors.
 
+## MVP goal
+
+The MVP should prove that Final Scoring can ingest, normalise, store, and present board game critic reviews in a way that is already useful to readers.
+
+The MVP is not trying to be complete. It is trying to validate the product concept with a coherent and credible first slice.
+
+A user should be able to visit Final Scoring and:
+
+- browse at least a small set of games
+- open a game page
+- see which publications reviewed the game
+- see the original review links and source score representations where available
+- see a normalised critic summary that makes cross-source comparison easier
+
+## Required capabilities
+
+### 1. Canonical data model
+
+The system must have a canonical representation of games, publications, and reviews in PostgreSQL, queryable by the application.
+
+### 2. At least one real source ingestion path
+
+The system must ingest review data from at least one real publication or source, including scraping, parsing into a structured form, canonical mapping, and database storage.
+
+### 3. Score normalisation
+
+The system must support a normalised comparable score for scored reviews where feasible. The pipeline must clearly handle at least a few common scoring schemes.
+
+### 4. Useful API endpoints
+
+A small but coherent REST API supporting at minimum: a list of games, a single game with its associated critic reviews, and publication information for display.
+
+### 5. Usable frontend pages
+
+At minimum: a homepage or browse page, a listing or rankings-style page, and a game detail page. Pages should be clear, legible, and content-oriented.
+
+## Strongly preferred capabilities
+
+These are not strictly mandatory but are highly desirable if they do not significantly delay delivery:
+
+- more than one review source
+- basic publication pages
+- simple sorting or filtering on game lists
+- display of review count alongside aggregate score
+- clear indication when a review is unscored
+
+## Explicit non-goals
+
+The MVP should not include:
+
+- user accounts or authentication
+- user-submitted ratings or reviews
+- recommendation systems
+- social or community features
+- collection or marketplace functionality
+- heavy personalisation
+- admin platform
+- heavy workflow orchestration
+- dedicated search engine
+- GraphQL
+- microservices
+
+## Acceptable shortcuts
+
+The MVP may:
+
+- support only one or a few review sources
+- support only a subset of scoring schemes initially
+- use straightforward deterministic matching before more advanced entity resolution exists
+- use simple rankings and aggregate formulas before more nuanced weighting exists
+- defer critic-level modelling if publication-level modelling is enough
+- keep visual design simple as long as pages are clear and usable
+
+## Quality bar
+
+A feature is good enough for MVP when it is understandable, reasonably reliable, easy to inspect and debug, not obviously misleading, and consistent with the project's core concept.
+
+## Launch criteria
+
+The MVP can be considered ready for an initial launch or external demo when all of the following are true:
+
+- at least one real source is ingested end-to-end
+- canonical game, publication, and review data exists in the database
+- score normalisation is functioning for the supported source types
+- the frontend can render game pages with meaningful critic information
+- the system can support a small catalogue without manual breakage
+- the product already feels like a board game critic aggregation site rather than a code demo
+
 ## Likely user journeys
 
 ### Researching a game
 
-A user lands on a game page and sees:
-
-- the aggregated critic score
-- the number of critic reviews
-- the contributing publications
-- the underlying reviews and original scores where available
+A user lands on a game page and sees the aggregated critic score, the number of critic reviews, the contributing publications, and the underlying reviews and original scores where available.
 
 ### Browsing highly rated games
 
@@ -110,11 +165,25 @@ A user visits a rankings or browse page and explores games sorted by critic scor
 
 A user compares multiple games by looking at their critic scores, review counts, source coverage, and score spread.
 
-## Success criteria for the MVP
+## What can wait until later
 
-The MVP is successful if it can demonstrate all of the following:
+- richer search
+- author / critic entities
+- sophisticated weighting of publications or critics
+- disagreement metrics and richer analytics
+- admin tooling
+- large-scale source onboarding frameworks
+- polished visual design systems
+- hosting optimisation
+- performance optimisation beyond obvious bottlenecks
+- large automated regression suites outside the highest-risk areas
 
-- review data can be ingested and normalised reliably
-- the resulting game pages are useful and intelligible
-- the product can support a small number of real sources without architecture strain
-- the system creates a strong base for later expansion
+## Contributor rule of thumb
+
+When deciding whether work belongs in MVP, ask:
+
+1. does this directly improve the core critic aggregation experience?
+2. is it necessary for the first real end-to-end product slice?
+3. would the MVP be meaningfully worse without it?
+
+If the answer is mostly no, it is probably post-MVP work.

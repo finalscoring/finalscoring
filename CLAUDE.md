@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Final Scoring is a board game criticism and review aggregation platform — closer to Metacritic for board games than a general community site. The MVP focus is critic aggregation, not user ratings, accounts, or social features.
 
-**Before making substantial changes**, read `docs/current-priority.md` to understand the active phase. For architecture/product decisions read `docs/architecture.md`, `docs/data-model.md`, and `docs/decisions.md`. Agent-specific guidance is in `agents/coding-guidelines.md` and `agents/project-overview.md`.
+**Before making substantial changes**, read `docs/current-priority.md` to understand the active phase. For architecture/product decisions read `docs/architecture.md`, `docs/data-model.md`, and `docs/decisions.md`. Full agent guidance is in `AGENTS.md`.
 
 ## Repo structure
 

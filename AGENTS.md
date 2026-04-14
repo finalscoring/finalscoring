@@ -12,15 +12,9 @@ Before making substantial changes, read these documents:
 - `docs/data-model.md`
 - `docs/development.md`
 - `docs/decisions.md`
-- `docs/mvp.md`
 - `docs/source-strategy.md`
 - `docs/score-normalisation.md`
 - `docs/entity-resolution.md`
-
-Also read the agent-specific guidance in `agents/`:
-
-- `agents/project-overview.md`
-- `agents/coding-guidelines.md`
 
 Then consult task-specific docs such as:
 
@@ -28,7 +22,6 @@ Then consult task-specific docs such as:
 - `docs/api-principles.md`
 - `docs/frontend-principles.md`
 - `docs/testing-strategy.md`
-- `docs/contribution-playbook.md`
 
 ## Project summary
 
@@ -120,6 +113,39 @@ Do not prioritise:
 - complex frontend state systems
 - speculative scalability work
 - highly dynamic product behaviour that is not yet needed
+
+## Use the documented decisions
+
+The repository contains explicit project decisions in `docs/decisions.md`. Do not casually reopen settled questions such as:
+
+- monorepo vs multi-repo
+- Python vs other backend languages
+- FastAPI vs another backend framework
+- critic aggregation focus vs broader social/community scope
+- REST vs GraphQL for MVP
+- simple worker CLI vs heavy orchestration system
+
+If a decision truly needs revisiting, the reason should be concrete and implementation-driven.
+
+## Prefer vertical progress
+
+The project benefits most from end-to-end progress over building disconnected subsystems in parallel.
+
+Prefer:
+
+- ingesting one real source fully rather than half-building support for five
+- rendering one real game page well rather than scaffolding many empty surfaces
+- implementing one clear API flow rather than a generic but unused framework
+
+## Good delivery shape
+
+A good change usually has these qualities:
+
+- solves a real current problem
+- fits the MVP scope
+- is understandable without heroic context reconstruction
+- comes with tests when the logic matters
+- updates docs when assumptions changed
 
 ## Rule of thumb
 
