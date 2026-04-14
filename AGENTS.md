@@ -43,41 +43,15 @@ Immediate implementation focus is **Phase 1 — Canonical DB foundation** (`docs
 - backend API
 - frontend rendering
 
-## Stack and repo shape
+## Stack, layout, and local workflow
 
-The project uses a monorepo called `finalscoring`.
-
-Main structure:
-
-- `apps/api` — FastAPI backend
-- `apps/worker` — scraping, ingestion, processing, and batch jobs
-- `apps/web` — Next.js frontend
-- `packages/py/finalscoring` — shared Python domain, DB, scraping, processing, and scoring logic
-
-Main technologies:
-
-- Python 3.12+
-- FastAPI
-- PostgreSQL
-- SQLAlchemy
-- Alembic
-- Scrapy
-- Polars
-- Next.js
-- TypeScript
-- pnpm
-- uv
+Monorepo (`finalscoring`): FastAPI API, worker CLI, Next.js frontend, shared Python package under `packages/py/finalscoring`. Toolchain and install/run commands: **`docs/development.md`**. Repository shape, component roles, and architectural principles: **`docs/architecture.md`**.
 
 ## High-level working rules
 
-- keep the API thin
-- keep business logic in shared Python code
-- keep worker tasks simple and explicit
-- avoid premature abstraction
-- avoid microservices, queues, and workflow systems unless clearly necessary
-- preserve already-made project decisions unless there is strong evidence they should be revisited
-- prefer conservative product behaviour over speculative automation
-- do not silently invent product rules that are not documented
+- Follow **`docs/architecture.md`** (thin API, simple worker, domain logic in the shared package, avoid premature distribution).
+- Preserve **`docs/decisions.md`**; do not silently invent product rules that are not documented.
+- Prefer conservative, explicit behaviour over speculative automation; avoid premature abstraction.
 
 ## Expected change style
 

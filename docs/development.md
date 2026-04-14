@@ -2,17 +2,7 @@
 
 ## Principles
 
-Development should favour simplicity, readability, and fast iteration.
-
-The project is early-stage. The priority is to build a coherent vertical slice rather than a perfectly general framework.
-
-Guiding principles:
-
-- keep solutions straightforward
-- avoid premature abstraction
-- prefer boring tools over clever infrastructure
-- keep business logic out of route handlers
-- add complexity only when it solves a real problem
+Favour simplicity, readability, and a coherent vertical slice over generic frameworks. Product scope: **`docs/product.md`**. Component boundaries, data flow, and persistence: **`docs/architecture.md`**. Contributor norms: **`AGENTS.md`**.
 
 ## Core stack
 
@@ -102,6 +92,16 @@ cd apps/web
 pnpm dev
 ```
 
+## Makefile shortcuts (optional)
+
+From the repository root, the same workflows are available via `Makefile` targets:
+
+- `make db-up` — start PostgreSQL (`docker compose up -d db`)
+- `make db-down` — `docker compose down`
+- `make api`, `make worker`, `make web` — API reload, worker CLI `--help`, Next.js dev
+- `make test` — pytest in `packages/py/finalscoring`, `apps/api`, and `apps/worker`
+- `make lint` — Ruff check and format check in those Python trees
+
 ## Testing
 
 ### Python tests
@@ -140,18 +140,7 @@ cd ../worker && uv run ruff check . && uv run ruff format --check .
 
 ## Data pipeline conventions
 
-The data pipeline should be easy to reason about.
-
-A typical flow is:
-
-1. scrape raw source data
-2. parse and structure it
-3. map it into canonical entities
-4. normalise scores
-5. resolve entities such as games and publications
-6. write the results into PostgreSQL
-
-Raw scraped data should not be committed to git.
+Typical flow: scrape → parse → canonical entities → normalise scores → resolve games and publications → PostgreSQL. Do not commit raw scraped data. End-to-end picture: **`docs/architecture.md`** (Data flow).
 
 ## Migrations
 
@@ -175,11 +164,7 @@ In particular:
 
 ## What to avoid
 
-- speculative architecture
-- framework-driven complexity
-- hidden magic in configuration or dependency injection
-- spreading business logic across route handlers, scripts, or frontend code
-- broad refactors with weak product justification
+See **`AGENTS.md`** (what not to optimise for yet). In code: speculative architecture, framework-heavy setups, hidden configuration magic, business logic in route handlers or the frontend, and broad refactors without product justification.
 
 ## AI-assisted development
 

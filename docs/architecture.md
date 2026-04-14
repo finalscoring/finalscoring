@@ -140,16 +140,7 @@ The project should avoid deep coupling to any single hosting provider. Runtime a
 
 ## Local development
 
-Local development is intentionally simple.
-
-The baseline setup is:
-
-- PostgreSQL via Docker Compose
-- API run directly with `uv`
-- worker run directly with `uv`
-- web app run directly with `pnpm`
-
-This keeps the workflow lightweight while still being compatible with containerised deployment later.
+Local development is intentionally simple: PostgreSQL via Docker Compose, API and worker via `uv`, web via `pnpm`. Exact prerequisites, install order, commands, Makefile shortcuts, and testing: **`docs/development.md`**.
 
 ## Architectural principles
 

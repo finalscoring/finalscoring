@@ -1,97 +1,38 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code ([claude.ai/code](https://claude.ai/code)) in this repository.
 
-## What this project is
+## Read first
 
-Final Scoring is a board game criticism and review aggregation platform — closer to Metacritic for board games than a general community site. The MVP focus is critic aggregation, not user ratings, accounts, or social features.
-
-**Before making substantial changes**, read `docs/current-priority.md` to understand the active phase. For architecture/product decisions read `docs/architecture.md`, `docs/data-model.md`, and `docs/decisions.md`. Full agent guidance is in `AGENTS.md`.
-
-## Repo structure
-
-```
-apps/api/        FastAPI backend (thin routes, delegates to shared package)
-apps/worker/     Background jobs as plain CLI commands (not a job framework)
-apps/web/        Next.js frontend
-packages/py/finalscoring/   Shared Python core: domain, DB models, scraping, scoring
-```
-
-All core business logic lives in `packages/py/finalscoring`, not in apps.
+1. **`docs/current-priority.md`** — active phase and definition of done
+2. **`AGENTS.md`** — working rules, full doc map, caution areas
+3. **`docs/architecture.md`** and **`docs/development.md`** — structure, stack, setup, commands
+4. **`docs/data-model.md`** and **`docs/decisions.md`** — entities and settled choices
 
 ## Commands
 
-### Setup
+Install Postgres, sync Python packages, and install frontend deps: **`docs/development.md`** (single copy-paste chain from the repo root).
+
+From the repository root, Makefile shortcuts:
 
 ```bash
-docker compose up -d db                          # start PostgreSQL (from repo root)
-cd packages/py/finalscoring && uv sync
-cd ../../../apps/api && uv sync
-cd ../worker && uv sync
-cd ../web && pnpm install
+make db-up    # PostgreSQL (Docker Compose)
+make api      # API with reload
+make worker   # worker CLI --help
+make web      # Next.js dev
+make test     # pytest in shared package, API, worker
+make lint     # Ruff in those Python trees
+make db-down  # tear down Compose stack
 ```
 
-### Run
+## Architecture (summary)
 
-```bash
-make api      # cd apps/api && uv run uvicorn finalscoring_api.main:app --reload
-make worker   # cd apps/worker && uv run python -m finalscoring_worker.cli --help
-make web      # cd apps/web && pnpm dev
-```
+Thin FastAPI routes; plain worker CLI; business logic in **`packages/py/finalscoring`**. No microservices, queues, or heavy job frameworks unless justified. Full principles: **`docs/architecture.md`**.
 
-### Test
+## High-risk areas
 
-```bash
-# Run all Python tests (from repo root)
-make test
+Score normalisation, entity resolution, and source inclusion are easy to get wrong. Use **`docs/score-normalisation.md`**, **`docs/entity-resolution.md`**, **`docs/source-strategy.md`**, and the caution list in **`AGENTS.md`**.
 
-# Run tests for a specific package
-cd packages/py/finalscoring && uv run pytest
-cd apps/api && uv run pytest
-cd apps/worker && uv run pytest
+## Python
 
-# Run a single test file
-cd packages/py/finalscoring && uv run pytest tests/path/to/test_file.py
-```
-
-### Lint
-
-```bash
-make lint
-
-# Or per package:
-cd packages/py/finalscoring && uv run ruff check . && uv run ruff format --check .
-```
-
-## Architecture rules
-
-- **API stays thin**: routes validate inputs, call shared logic, return responses — no business logic in handlers
-- **Worker stays simple**: plain CLI commands, not a workflow framework
-- **Domain logic in `packages/py/finalscoring`**: domain models, DB access, scraping, scoring, processing all belong here
-- **No microservices, queues, or event-driven systems** unless justified by real operational pain
-
-## Key areas requiring special caution
-
-Mistakes here produce silent product errors — be explicit and conservative:
-
-- **Score normalisation** (`docs/score-normalisation.md`) — normalisation must be traceable
-- **Entity resolution** (`docs/entity-resolution.md`) — conservative matching policy
-- **Source inclusion policy** (`docs/source-strategy.md`)
-- Edition vs base game distinctions
-- Scoreless review handling
-- Duplicate review handling
-
-## Data model
-
-Three canonical entities: `Game`, `Publication`, `Review`. Preserve `original_score` string from source alongside derived `normalised_score`. Do not commit raw scraped data to git.
-
-## Current phase
-
-**Phase 1 — Canonical DB foundation**: SQLAlchemy models, Alembic setup, initial migration, DB session wiring. See `docs/current-priority.md` for the full definition of done.
-
-## Python conventions
-
-- Python 3.12+, modern type annotations on all function signatures
-- Prefer Polars for tabular processing, Pydantic for structured validation
-- SQLAlchemy + Alembic for DB; Scrapy for scraping
-- Linting/formatting: Ruff
+3.12+, type hints, Ruff; Polars, Pydantic, SQLAlchemy, Alembic, Scrapy as in **`docs/development.md`**.
