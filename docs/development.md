@@ -69,6 +69,24 @@ cd ../worker && uv sync
 cd ../web && pnpm install
 ```
 
+### Environment variables
+
+Copy `.env.example` to `.env` in each app directory and adjust if needed. Default values work for the standard local Docker Compose setup.
+
+```bash
+cp apps/api/.env.example apps/api/.env
+```
+
+### Apply migrations
+
+From `packages/py/finalscoring`:
+
+```bash
+uv run alembic upgrade head
+```
+
+Run this after initial setup and after pulling new migration files.
+
 ## Running the applications
 
 ### API
@@ -98,6 +116,7 @@ From the repository root, the same workflows are available via `Makefile` target
 
 - `make db-up` — start PostgreSQL (`docker compose up -d db`)
 - `make db-down` — `docker compose down`
+- `make migrate` — run `alembic upgrade head` in the shared package
 - `make api`, `make worker`, `make web` — API reload, worker CLI `--help`, Next.js dev
 - `make test` — pytest in `packages/py/finalscoring`, `apps/api`, and `apps/worker`
 - `make lint` — Ruff check and format check in those Python trees
