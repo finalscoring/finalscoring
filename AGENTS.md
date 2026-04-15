@@ -1,10 +1,10 @@
 # Agent handoff guide
 
-This repository is intended to be workable by coding agents, but agents should optimise for correctness, clarity, and scope discipline rather than speed alone.
+Repo workable by coding agents. Optimise for correctness, clarity, scope — not speed alone.
 
 ## Read this first
 
-Before making substantial changes, read these documents:
+Before substantial changes, read:
 
 - `docs/current-priority.md`
 - `docs/product.md`
@@ -16,7 +16,7 @@ Before making substantial changes, read these documents:
 - `docs/score-normalisation.md`
 - `docs/entity-resolution.md`
 
-Then consult task-specific docs such as:
+Then task-specific docs:
 
 - `docs/roadmap.md`
 - `docs/api-principles.md`
@@ -25,48 +25,38 @@ Then consult task-specific docs such as:
 
 ## Project summary
 
-Final Scoring is a board game criticism and review aggregation platform.
+Final Scoring = board game criticism + review aggregation platform.
 
-The product goal is to collect published critical opinions about board games, normalise them into a comparable structure, and present them in a way that helps readers understand how games are being received.
+Collect published critic opinions, normalise into comparable structure, present so readers understand reception.
 
-This is not a general board game community product. The MVP focus is critic aggregation, not user ratings, accounts, recommendations, social features, or collection management.
+Not a community product. MVP = critic aggregation. No user ratings, accounts, recommendations, social, collection management.
 
 ## Current stage
 
-The project is early.
-
-Immediate implementation focus is **Phase 1 — Canonical DB foundation** (`docs/current-priority.md`). The broader goal is a coherent MVP vertical slice across:
-
-- source ingestion
-- canonical data modelling
-- score normalisation
-- backend API
-- frontend rendering
+Early. Immediate focus: **Phase 1 — Canonical DB foundation** (`docs/current-priority.md`). Goal: coherent MVP vertical slice across source ingestion, canonical data modelling, score normalisation, backend API, frontend rendering.
 
 ## Stack, layout, and local workflow
 
-Monorepo (`finalscoring`): FastAPI API, worker CLI, Next.js frontend, shared Python package under `packages/py/finalscoring`. Toolchain and install/run commands: **`docs/development.md`**. Repository shape, component roles, and architectural principles: **`docs/architecture.md`**.
+Monorepo (`finalscoring`): FastAPI API, worker CLI, Next.js frontend, shared Python package under `packages/py/finalscoring`. Toolchain + install/run: **`docs/development.md`**. Repo shape, component roles, architectural principles: **`docs/architecture.md`**.
 
 ## High-level working rules
 
-- Follow **`docs/architecture.md`** (thin API, simple worker, domain logic in the shared package, avoid premature distribution).
-- Preserve **`docs/decisions.md`**; do not silently invent product rules that are not documented.
-- Prefer conservative, explicit behaviour over speculative automation; avoid premature abstraction.
+- Follow **`docs/architecture.md`** (thin API, simple worker, domain logic in shared package, no premature distribution).
+- Preserve **`docs/decisions.md`**; don't silently invent undocumented product rules.
+- Conservative, explicit behaviour over speculative automation; no premature abstraction.
 
 ## Expected change style
 
-When implementing work:
-
-1. understand the local context first
-2. read the relevant docs before changing code
-3. make the smallest coherent change that solves the actual problem
-4. keep naming and structure consistent with the existing repo
-5. add or update tests when appropriate
-6. update docs when behaviour, assumptions, or architecture change materially
+1. Understand local context first
+2. Read relevant docs before changing code
+3. Smallest coherent change that solves actual problem
+4. Keep naming + structure consistent with existing repo
+5. Add/update tests when appropriate
+6. Update docs when behaviour, assumptions, or architecture change materially
 
 ## Special caution areas
 
-Be especially careful in these parts of the project:
+Extra care in:
 
 - source inclusion policy
 - score normalisation
@@ -75,57 +65,55 @@ Be especially careful in these parts of the project:
 - scoreless reviews
 - duplicate review handling
 
-If uncertain in these areas, prefer explicitness and conservative behaviour.
+Uncertain here → prefer explicitness and conservative behaviour.
 
 ## What not to optimise for yet
 
-Do not prioritise:
+Don't prioritise:
 
 - abstract architecture neatness over shipping
 - generic frameworks for everything
-- broad source coverage before the first source works well
+- broad source coverage before first source works well
 - complex frontend state systems
 - speculative scalability work
-- highly dynamic product behaviour that is not yet needed
+- highly dynamic behaviour not yet needed
 
 ## Use the documented decisions
 
-The repository contains explicit project decisions in `docs/decisions.md`. Do not casually reopen settled questions such as:
+Explicit decisions in `docs/decisions.md`. Don't reopen settled questions:
 
 - monorepo vs multi-repo
 - Python vs other backend languages
 - FastAPI vs another backend framework
 - critic aggregation focus vs broader social/community scope
 - REST vs GraphQL for MVP
-- simple worker CLI vs heavy orchestration system
+- simple worker CLI vs heavy orchestration
 
-If a decision truly needs revisiting, the reason should be concrete and implementation-driven.
+Need to revisit? Reason must be concrete and implementation-driven.
 
 ## Prefer vertical progress
 
-The project benefits most from end-to-end progress over building disconnected subsystems in parallel.
+End-to-end progress beats disconnected subsystems.
 
 Prefer:
 
-- ingesting one real source fully rather than half-building support for five
-- rendering one real game page well rather than scaffolding many empty surfaces
-- implementing one clear API flow rather than a generic but unused framework
+- one real source ingested fully over half-building five
+- one real game page rendered well over many empty surfaces
+- one clear API flow over generic unused framework
 
 ## Good delivery shape
 
-A good change usually has these qualities:
-
-- solves a real current problem
-- fits the MVP scope
-- is understandable without heroic context reconstruction
-- comes with tests when the logic matters
-- updates docs when assumptions changed
+- solves real current problem
+- fits MVP scope
+- understandable without heroic context reconstruction
+- tests when logic matters
+- docs updated when assumptions changed
 
 ## Rule of thumb
 
-When in doubt, choose the option that:
+When in doubt, pick option that:
 
-1. helps ship the MVP
-2. keeps the codebase understandable
+1. helps ship MVP
+2. keeps codebase understandable
 3. preserves room for later extension
 4. avoids unnecessary infrastructure or abstraction

@@ -27,3 +27,6 @@ data/
 .coverage
 htmlcov/
 coverage.xml
+
+# Claude
+**/.claude/settings.local.json

@@ -1,14 +1,14 @@
 # Frontend principles
 
-This document defines the intended frontend direction for Final Scoring.
+Defines frontend direction for Final Scoring.
 
-The goal is to keep the frontend aligned with the product: a browseable, content-heavy, critic aggregation site for board games.
+Goal: keep frontend aligned with product — browseable, content-heavy, critic aggregation site for board games.
 
 ## Product posture
 
-The frontend should feel like a public information product, not a SaaS dashboard and not a highly dynamic application shell.
+Should feel like public information product. Not SaaS dashboard. Not highly dynamic app shell.
 
-Priority should go to:
+Priority:
 
 - clarity
 - legibility
@@ -18,7 +18,7 @@ Priority should go to:
 
 ## Core frontend goals
 
-The frontend should help users:
+Help users:
 
 - discover games
 - understand critical reception
@@ -27,63 +27,63 @@ The frontend should help users:
 
 ## Page-first, content-first approach
 
-The frontend should prioritise strong page-level experiences over complex client-side application behaviour.
+Prioritise strong page-level experiences over complex client-side behaviour.
 
-Important early pages include:
+Key early pages:
 
 - homepage or browse page
 - rankings or listing page
 - game detail page
-- publication pages if and when they are useful
+- publication pages if useful
 
 ## Prefer server-friendly rendering
 
-Given the product shape, server-oriented rendering is a good default.
+Server-oriented rendering is good default given product shape.
 
-The site is likely to benefit from:
+Benefits:
 
 - crawlable public pages
 - stable content URLs
 - content-heavy layouts
 - low reliance on client-only state
 
-Do not introduce large client-state architectures unless there is a clear need.
+No large client-state architectures without clear need.
 
 ## Game pages matter most
 
-The game detail page is one of the core product surfaces.
+Game detail page = core product surface.
 
-It should eventually make it easy to understand:
+Should make easy to understand:
 
-- the game identity
-- the aggregate critic score
+- game identity
+- aggregate critic score
 - review count
 - which publications reviewed it
-- the original source links
-- whether reviews are scored or unscored
+- original source links
+- whether reviews scored or unscored
 
-This page should be treated as a primary design and implementation anchor.
+Treat as primary design and implementation anchor.
 
 ## Rankings and browse pages
 
-Browse and ranking surfaces should help users answer questions like:
+Help users answer:
 
-- which games are most highly regarded?
-- which games have the most critical coverage?
-- what should I look at next?
+- which games most highly regarded?
+- which games have most critical coverage?
+- what to look at next?
 
-These pages should emphasise clarity and comparability over decorative interaction.
+Emphasise clarity and comparability over decorative interaction.
 
 ## Avoid dashboard thinking
 
-Do not default to:
+Don't default to:
 
-- cards everywhere with little information density
+- cards everywhere with low information density
 - SaaS admin aesthetics
-- excessive filtering panels before the data justifies them
-- flashy animated UI patterns that do not help reading
+- excessive filtering panels before data justifies them
+- flashy animated UI that doesn't help reading
 
-This is a content product, not internal analytics software.
+Content product, not internal analytics software.
 
 ## Component philosophy
 
@@ -94,11 +94,11 @@ Components should be:
 - easy to compose
 - driven by product needs
 
-Do not create a large design system or component abstraction hierarchy too early.
+No large design system or component abstraction hierarchy too early.
 
 ## State management
 
-Keep state management simple.
+Keep simple.
 
 Prefer:
 
@@ -107,23 +107,23 @@ Prefer:
 - explicit data fetching
 - server-friendly patterns
 
-Avoid introducing global client-side state frameworks early unless the product clearly needs them.
+No global client-side state frameworks early unless clearly needed.
 
 ## API integration
 
-Frontend data access should be easy to trace.
+Data access should be easy to trace.
 
-Contributors should be able to tell:
+Contributors should know:
 
 - where data comes from
 - which route powers which page
 - how page data maps to UI output
 
-Avoid opaque data layers or indirection-heavy abstractions too early.
+No opaque data layers or indirection-heavy abstractions early.
 
 ## Accessibility and readability
 
-The frontend should prioritise:
+Prioritise:
 
 - readable typography
 - sensible information hierarchy
@@ -133,10 +133,10 @@ The frontend should prioritise:
 
 ## Visual polish
 
-Visual polish matters, but MVP should not chase perfection before the content model is working.
+Matters, but MVP shouldn't chase perfection before content model works.
 
-A simple, clean, credible interface is better than a flashy but underpowered one.
+Simple, clean, credible > flashy but underpowered.
 
 ## Rule of thumb
 
-If a frontend idea makes the site feel less like a board game critic publication surface and more like a generic app template, it is probably off-track for MVP.
+Frontend idea makes site feel less like board game critic publication surface and more like generic app template → off-track for MVP.

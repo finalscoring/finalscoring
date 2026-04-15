@@ -1,20 +1,18 @@
 # Roadmap
 
-This document provides a practical phase-based roadmap for the early development of Final Scoring.
-
-The aim is not to freeze all future work, but to give contributors and coding agents a sensible order of implementation so effort stays focused on a coherent vertical slice.
+Phase-based roadmap for early Final Scoring development. Not a freeze — gives contributors sensible implementation order for coherent vertical slice.
 
 ## Guiding principle
 
-Prefer completing one end-to-end slice over building disconnected subsystems in parallel.
+Complete one end-to-end slice. No disconnected parallel subsystems.
 
 ## Phase 0 — Repository scaffold
 
-Goal: establish the repo structure and basic developer workflow.
+Goal: repo structure + basic dev workflow.
 
 Deliverables:
 
-- monorepo layout in place
+- monorepo layout
 - `apps/api`, `apps/worker`, `apps/web`
 - `packages/py/finalscoring`
 - local PostgreSQL via Docker Compose
@@ -26,26 +24,26 @@ Deliverables:
 Exit criteria:
 
 - local setup works
-- API, worker, and web app can all run
-- repo structure is clear and documented
+- API, worker, web all run
+- repo structure clear + documented
 
 ## Phase 1 — Canonical DB foundation
 
-Goal: create the first real persistence layer.
+Goal: first real persistence layer.
 
 Deliverables:
 
-- SQLAlchemy base and models
+- SQLAlchemy base + models
 - Alembic setup
 - initial migrations
-- canonical tables for `games`, `publications`, and `reviews`
-- DB session wiring in backend code
+- canonical tables for `games`, `publications`, `reviews`
+- DB session wiring in backend
 
 Exit criteria:
 
-- schema can be created locally
-- migrations run cleanly
-- application code can read and write the core entities
+- schema creates locally
+- migrations run clean
+- app code reads/writes core entities
 
 ## Phase 2 — First real source ingestion
 
@@ -53,94 +51,94 @@ Goal: ingest one real review source end-to-end.
 
 Deliverables:
 
-- one source selected and documented
-- scraper or ingestion adapter implemented
-- extraction of source title, URL, score/verdict, and game-identifying data
-- structured output from that source
-- source-specific parsing logic where needed
+- one source selected + documented
+- scraper or ingestion adapter
+- extraction of title, URL, score/verdict, game-identifying data
+- structured output
+- source-specific parsing where needed
 
 Exit criteria:
 
-- at least one source can be ingested repeatedly and reliably
-- extracted records are inspectable
-- the ingestion path is understandable and debuggable
+- one source ingestable repeatedly + reliably
+- extracted records inspectable
+- ingestion path debuggable
 
 ## Phase 3 — Normalisation and canonical mapping
 
-Goal: convert raw source data into usable canonical application data.
+Goal: convert raw source data into canonical app data.
 
 Deliverables:
 
-- score normalisation for supported score formats
+- score normalisation for supported formats
 - publication resolution
 - conservative game entity resolution
-- handling of unresolved or scoreless cases
+- handling of unresolved/scoreless cases
 - canonical rows written to PostgreSQL
 
 Exit criteria:
 
-- at least one real source lands in canonical tables
+- one real source lands in canonical tables
 - supported score types normalise correctly
-- unresolved cases do not silently corrupt data
+- unresolved cases don't silently corrupt data
 
 ## Phase 4 — First useful API surface
 
-Goal: expose meaningful product data via the backend.
+Goal: expose meaningful product data via backend.
 
 Deliverables:
 
 - `GET /games`
 - `GET /games/{slug}` or equivalent canonical detail route
-- inclusion of associated reviews on game detail
-- response shape suitable for the frontend
+- associated reviews on game detail
+- response shape suitable for frontend
 - simple error handling conventions
 
 Exit criteria:
 
-- frontend can fetch and render real game data through the API
-- payloads are simple and coherent
+- frontend fetches + renders real game data
+- payloads simple + coherent
 - routes reflect canonical product entities
 
 ## Phase 5 — First useful frontend pages
 
-Goal: render a real, browseable critic aggregation experience.
+Goal: render real, browseable critic aggregation experience.
 
 Deliverables:
 
 - homepage or browse page
 - game detail page
-- display of critic reviews and original source links
-- display of normalised aggregate score where available
-- basic rankings or listing page
+- critic reviews + original source links
+- normalised aggregate score where available
+- basic rankings/listing page
 
 Exit criteria:
 
-- the product feels like a real critic aggregation site
-- at least a small set of real games can be browsed
-- pages are legible, content-oriented, and useful
+- product feels like real critic aggregation site
+- small set of real games browseable
+- pages legible, content-oriented, useful
 
 ## Phase 6 — Stabilisation and expansion
 
-Goal: make the first slice more credible and easier to extend.
+Goal: make first slice credible + easier to extend.
 
 Deliverables:
 
 - improve scraper robustness
 - refine score normalisation coverage
-- improve entity resolution handling
-- add tests in the highest-risk areas
-- improve docs and contributor guidance
-- optionally add a second source if it does not destabilise the first slice
+- improve entity resolution
+- tests in highest-risk areas
+- improve docs + contributor guidance
+- optionally add second source if it doesn't destabilise first slice
 
 Exit criteria:
 
-- the vertical slice is robust enough for demonstration or soft launch
-- common failure modes are easier to detect
-- the codebase remains understandable
+- vertical slice robust enough for demo or soft launch
+- common failure modes easier to detect
+- codebase stays understandable
 
 ## Defer until later unless clearly needed
 
-The following are intentionally lower priority:
+Lower priority:
 
 - rich search
 - user accounts
@@ -155,4 +153,4 @@ The following are intentionally lower priority:
 
 ## Roadmap rule of thumb
 
-If a proposed task does not clearly support the current or next phase, it should usually be deferred.
+Task doesn't clearly support current or next phase → defer.

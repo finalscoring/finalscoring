@@ -1,18 +1,12 @@
 # Testing strategy
 
-This document defines how testing should be approached in Final Scoring.
-
-The project is early-stage, so testing effort should be directed where mistakes are most costly.
+Early-stage project. Direct effort where mistakes cost most.
 
 ## Main principle
 
-Prioritise tests for product-critical logic and failure-prone transformation steps.
-
-Do not chase blanket coverage for its own sake.
+Prioritise product-critical logic and failure-prone transforms. No blanket coverage for its own sake.
 
 ## Highest-priority test areas
-
-The most important areas to test early are:
 
 - score normalisation
 - source parsing and extraction
@@ -20,11 +14,9 @@ The most important areas to test early are:
 - canonical ingestion logic
 - API behaviour for core product endpoints
 
-These are the parts most likely to produce silent product errors if they are wrong.
+Silent product errors live here.
 
 ## Lower-priority areas in MVP
-
-The following can usually be lighter in the earliest stage:
 
 - pure UI snapshot breadth
 - highly abstract utility tests
@@ -36,7 +28,7 @@ The following can usually be lighter in the earliest stage:
 
 ### 1. Domain and transformation logic
 
-This should be the highest priority.
+Highest priority.
 
 Examples:
 
@@ -48,13 +40,11 @@ Examples:
 
 ### 2. Parser and extractor tests
 
-For each source, prefer tests that validate real extraction expectations against representative HTML or source fixtures.
-
-These tests should help detect breakage when a source structure changes.
+Per source: validate real extraction against representative HTML or source fixtures. Detect breakage when source structure changes.
 
 ### 3. API tests
 
-Core API routes should have integration-style tests that verify:
+Core routes need integration-style tests verifying:
 
 - status codes
 - response shapes
@@ -63,23 +53,23 @@ Core API routes should have integration-style tests that verify:
 
 ### 4. Database-backed tests
 
-Where business logic depends on persistence behaviour, use database-backed tests selectively and deliberately.
+Where business logic depends on persistence, use DB-backed tests selectively and deliberately.
 
 ## Frontend testing priorities
 
-Early frontend testing can remain lighter than backend/data testing.
+Keep lighter than backend/data testing early.
 
-Useful early frontend tests may include:
+Useful early:
 
 - rendering of core game page data
 - basic behaviour of important data-driven components
 - handling of missing or unscored review data
 
-But the project should not spend disproportionate effort on frontend test infrastructure before the product surfaces stabilise.
+Don't over-invest in frontend test infrastructure before product surfaces stabilise.
 
 ## Fixture strategy
 
-Fixtures should be easy to inspect and maintain.
+Fixtures must be easy to inspect and maintain.
 
 Good candidates:
 
@@ -87,36 +77,19 @@ Good candidates:
 - structured extracted source records
 - canonical example games/publications/reviews
 
-Avoid fixtures that are:
-
-- overly huge
-- hard to understand
-- detached from real product behaviour
+Avoid fixtures that are overly huge, hard to understand, or detached from real product behaviour.
 
 ## Test style preferences
 
-Prefer tests that are:
+Prefer: direct, concrete, readable, close to protected product behaviour.
 
-- direct
-- concrete
-- readable
-- close to the product behaviour being protected
-
-Avoid overly abstract or meta-programmed test machinery unless it is clearly justified.
+Avoid overly abstract or meta-programmed test machinery unless clearly justified.
 
 ## Regression philosophy
 
-When a bug is found in:
+Bug found in parsing, normalisation, matching, duplicate handling, or API response semantics → add regression test where practical.
 
-- parsing
-- normalisation
-- matching
-- duplicate handling
-- API response semantics
-
-add a regression test where practical.
-
-These are precisely the areas where quiet recurrence is costly.
+Quiet recurrence in these areas is costly.
 
 ## Suggested testing order for MVP
 
@@ -129,4 +102,4 @@ These are precisely the areas where quiet recurrence is costly.
 
 ## Rule of thumb
 
-If a piece of logic can silently distort critic reception data, it deserves stronger tests than a piece of code that only affects internal neatness.
+Logic that can silently distort critic reception data deserves stronger tests than code affecting only internal neatness.

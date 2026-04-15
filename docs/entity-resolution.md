@@ -1,52 +1,52 @@
 # Entity resolution
 
-This document defines how Final Scoring should think about resolving scraped source records into canonical game entities.
+Defines how Final Scoring resolves scraped source records into canonical game entities.
 
-This is one of the highest-risk areas of the project. The system should therefore be conservative, explicit, and easy to debug.
+Highest-risk area. System must be conservative, explicit, debuggable.
 
 ## Product principle
 
-A wrong match is usually worse than an unresolved match.
+Wrong match worse than unresolved match.
 
-Contributors and coding agents should prefer leaving a review unresolved rather than silently attaching it to the wrong canonical game.
+Prefer leaving review unresolved over silently attaching to wrong canonical game.
 
 ## Resolution target
 
-The goal of entity resolution is to map source-level review rows onto canonical entities in the application database.
+Goal: map source-level review rows to canonical entities in application database.
 
-For MVP, the most important resolution task is:
+MVP priority:
 
 - source review -> canonical `Game`
 - source review -> canonical `Publication`
 
-Publication resolution is usually simpler. Game resolution is the higher-risk problem and should receive the most care.
+Publication resolution simpler. Game resolution higher-risk, needs most care.
 
 ## Preferred canonical anchor
 
-Where available, BoardGameGeek identifiers can be very useful anchors for canonical game identity.
+BGG identifiers useful anchors for canonical game identity.
 
-However:
+But:
 
-- not every source will expose a BGG link
-- not every scraped record will include a reliable external identifier
-- absence of a BGG identifier should not block the project
+- not every source exposes BGG link
+- not every scraped record includes reliable external identifier
+- absence of BGG ID must not block project
 
-BGG IDs should help when available, but MVP should not assume they always exist.
+BGG IDs help when available. MVP must not assume they always exist.
 
 ## Resolution strategy hierarchy
 
-When resolving a scraped review to a canonical game, prefer this order of confidence:
+Prefer this confidence order:
 
 1. explicit known external identifier match
 2. previously curated mapping for that source/title pair
 3. exact or very strong title match under clear contextual agreement
 4. unresolved
 
-Contributors should avoid jumping too quickly from weak title similarity to a canonical assignment.
+Avoid jumping from weak title similarity to canonical assignment.
 
 ## Acceptable MVP matching signals
 
-For MVP, useful signals may include:
+Useful signals:
 
 - exact title match
 - near-exact title match after normalisation
@@ -57,7 +57,7 @@ For MVP, useful signals may include:
 
 ## Dangerous matching cases
 
-Use extra caution for:
+Extra caution for:
 
 - titles with common words
 - games with subtitles
@@ -67,96 +67,94 @@ Use extra caution for:
 - deluxe editions
 - expansions vs base games
 - reimplementations
-- similar games from the same franchise
+- similar games from same franchise
 
-These should not be matched aggressively with naive fuzzy matching.
+Do not match aggressively with naive fuzzy matching.
 
 ## Title normalisation
 
-The system may use lightweight title normalisation to improve matching, such as:
+Lightweight normalisation acceptable:
 
 - case folding
 - whitespace normalisation
 - simple punctuation normalisation
 
-However, title normalisation should stay conservative. It should not become an excuse for broad fuzzy matching without evidence.
+Stay conservative. Not excuse for broad fuzzy matching without evidence.
 
 ## Editions and variants
 
-MVP should treat editions cautiously.
+Handle cautiously.
 
 Guidelines:
 
-- if the review is clearly about a distinct edition and that distinction matters, do not silently collapse it into the base game without a policy
-- if the project is not yet ready to represent edition distinctions cleanly, unresolved is better than wrong collapse
-- contributors should document assumptions if they deliberately collapse source distinctions
+- if review clearly about distinct edition and distinction matters, do not silently collapse into base game without policy
+- if project not ready to represent edition distinctions cleanly, unresolved beats wrong collapse
+- document assumptions when deliberately collapsing source distinctions
 
-This is an area likely to need richer modelling later.
+Area likely needs richer modelling later.
 
 ## Expansions
 
-Expansions should not be silently attached to the base game.
+Do not silently attach expansions to base game.
 
-If a source review is clearly about an expansion:
+If source review clearly about expansion:
 
-- it should resolve to a distinct canonical game-like entity if the model supports that
-- otherwise it should remain unresolved until the model or policy supports it properly
+- resolve to distinct canonical game-like entity if model supports it
+- otherwise leave unresolved until model or policy supports it
 
 ## Publication resolution
 
-Publication resolution is expected to be simpler and may often rely on deterministic source-level configuration.
+Simpler. Often relies on deterministic source-level configuration.
 
-For MVP, each scraper or source adapter should usually know which canonical publication it belongs to.
+Each scraper or source adapter should usually know which canonical publication it belongs to.
 
 ## Unresolved records
 
-The system should be able to tolerate unresolved records during MVP.
+System must tolerate unresolved records during MVP:
 
-That means:
+- unresolved reviews must not crash pipeline
+- unresolved rows must be visible for debugging
+- unresolved records must be easy to inspect and fix later
+- pipeline must support deliberate improvement over time
 
-- unresolved reviews should not necessarily crash the pipeline
-- unresolved rows should be visible for debugging
-- unresolved records should be easy to inspect and later fix
-- the pipeline should support deliberate improvement over time
-
-This is preferable to forcing low-confidence matches.
+Preferable to forcing low-confidence matches.
 
 ## Debuggability expectations
 
-Entity resolution should be easy to inspect.
+Resolution must be inspectable.
 
-Where practical, the system should make it possible to understand:
+Where practical, system should expose:
 
 - what source title was extracted
 - what candidate canonical entity was considered
 - what signals were used
-- why the match succeeded or failed
+- why match succeeded or failed
 
-This does not require a heavy framework, but the logic should not be opaque.
+No heavy framework needed. Logic must not be opaque.
 
 ## Recommended MVP approach
 
-For MVP, prefer a pragmatic and conservative approach:
+Pragmatic, conservative:
 
-- use deterministic matching where possible
-- support source-specific mappings
+- deterministic matching where possible
+- source-specific mappings
 - exploit external identifiers when available
 - allow unresolved rows
-- avoid ambitious fuzzy matching systems
+- avoid ambitious fuzzy matching
 
 ## What to avoid in MVP
 
-Do not introduce, unless clearly necessary:
+Do not introduce unless clearly necessary:
 
 - overly complex probabilistic matching pipelines
-- opaque embedding-based resolution as the default path
+- opaque embedding-based resolution as default path
 - aggressive fuzzy matching without review
 - silent auto-collapse of editions and expansions into base games
 
 ## Open questions for later
 
-- when should aliases become a first-class entity?
+- when should aliases become first-class entity?
 - how should editions and reprints be represented canonically?
 - when should critic or publication-specific knowledge influence matching?
-- should there be an internal review queue for unresolved matches?
-- when does a game-family model become necessary?
+- should there be internal review queue for unresolved matches?
+- when does game-family model become necessary?

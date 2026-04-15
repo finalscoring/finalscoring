@@ -1,30 +1,24 @@
 # API principles
 
-This document defines the intended API style for Final Scoring.
-
-The goal is to keep the backend interface simple, stable, and easy for both humans and coding agents to reason about.
+Defines intended API style for Final Scoring. Goal: simple, stable, easy for humans and agents to reason about.
 
 ## General direction
 
-The API should start as a straightforward REST API.
-
-It should expose the product’s canonical entities and derived views without introducing unnecessary protocol or schema complexity.
+Straightforward REST API. Expose canonical entities and derived views. No unnecessary protocol complexity.
 
 ## API goals
-
-The API should be:
 
 - easy to read
 - easy to debug
 - easy to evolve
-- well aligned with the product model
+- well aligned with product model
 - boring in a good way
 
 ## Canonical orientation
 
-The API should expose canonical application entities, not raw scraped payloads.
+Expose canonical application entities, not raw scraped payloads.
 
-Examples of first-class concepts:
+First-class concepts:
 
 - games
 - publications
@@ -33,18 +27,18 @@ Examples of first-class concepts:
 
 ## Keep the API thin
 
-Route handlers should mainly:
+Route handlers should:
 
 - validate inputs
 - load or invoke shared business logic
 - shape responses
 - return clear errors
 
-They should not become the place where ingestion, scoring, or matching logic lives.
+Not the place for ingestion, scoring, or matching logic.
 
 ## REST-first
 
-The backend should begin with REST.
+Start with REST.
 
 Reasons:
 
@@ -53,13 +47,13 @@ Reasons:
 - suitable for current product needs
 - avoids early GraphQL complexity
 
-GraphQL should not be introduced unless there is clear real pressure that REST cannot handle cleanly.
+No GraphQL unless clear real pressure REST can't handle cleanly.
 
 ## URL design
 
-Prefer stable, descriptive resource-oriented routes.
+Stable, descriptive resource-oriented routes.
 
-Examples of likely patterns:
+Likely patterns:
 
 - `/games`
 - `/games/{slug}`
@@ -78,80 +72,68 @@ Responses should be:
 - minimally surprising
 - not overloaded with hidden semantics
 
-Prefer stable field names over clever compression.
-
-Do not prematurely optimise payloads for theoretical future clients.
+Stable field names over clever compression. No premature payload optimisation for theoretical future clients.
 
 ## Pagination
 
-List endpoints should use a simple and explicit pagination model once needed.
-
-A consistent convention should be chosen and applied across endpoints rather than reinvented per route.
-
-For MVP, a simple offset/limit or page-based scheme is acceptable.
+List endpoints use simple, explicit pagination once needed. One consistent convention across endpoints. For MVP, offset/limit or page-based scheme acceptable.
 
 ## Filtering and sorting
 
-Filtering and sorting should be introduced incrementally and only where they improve real product surfaces.
+Introduce incrementally, only where they improve real product surfaces.
 
-Examples that are likely useful:
+Likely useful:
 
 - sort games by aggregate critic score
 - sort by review count
-- filter to scored vs unscored availability where relevant
+- filter scored vs unscored availability where relevant
 
-Do not build an ultra-generic filtering DSL in MVP.
+No ultra-generic filtering DSL in MVP.
 
 ## Errors
 
-Error responses should be clear and consistent.
+Clear and consistent error responses.
 
-The API should avoid:
+Avoid:
 
-- vague 500 errors for known user-facing failure modes
+- vague 500s for known user-facing failures
 - inconsistent error shapes
-- hidden null semantics where a clear error is better
+- hidden null semantics where clear error is better
 
-A small standard error response structure is preferable.
+Small standard error response structure preferred.
 
 ## Public vs internal endpoints
 
-Early on, it is acceptable for the same API to serve both the web frontend and basic internal needs.
+Same API can serve web frontend and basic internal needs early on.
 
-However:
+But:
 
-- internal maintenance actions should not casually leak into public routes
-- operational or ingestion endpoints should remain clearly separated if exposed at all
+- internal maintenance actions must not leak into public routes
+- operational or ingestion endpoints stay clearly separated if exposed
 
 ## Derived values
 
-The API may expose derived values such as:
+API may expose:
 
 - normalised aggregate score
 - number of reviews
 - list ordering data
 
-But these should be clearly defined and sourced from shared backend logic, not ad hoc route-level calculations.
+Must be clearly defined, sourced from shared backend logic — not ad hoc route-level calculations.
 
 ## Versioning
 
-Do not introduce formal API versioning too early unless there is a real compatibility problem.
-
-Early-stage product iteration is better served by keeping the API small and coherent.
+No formal API versioning until real compatibility problem exists. Keep API small and coherent during early iteration.
 
 ## Security and auth
 
-End-user authentication is not an MVP goal.
-
-Therefore, the API should not be shaped around user-specific sessions or personalised behaviour.
-
-If internal-only administrative actions are later needed, they should be added deliberately rather than assumed from the start.
+End-user auth not MVP goal. No user-specific sessions or personalised behaviour. Internal admin actions added deliberately if needed, not assumed from start.
 
 ## Documentation expectation
 
-When API behaviour becomes meaningful to product usage, it should be documented concretely.
+Document API behaviour concretely when it becomes meaningful to product usage.
 
-Good documentation should include:
+Include:
 
 - route purpose
 - request parameters
@@ -161,4 +143,4 @@ Good documentation should include:
 
 ## Rule of thumb
 
-If an API design decision makes the backend feel more like a generic framework and less like a clear interface for Final Scoring, it is probably the wrong direction for MVP.
+If design makes backend feel like generic framework instead of clear interface for Final Scoring — wrong direction for MVP.
