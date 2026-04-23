@@ -1,4 +1,6 @@
-from sqlalchemy import Float, ForeignKey, Integer, String
+from datetime import date
+
+from sqlalchemy import Date, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from finalscoring.db.base import Base
@@ -33,3 +35,4 @@ class ReviewModel(Base):
     url: Mapped[str] = mapped_column(String(500), unique=True)
     original_score: Mapped[str | None] = mapped_column(String(64), nullable=True)
     normalised_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    published_date: Mapped[date | None] = mapped_column(Date, nullable=True)
