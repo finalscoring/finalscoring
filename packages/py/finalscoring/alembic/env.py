@@ -6,7 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from finalscoring.db.base import Base
 # Import all models to ensure they are registered with Base.metadata
-from finalscoring.db.models import GameModel, PublicationModel, ReviewModel  # noqa: F401
+import finalscoring.db.models  # noqa: F401
 
 # this is the Alembic Config object, which provides access to the values within the .ini file in use.
 config = context.config
