@@ -19,6 +19,8 @@ def test_models():
     session.add(publication)
     session.commit()
 
+    from datetime import date
+    published = date(2024, 4, 25)
     review = ReviewModel(
         game_id=game.id,
         publication_id=publication.id,
@@ -26,6 +28,7 @@ def test_models():
         url="https://example.com/test-review",
         original_score="8/10",
         normalised_score=0.8,
+        published_date=published,
     )
     session.add(review)
     session.commit()
@@ -33,6 +36,7 @@ def test_models():
     assert game.id is not None
     assert publication.id is not None
     assert review.id is not None
+    assert review.published_date == published
     assert session.query(GameModel).count() == 1
     assert session.query(PublicationModel).count() == 1
     assert session.query(ReviewModel).count() == 1
