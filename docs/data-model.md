@@ -2,25 +2,25 @@
 
 ## Purpose
 
-The initial data model should support the core Final Scoring use case: collecting, normalising, storing, and presenting published critic reviews of board games.
+Support Final Scoring core use case: collect, normalise, store, present published critic reviews of board games.
 
-The first version should stay narrow. It should model the smallest set of entities needed to support useful game pages, review listings, and simple rankings.
+Stay narrow. Model smallest entity set for useful game pages, review listings, simple rankings.
 
 ## Core entities
 
-The initial model centres on three entities:
+Three entities:
 
 - `Game`
 - `Publication`
 - `Review`
 
-A `Critic` entity may be introduced later if author-level modelling becomes important.
+`Critic` deferred — add if author-level modelling matters later.
 
 ## Entity definitions
 
 ### Game
 
-A `Game` represents a canonical board game in the system.
+Canonical board game in system.
 
 Suggested fields:
 
@@ -32,12 +32,12 @@ Suggested fields:
 
 Notes:
 
-- this should represent the canonical game entity, not a source-specific row
-- aliases or source-specific names can be handled later if needed
+- canonical entity, not source-specific row
+- aliases/source names deferred
 
 ### Publication
 
-A `Publication` represents the source or outlet that published a review.
+Source or outlet that published a review.
 
 Suggested fields:
 
@@ -48,12 +48,12 @@ Suggested fields:
 
 Notes:
 
-- in the MVP, publication-level modelling is likely enough
-- the system does not need to model every site attribute immediately
+- publication-level modelling sufficient for MVP
+- no need to model every site attribute immediately
 
 ### Review
 
-A `Review` represents one published critical review of one game from one publication.
+One published critical review of one game from one publication.
 
 Suggested fields:
 
@@ -68,74 +68,74 @@ Suggested fields:
 
 Notes:
 
-- `original_score` should preserve the source form where practical, such as `8/10`, `4 stars`, or `Recommended`
-- `normalised_score` should represent a comparable numeric scale derived from the original review score where possible
-- not every review will necessarily have a usable score
+- `original_score` preserves source form where practical: `8/10`, `4 stars`, `Recommended`
+- `normalised_score` comparable numeric scale derived from original where possible
+- not every review has usable score
 
 ## Relationships
 
 ### Game to Review
 
-One `Game` can have many `Review` records.
+One `Game` → many `Review` records.
 
 ### Publication to Review
 
-One `Publication` can have many `Review` records.
+One `Publication` → many `Review` records.
 
 ### Review to Game and Publication
 
-Each `Review` belongs to exactly one `Game` and one `Publication` in the canonical model.
+Each `Review` belongs to exactly one `Game` and one `Publication`.
 
 ## Canonical modelling principles
 
 ### Canonical first
 
-The main tables should represent canonical entities, not raw source-specific payloads.
+Main tables = canonical entities, not raw source payloads.
 
 ### Preserve source truth where useful
 
-Important source values such as original score strings and source URLs should be retained.
+Retain original score strings and source URLs.
 
 ### Normalise only where justified
 
-Score normalisation should be explicit and traceable.
+Score normalisation explicit and traceable.
 
 ### Leave room for enrichment
 
-The model should be simple now but allow later extensions such as critics, excerpts, tags, source metadata, confidence scores, or alternate titles.
+Simple now, extensible later: critics, excerpts, tags, source metadata, confidence scores, alternate titles.
 
 ## Possible future entities
 
-These are intentionally deferred, but likely candidates later.
+Deferred but likely.
 
 ### Critic
 
-Represents an individual author or reviewer.
+Individual author or reviewer.
 
-Possible reasons to add it:
+Add when:
 
 - multiple authors per publication matter analytically
-- users benefit from author-level browsing
-- publication and author need to be separated cleanly
+- users need author-level browsing
+- publication/author separation needed
 
 ### RawReview or SourceRecord
 
-Represents raw scraped source data before canonical mapping.
+Raw scraped data before canonical mapping.
 
-Possible reasons to add it:
+Add when:
 
-- traceability
-- easier debugging of ingestion
-- support for multiple parsers or ingestion pipelines
+- traceability needed
+- ingestion debugging matters
+- multiple parsers or pipelines
 
 ### GameAlias
 
-Represents alternate names or source-specific titles for a game.
+Alternate names or source-specific titles.
 
-Possible reasons to add it:
+Add when:
 
-- source naming inconsistencies
-- localised names
+- source naming inconsistent
+- localised names needed
 - edition naming issues
 
 ## First relational sketch
@@ -167,20 +167,20 @@ Review
 
 ## Open questions
 
-These do not need to block the MVP, but they should be revisited as real data arrives.
+Revisit as real data arrives.
 
-- Do we need a separate `Critic` entity early?
-- How should scoreless reviews be represented in aggregates?
-- Do we need a dedicated table for raw ingestion outputs?
-- How should multiple reviews of the same game from the same publication be handled?
-- How should editions, expansions, or reimplementations be distinguished from base games?
+- Need separate `Critic` entity early?
+- Scoreless reviews in aggregates — how?
+- Dedicated table for raw ingestion outputs?
+- Multiple reviews of same game from same publication — how handled?
+- Editions, expansions, reimplementations vs base games — how distinguished?
 
-## Recommendation for the first implementation
+## Recommendation for first implementation
 
-Start with just:
+Start with:
 
 - `games`
 - `publications`
 - `reviews`
 
-Then evolve the model only once real ingestion work reveals the pressure points.
+Evolve only once real ingestion reveals pressure points.

@@ -1,61 +1,55 @@
 # Score normalisation
 
-This document defines how Final Scoring should think about score normalisation.
+Defines how Final Scoring handles score normalisation.
 
-The goal is to make critic scores more comparable across sources while remaining explicit, conservative, and traceable.
+Goal: make critic scores comparable across sources — explicit, conservative, traceable.
 
 ## Product principle
 
-Normalisation exists to aid comparison, not to erase source truth.
+Normalisation aids comparison, not erases source truth.
 
-The system should preserve original source score representations where possible and derive a normalised numeric score only when there is a justified mapping.
+Preserve original source score representations. Derive normalised numeric score only when justified mapping exists.
 
 ## Two values should usually be preserved
 
-For scored reviews, the system should keep both:
+For scored reviews, keep both:
 
-- the original score representation, such as `8/10`, `4/5`, `B+`, or `Recommended`
-- the derived normalised score, when a defensible mapping exists
+- original score representation: `8/10`, `4/5`, `B+`, `Recommended`
+- derived normalised score, when defensible mapping exists
 
-These serve different purposes:
+Different purposes:
 
 - original score preserves source truth
 - normalised score supports comparison and aggregation
 
 ## Preferred normalised scale
 
-The default normalised scale should be **0 to 100**.
+Default normalised scale: **0 to 100**.
 
 ### Rationale
 
 - easy to understand
 - compatible with familiar aggregator conventions
 - easy to derive from common source scales
-- flexible enough for later presentation choices
+- flexible for later presentation choices
 
-The system may later display that value differently in the UI, but the canonical stored comparable numeric scale should be percentage-like.
+System may display differently in UI, but canonical stored comparable numeric scale = percentage-like.
 
 ## Straightforward deterministic mappings
 
-These should be supported early.
+Support these early.
 
 ### Ten-point scales
-
-Examples:
 
 - `8/10` -> `80`
 - `6.5/10` -> `65`
 
 ### Five-point scales
 
-Examples:
-
 - `4/5` -> `80`
 - `3.5/5` -> `70`
 
 ### Percentages
-
-Examples:
 
 - `92%` -> `92`
 - `75%` -> `75`
@@ -71,30 +65,28 @@ When clearly out of ten:
 
 - `8 stars out of 10` -> `80`
 
-Mappings should only be applied when the source scale is genuinely known.
+Apply mappings only when source scale genuinely known.
 
 ## Source-specific mappings
 
-Some score systems may require source-specific handling.
-
-Examples:
+Some score systems need source-specific handling:
 
 - letter grades
-- thumbs up / thumbs down systems
+- thumbs up / thumbs down
 - recommendation badges
 - publication-specific verdict vocabularies
 
-These mappings should be explicit and documented, not inferred silently in many places.
+Mappings must be explicit and documented, not silently inferred.
 
 ## Letter grades
 
-Letter grades should not be normalised until a project-level mapping policy is explicitly chosen and implemented.
+Don't normalise letter grades until project-level mapping policy explicitly chosen and implemented.
 
 ### Rationale
 
-Letter grades are more culturally and publication-context dependent than simple numeric scales. Prematurely pretending they map cleanly to a percentage would create false precision.
+Letter grades more culturally and publication-context dependent than numeric scales. Premature mapping = false precision.
 
-If letter grades are later supported, the mapping should be:
+If later supported, mapping must be:
 
 - explicit
 - centrally defined
@@ -111,82 +103,82 @@ Verdicts like:
 - `Buy`
 - `Pass`
 
-should not automatically become numeric scores during MVP unless a clear and documented policy is adopted.
+Don't auto-convert to numeric scores during MVP unless clear documented policy adopted.
 
-Instead, these should remain as source truth and be handled as verdict metadata rather than silently converted into percentages.
+Keep as source truth, handle as verdict metadata — not silently converted to percentages.
 
 ## Scoreless reviews
 
-A review can still be a valid review even if it has no numeric score.
+Review valid even without numeric score.
 
 In those cases:
 
 - `original_score` may be null
 - `normalised_score` should be null
-- the review should still remain eligible for display on the game page
+- review still eligible for display on game page
 
-Scoreless reviews should not be discarded solely because they are unscored.
+Don't discard scoreless reviews solely for being unscored.
 
 ## Traceability requirements
 
-Normalisation should be easy to inspect and debug.
+Normalisation must be easy to inspect and debug.
 
-Where practical, the system should make it possible to determine:
+Where practical, system should expose:
 
-- what raw score string was extracted
-- what scale was inferred
-- what mapping rule was applied
-- what numeric value was produced
+- raw score string extracted
+- scale inferred
+- mapping rule applied
+- numeric value produced
 
-This can be implemented later in richer metadata structures if needed, but the design should not hide the transformation.
+Implement later in richer metadata if needed — but design must not hide transformation.
 
 ## Aggregation rules
 
-For MVP, only reviews with a valid normalised numeric score should contribute to numeric aggregate scores.
+MVP: only reviews with valid normalised numeric score contribute to numeric aggregates.
 
 Scoreless reviews may still contribute to:
 
-- review counts shown separately if desired
+- review counts shown separately
 - page completeness
 - qualitative presentation on game pages
 
-But they should not be quietly treated as numeric data.
+Don't quietly treat as numeric data.
 
 ## Precision and rounding
 
-The system should preserve enough precision internally to avoid unnecessary distortion.
+Preserve enough precision internally to avoid distortion.
 
 Suggested default:
 
-- store normalised scores as numeric values that may include decimals
-- decide on UI rounding separately
+- store normalised scores as numeric values with decimals
+- decide UI rounding separately
 
-For example, a source score of `3.5/5` may be stored as `70.0`, while UI display could later choose whether to show `70` or `70.0`.
+`3.5/5` stored as `70.0`; UI decides whether to show `70` or `70.0`.
 
 ## Conservative rule
 
-When in doubt, do not normalise.
+When in doubt, don't normalise.
 
-It is better to leave a score unnormalised than to apply a misleading conversion with false confidence.
+Better to leave score unnormalised than apply misleading conversion with false confidence.
 
 ## Early implementation recommendation
 
-For MVP, support:
+MVP support:
 
 - x/10
 - x/5
 - percentages
-- obvious star systems when the denominator is known
+- obvious star systems when denominator known
 
 Defer:
 
 - letter grades
 - recommendation verdicts as numeric mappings
-- publication-specific judgement systems without a documented policy
+- publication-specific judgement systems without documented policy
 
 ## Open questions for later
 
 - should verdict-only reviews influence non-numeric browse surfaces?
 - how should letter grades be mapped, if at all?
-- should source-specific weighting ever alter the contribution of a normalised score?
-- should the UI expose confidence or provenance of a mapping?
+- should source-specific weighting alter contribution of normalised score?
+- should UI expose confidence or provenance of mapping?

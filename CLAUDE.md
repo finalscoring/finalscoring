@@ -11,9 +11,9 @@ Guidance for Claude Code ([claude.ai/code](https://claude.ai/code)) in this repo
 
 ## Commands
 
-Install Postgres, sync Python packages, and install frontend deps: **`docs/development.md`** (single copy-paste chain from the repo root).
+Install Postgres, sync Python packages, install frontend deps: **`docs/development.md`** (single copy-paste chain from repo root).
 
-From the repository root, Makefile shortcuts:
+From repo root, Makefile shortcuts:
 
 ```bash
 make db-up    # PostgreSQL (Docker Compose)
@@ -27,11 +27,11 @@ make db-down  # tear down Compose stack
 
 ## Architecture (summary)
 
-Thin FastAPI routes; plain worker CLI; business logic in **`packages/py/finalscoring`**. No microservices, queues, or heavy job frameworks unless justified. Full principles: **`docs/architecture.md`**.
+Thin FastAPI routes; plain worker CLI; business logic in **`packages/py/finalscoring`**. No microservices, queues, heavy job frameworks unless justified. Full principles: **`docs/architecture.md`**.
 
 ## High-risk areas
 
-Score normalisation, entity resolution, and source inclusion are easy to get wrong. Use **`docs/score-normalisation.md`**, **`docs/entity-resolution.md`**, **`docs/source-strategy.md`**, and the caution list in **`AGENTS.md`**.
+Score normalisation, entity resolution, source inclusion easy to get wrong. Use **`docs/score-normalisation.md`**, **`docs/entity-resolution.md`**, **`docs/source-strategy.md`**, and caution list in **`AGENTS.md`**.
 
 ## Python
 

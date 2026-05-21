@@ -2,7 +2,7 @@
 
 ## Principles
 
-Favour simplicity, readability, and a coherent vertical slice over generic frameworks. Product scope: **`docs/product.md`**. Component boundaries, data flow, and persistence: **`docs/architecture.md`**. Contributor norms: **`AGENTS.md`**.
+Simplicity, readability, coherent vertical slice over generic frameworks. Product scope: **`docs/product.md`**. Component boundaries, data flow, persistence: **`docs/architecture.md`**. Contributor norms: **`AGENTS.md`**.
 
 ## Core stack
 
@@ -60,7 +60,7 @@ docker compose up -d db
 
 ### Install dependencies
 
-From the repository root:
+From repo root:
 
 ```bash
 cd packages/py/finalscoring && uv sync
@@ -68,6 +68,24 @@ cd ../../../apps/api && uv sync
 cd ../worker && uv sync
 cd ../web && pnpm install
 ```
+
+### Environment variables
+
+Copy `.env.example` to `.env` in each app dir. Adjust if needed. Defaults work for standard local Docker Compose setup.
+
+```bash
+cp apps/api/.env.example apps/api/.env
+```
+
+### Apply migrations
+
+From `packages/py/finalscoring`:
+
+```bash
+uv run alembic upgrade head
+```
+
+Run after initial setup and after pulling new migration files.
 
 ## Running the applications
 
@@ -94,12 +112,13 @@ pnpm dev
 
 ## Makefile shortcuts (optional)
 
-From the repository root, the same workflows are available via `Makefile` targets:
+From repo root, same workflows via `Makefile` targets:
 
 - `make db-up` — start PostgreSQL (`docker compose up -d db`)
 - `make db-down` — `docker compose down`
+- `make migrate` — run `alembic upgrade head` in shared package
 - `make api`, `make worker`, `make web` — API reload, worker CLI `--help`, Next.js dev
-- `make test` — pytest in `packages/py/finalscoring`, `apps/api`, and `apps/worker`
+- `make test` — pytest in `packages/py/finalscoring`, `apps/api`, `apps/worker`
 - `make lint` — Ruff check and format check in those Python trees
 
 ## Testing
@@ -140,32 +159,30 @@ cd ../worker && uv run ruff check . && uv run ruff format --check .
 
 ## Data pipeline conventions
 
-Typical flow: scrape → parse → canonical entities → normalise scores → resolve games and publications → PostgreSQL. Do not commit raw scraped data. End-to-end picture: **`docs/architecture.md`** (Data flow).
+Flow: scrape → parse → canonical entities → normalise scores → resolve games and publications → PostgreSQL. No raw scraped data commits. End-to-end picture: **`docs/architecture.md`** (Data flow).
 
 ## Migrations
 
-Database migrations are managed with Alembic.
+Managed with Alembic.
 
 Rules:
 
-- schema changes should be explicit
-- migrations should be committed with the code that depends on them
-- avoid hidden schema drift from ad hoc manual database edits
+- schema changes explicit
+- migrations committed with dependent code
+- no hidden schema drift from ad hoc manual DB edits
 
 ## Documentation
 
-Important project decisions should be written down in `docs/`.
+Decisions go in `docs/`.
 
-In particular:
-
-- update `product.md` when MVP scope changes
-- update `data-model.md` when core entities or relationships change
-- update `architecture.md` when component boundaries change materially
+- update `product.md` on MVP scope changes
+- update `data-model.md` on core entity/relationship changes
+- update `architecture.md` on material component boundary changes
 
 ## What to avoid
 
-See **`AGENTS.md`** (what not to optimise for yet). In code: speculative architecture, framework-heavy setups, hidden configuration magic, business logic in route handlers or the frontend, and broad refactors without product justification.
+See **`AGENTS.md`**. In code: speculative architecture, framework-heavy setups, hidden config magic, business logic in route handlers or frontend, broad refactors without product justification.
 
 ## AI-assisted development
 
-The primary guidance for coding agents is in `AGENTS.md`. AI-generated changes should still be reviewed critically.
+Primary guidance for coding agents: `AGENTS.md`. AI-generated changes still need critical review.

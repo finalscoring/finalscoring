@@ -1,52 +1,46 @@
 # Source strategy
 
-This document defines how Final Scoring should think about review sources and what kinds of material should be included in the product.
+Defines how Final Scoring thinks about review sources and what material belongs in product.
 
-The goal is to keep source ingestion decisions consistent and avoid arbitrary assumptions by contributors or coding agents.
+Goal: keep source ingestion decisions consistent, avoid arbitrary assumptions.
 
 ## Product principle
 
-Final Scoring is about **published critical reception** of board games.
+Final Scoring = **published critical reception** of board games.
 
-It is not a general web crawler for all board game content. Inclusion should be guided by whether a source materially contributes to understanding how a game was critically received.
+Not general web crawler. Inclusion guided by: does source materially contribute to understanding critical reception?
 
 ## What counts as a source
 
-A source is a publication, site, channel, outlet, or other identifiable origin of critical content that publishes board game reviews or review-like verdicts.
+Publication, site, channel, or outlet publishing board game reviews or review-like verdicts.
 
-Examples may include:
-
+Examples:
 - editorial board game review sites
 - magazines with board game coverage
 - video channels with structured review content
-- publications with clearly attributable review pages and verdicts
+- publications with attributable review pages and verdicts
 
-The source model should remain conservative early on. It is better to support fewer, better-understood sources than broad and messy coverage.
+Source model: stay conservative early. Fewer, better-understood sources beat broad messy coverage.
 
 ## What counts as a review
 
-A review is a piece of published content that expresses a meaningful evaluative judgement about a specific board game.
+Published content expressing meaningful evaluative judgement about specific board game.
 
-Typical indicators:
-
-- the content is primarily about a specific game
-- it includes a verdict, recommendation, or score
-- it reflects a retrospective or evaluative view, not just first impressions
-- it is attributable to a source and usually linkable to a stable URL
+Indicators:
+- primarily about specific game
+- includes verdict, recommendation, or score
+- retrospective/evaluative view, not just first impressions
+- attributable to source, usually linkable to stable URL
 
 ## Content that should usually be included
 
-These are good default candidates for inclusion:
-
 - written reviews of specific games
 - scored reviews
-- unscored reviews with a clear evaluative verdict
-- structured video reviews when they can be tied to a stable source and game
-- publication pages that clearly correspond to a single game review
+- unscored reviews with clear evaluative verdict
+- structured video reviews tied to stable source and game
+- publication pages clearly corresponding to single game review
 
 ## Content that should usually be excluded
-
-These should normally be excluded unless a later policy says otherwise:
 
 - previews
 - unboxing articles or videos
@@ -57,119 +51,108 @@ These should normally be excluded unless a later policy says otherwise:
 - news posts
 - crowdfunding previews
 - first impressions
-- roundups containing many games without a clear review entry per game
+- roundups with many games, no clear per-game review entry
 - marketplace or store listings
 
 ## Scoreless reviews
 
-Scoreless reviews may still be included if they are clearly reviews rather than adjacent content.
+May be included if clearly reviews, not adjacent content.
 
-However:
-
-- they should not be forced into fake numeric scores
-- they should remain distinguishable from scored reviews
-- downstream aggregates should handle them explicitly rather than pretending they are numeric inputs
+But:
+- no fake numeric scores
+- remain distinguishable from scored reviews
+- downstream aggregates handle them explicitly, not as numeric inputs
 
 ## Publication vs critic
 
-For MVP, the system should model the source primarily at the publication level.
+MVP: model source at publication level.
 
-This means:
+- publication identity first
+- critic identity deferred
+- author names capturable later, but should not block ingestion
 
-- publication identity matters first
-- critic identity can be deferred
-- author names may still be captured later, but should not block ingestion
+Many authors alone = not enough reason for critic-level modelling before needed.
 
-If a source has many authors, that alone is not enough reason to introduce critic-level modelling before it is needed.
+## Multiple reviews from same source
 
-## Multiple reviews from the same source
+Allowed only if meaningfully distinct content.
 
-Multiple reviews from the same publication may be allowed, but only if they are meaningfully distinct pieces of content.
+May justify multiple entries:
+- separate review for new edition treated distinctly
+- separate pages for base game and expansion
+- publication-specific updated reviews where both versions intentionally retained
 
-Examples that may justify multiple entries:
-
-- a separate review for a new edition that should be treated distinctly
-- clearly separate review pages for base game and expansion
-- publication-specific updated reviews where both versions are intentionally retained
-
-However, the default assumption should be conservative. The system should avoid accidental duplication from:
-
+Default: conservative. Avoid duplication from:
 - mirrored URLs
-- revised pages that are really the same review
-- alternate mobile / AMP / tracking variants
+- revised pages that are really same review
+- alternate mobile/AMP/tracking variants
 - scraper duplication bugs
 
 ## Videos, podcasts, and non-traditional formats
 
-These may be supported later, but MVP should remain cautious.
+Defer to later. MVP: stay cautious.
 
-To include non-written formats, the content should ideally have:
+To include non-written formats, ideally need:
+- stable canonical URL
+- clear game target
+- clear review/verdict identity
+- reliable way to extract source and score metadata
 
-- a stable canonical URL
-- a clear game target
-- a clear review or verdict identity
-- a reliable way to extract source and score metadata
-
-Contributors should not aggressively expand to these formats before written sources are working well.
+Don't expand to these before written sources work well.
 
 ## Source onboarding philosophy
 
 Add sources incrementally.
 
-For each new source, aim to understand:
-
-- what a canonical game review looks like on that source
-- how scores are represented
-- how stable the URLs are
-- whether the publication uses multiple review templates
-- whether the content is easy to parse reliably
-- whether legal and politeness considerations are acceptable
+Per new source, understand:
+- what canonical game review looks like on that source
+- how scores represented
+- how stable URLs are
+- whether publication uses multiple review templates
+- whether content parses reliably
+- whether legal and politeness considerations acceptable
 
 ## Recommended source onboarding checklist
 
-Before onboarding a new source, confirm:
+Before onboarding:
 
-1. the source clearly publishes board game reviews
-2. the review pages are structurally consistent enough to parse
-3. the game title can be extracted reliably
-4. the score or verdict representation is understandable
-5. the source adds real product value
-6. the source can be scraped or accessed politely and reasonably
+1. source clearly publishes board game reviews
+2. review pages structurally consistent enough to parse
+3. game title extractable reliably
+4. score or verdict representation understandable
+5. source adds real product value
+6. source scrapable politely and reasonably
 
 ## Scraping and politeness expectations
 
-Source ingestion should be technically and operationally polite.
-
-Contributors should:
+Ingestion must be technically and operationally polite.
 
 - obey robots and site policies where appropriate
 - avoid aggressive request rates
 - avoid unnecessary repeated crawling
 - prefer stable canonical pages
-- make scraper behaviour easy to inspect and throttle
+- scraper behaviour easy to inspect and throttle
 - preserve source attribution clearly
 
-Final Scoring should not behave like an indiscriminate crawler.
+Final Scoring not an indiscriminate crawler.
 
 ## Early-stage recommendation
 
-For MVP, source selection should prioritise:
-
+MVP: prioritise:
 - clarity of review structure
 - extractability
 - stable URLs
 - understandable scores or verdicts
 - editorial credibility
-- ease of maintaining the parser
+- ease of maintaining parser
 
-In practice, a small number of well-behaved sources is better than broad but fragile coverage.
+Small number of well-behaved sources beats broad but fragile coverage.
 
 ## Open questions for later
 
-These do not need to block MVP, but they should be revisited over time:
-
+Not blocking MVP, revisit over time:
 - how should video-first sources be modelled?
 - when should critic-level attribution become first-class?
 - should scoreless but strongly evaluative reviews influence browse surfaces?
 - how should updated or revised reviews be represented?
-- how should translated or localised versions of the same review be handled?
+- how should translated or localised versions of same review be handled?

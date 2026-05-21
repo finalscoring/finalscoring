@@ -1,10 +1,13 @@
-.PHONY: db-up db-down api worker web test lint
+.PHONY: db-up db-down migrate api worker web test lint
 
 db-up:
 	docker compose up -d db
 
 db-down:
 	docker compose down
+
+migrate:
+	cd packages/py/finalscoring && uv run alembic upgrade head
 
 api:
 	cd apps/api && uv run uvicorn finalscoring_api.main:app --reload

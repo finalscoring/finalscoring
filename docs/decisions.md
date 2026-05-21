@@ -1,21 +1,21 @@
 # Project decisions
 
-This document records explicit project decisions that should not be repeatedly re-litigated by contributors or coding agents unless there is a concrete reason to revisit them.
+Records explicit decisions. Not re-litigated unless concrete reason exists.
 
 ## 2026-04-13 — Final Scoring is a separate project
 
-Final Scoring should live as its own GitLab project rather than inside the existing Recommend.Games project.
+Final Scoring = own GitLab project, not inside Recommend.Games.
 
 ### Rationale
 
-- it has its own domain and brand identity
-- it is a distinct product, even if related in spirit
-- it should have independent repo structure, issue tracking, CI, and deployment choices
-- it should not inherit unnecessary licensing or packaging assumptions from Recommend.Games
+- own domain and brand
+- distinct product
+- independent repo, issues, CI, deployment
+- no inherited licensing or packaging from Recommend.Games
 
 ## 2026-04-13 — Brand and naming conventions
 
-The human-readable brand is **Final Scoring**.
+Human-readable brand: **Final Scoring**.
 
 Conventions:
 
@@ -25,22 +25,22 @@ Conventions:
 
 ### Rationale
 
-This keeps the public-facing identity elegant and the technical identifiers simple and consistent.
+Public identity elegant. Technical identifiers simple and consistent.
 
 ## 2026-04-13 — Start with a monorepo
 
-The project should start as a single monorepo named `finalscoring`.
+Single monorepo named `finalscoring`.
 
 ### Rationale
 
-- backend, frontend, scraping, processing, and scoring are tightly coupled during MVP
-- shared domain and data-model changes will frequently span multiple parts of the system
-- a monorepo makes it easier to iterate quickly and maintain consistency
-- splitting into multiple repos too early would add unnecessary coordination and packaging overhead
+- backend, frontend, scraping, processing, scoring tightly coupled in MVP
+- shared domain and data-model changes span multiple parts
+- faster iteration, better consistency
+- early split = unnecessary coordination overhead
 
 ## 2026-04-13 — Keep strong internal boundaries inside the monorepo
 
-The monorepo should still have clear boundaries between runnable apps and shared libraries.
+Clear boundaries between runnable apps and shared libraries.
 
 Expected structure:
 
@@ -51,117 +51,117 @@ Expected structure:
 
 ### Rationale
 
-Monorepo does not mean unstructured code. Internal boundaries should remain clear even while everything lives in one repository.
+Monorepo ≠ unstructured. Internal boundaries stay clear even in one repo.
 
 ## 2026-04-13 — Use Python for backend, ingestion, processing, and scoring
 
-Python is the primary language for the backend and data side of the system.
+Python = primary language for backend and data side.
 
 ### Rationale
 
-- it aligns with existing strengths and preferred tooling
-- scraping, parsing, processing, and scoring are naturally Python-shaped problems
-- it avoids unnecessary language fragmentation
-- it makes it easier to share core logic between API and worker code
+- matches existing strengths and tooling
+- scraping, parsing, processing, scoring are Python-shaped problems
+- no language fragmentation
+- easy to share core logic between API and worker
 
 ## 2026-04-13 — Use FastAPI for the backend API
 
-The backend API should be implemented with FastAPI.
+Backend API = FastAPI.
 
 ### Rationale
 
 - fast iteration
-- good fit for typed request and response models
-- straightforward development experience
-- good alignment with Python-first backend architecture
+- good fit for typed request/response models
+- straightforward dev experience
+- aligns with Python-first architecture
 
 ## 2026-04-13 — Use Next.js for the frontend
 
-The web frontend should be implemented with Next.js and TypeScript.
+Web frontend = Next.js + TypeScript.
 
 ### Rationale
 
 - good fit for public, content-heavy, indexable pages
 - strong ecosystem and deployment flexibility
-- suitable for server-rendered and browseable product pages
-- easy for coding agents to work with
+- supports server-rendered and browseable product pages
+- easy for coding agents
 
 ## 2026-04-13 — Use PostgreSQL as the primary database
 
-PostgreSQL is the system of record for canonical application data.
+PostgreSQL = system of record for canonical application data.
 
 ### Rationale
 
-- the project has a naturally relational data model
-- PostgreSQL is mature, portable, affordable, and easy to run locally
-- it provides enough capability for early search and aggregation use cases
+- naturally relational data model
+- mature, portable, affordable, easy to run locally
+- sufficient for early search and aggregation
 
 ## 2026-04-13 — Use SQLAlchemy and Alembic
 
-Database persistence should use SQLAlchemy and Alembic.
+DB persistence = SQLAlchemy + Alembic.
 
 ### Rationale
 
-- mature and well-understood tools
-- good fit for Python-based application and migration workflows
-- avoid experimental or over-clever data layers in MVP
+- mature, well-understood tools
+- good fit for Python app and migration workflows
+- no experimental data layers in MVP
 
 ## 2026-04-13 — Use Scrapy for scraping
 
-Scraping should use Scrapy.
+Scraping = Scrapy.
 
 ### Rationale
 
-- existing familiarity and preference
-- well suited to multi-source crawling and extraction
-- fits the intended workflow of raw source extraction followed by later processing
+- existing familiarity
+- well-suited to multi-source crawling and extraction
+- fits raw extraction → later processing workflow
 
 ## 2026-04-13 — Use uv for Python package and environment management
 
-Python dependency and environment management should use `uv`.
+Python deps and environments = `uv`.
 
 ### Rationale
 
 - simple and fast
-- suitable for app-local environments in a monorepo
-- avoids unnecessary tooling complexity
+- fits app-local environments in monorepo
+- no unnecessary tooling complexity
 
 ## 2026-04-13 — Use pnpm for the frontend
 
-The frontend should use `pnpm`.
+Frontend = `pnpm`.
 
 ### Rationale
 
 - fast and efficient
-- good fit for JS/TS work in a larger repo
-- leaves room for future shared frontend packages if needed
+- good fit for JS/TS in larger repo
+- room for future shared frontend packages
 
 ## 2026-04-13 — Do not commit to hosting yet
 
-The repo should remain portable and should not yet be deeply tied to any hosting provider.
+Repo stays portable. No deep tie to any hosting provider.
 
 ### Rationale
 
-- hosting is not the present bottleneck
-- the priority is getting the product shape and implementation right
-- architecture portability matters more than provider choice at this stage
+- hosting not current bottleneck
+- priority = right product shape and implementation
+- portability matters more than provider choice now
 
 ## 2026-04-13 — Optimise for simplicity, affordability, and portability
 
-Early decisions should favour:
+Early decisions favour:
 
 - low cognitive overhead
 - low operational complexity
 - affordable infrastructure
-- ability to move hosting later if needed
+- ability to move hosting later
 
 ### Rationale
 
-The project is early. It does not need scalability-driven architecture yet.
+Project is early. No scalability-driven architecture needed yet.
 
 ## 2026-04-13 — Local development should be lightweight
 
-Local development should use:
+Local dev uses:
 
 - PostgreSQL via Docker Compose
 - API run directly with `uv`
@@ -170,41 +170,41 @@ Local development should use:
 
 ### Rationale
 
-This keeps the development loop simple and avoids over-containerising day-one workflows.
+Keeps dev loop simple. No over-containerising day-one workflows.
 
 ## 2026-04-13 — Worker tasks should start as plain CLI commands
 
-Background and operational tasks should begin as straightforward CLI commands rather than a queue or workflow system.
+Background and operational tasks = CLI commands first, not queues or workflow systems.
 
 ### Rationale
 
 - simpler to build and debug
-- compatible with cron, schedulers, CI, or future job runners
-- avoids premature infrastructure
+- compatible with cron, schedulers, CI, future job runners
+- no premature infrastructure
 
 ## 2026-04-13 — Avoid microservices, queues, and workflow systems in MVP
 
-Do not introduce microservices, service decomposition, queues, or heavy workflow tools unless there is clear present pain that justifies them.
+No microservices, service decomposition, queues, or heavy workflow tools unless clear present pain justifies them.
 
 ### Rationale
 
-The MVP is a tightly coupled vertical slice and should not be distributed prematurely.
+MVP = tightly coupled vertical slice. No premature distribution.
 
 ## 2026-04-13 — API should be REST-first
 
-The backend API should start as a straightforward REST API.
+Backend API = straightforward REST.
 
 ### Rationale
 
 - simpler to implement and debug
-- fits the product shape well
-- avoids GraphQL complexity before there is evidence it is needed
+- fits product shape
+- no GraphQL complexity before evidence it's needed
 
 ## 2026-04-13 — Final Scoring focuses on critic aggregation, not user community features
 
-The core product focus is critic reviews and critical reception.
+Core focus = critic reviews and critical reception.
 
-Not MVP priorities:
+Not MVP:
 
 - user accounts
 - user reviews
@@ -215,29 +215,29 @@ Not MVP priorities:
 
 ### Rationale
 
-The product should stay focused on its differentiating value rather than trying to become a general-purpose board game platform.
+Stay focused on differentiating value. Not a general-purpose board game platform.
 
 ## 2026-04-13 — First canonical entities are Game, Publication, and Review
 
-The first version of the data model should centre on:
+First data model centres on:
 
 - `Game`
 - `Publication`
 - `Review`
 
-A `Critic` entity may be added later if author-level modelling becomes important.
+`Critic` entity may come later if author-level modelling matters.
 
 ### Rationale
 
-These are the minimal useful entities needed to support ingestion, storage, and presentation of critic coverage.
+Minimal useful entities for ingestion, storage, and presentation of critic coverage.
 
 ## When to revisit a decision
 
-A recorded decision should only be revisited when at least one of the following is true:
+Revisit only when at least one is true:
 
-- real implementation pain has emerged
-- product requirements have materially changed
-- there is strong evidence that the current decision blocks progress
-- a change would simplify the system in practice, not just in theory
+- real implementation pain emerged
+- product requirements materially changed
+- current decision blocks progress
+- change simplifies system in practice, not just theory
 
-Contributors and coding agents should not reopen settled decisions casually.
+Contributors and coding agents: don't reopen settled decisions casually.
