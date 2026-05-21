@@ -13,15 +13,14 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql+psycopg://finalscoring:finalscoring@localhost:5432/finalscoring",
-)
+
+def get_url() -> str:
+    return os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
 
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=DATABASE_URL,
+        url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -32,7 +31,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     cfg = config.get_section(config.config_ini_section, {})
-    cfg["sqlalchemy.url"] = DATABASE_URL
+    cfg["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(cfg, prefix="sqlalchemy.", poolclass=pool.NullPool)
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
