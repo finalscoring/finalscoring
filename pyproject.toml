@@ -68,3 +68,8 @@ python-version = "3.14"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+]
