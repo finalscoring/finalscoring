@@ -1,0 +1,2 @@
+slug,name,outlet,medium,language,homepage_url,feed_url,score_format,source_tier,opt_out,notes
+spiel_des_jahres,Spiel des Jahres jury,Spiel des Jahres,text,de,https://www.spiel-des-jahres.de/,https://www.spiel-des-jahres.de/sitemap_index.xml,verdict_band,1.0,false,"Meta-source: extracts cited critics from the Kritikenrundschau roundups. Treated as a tier-1 editorial source."
