@@ -23,8 +23,8 @@ ruff/ty/pytest run green on an empty tree. Already in place.
 
 ### A2. Settings/config object
 A single typed config (env-driven) for the values the rest of the code
-will need: LLM endpoint/model, scraper politeness, DB output path,
-Recommend.Games import location. Plus a `.env.example` documenting them.
+will need: LLM endpoint/model, scraper politeness, DB output path.
+Plus a `.env.example` documenting them.
 Small, no logic, easy to review. Nothing imports it yet — that's fine;
 it lands before the code that needs it so later diffs stay focused.
 *Decision needed first:* none beyond what's already agreed, but keep it
@@ -50,10 +50,11 @@ gets materialised, without committing to any table yet. Path sketch:
 `src/finalscoring/db.py` (or a `schema/` package — maintainer's call).
 
 ### B2. First entity: the game record
-The imported-from-Recommend.Games record. Likely thin: a BGG id as the
-canonical key plus a handful of metadata fields. One model, one
-round-trip test (insert, read back). No import logic yet — just the
-shape.
+Likely thin: a BGG id as the canonical key plus a handful of metadata
+fields. One model, one round-trip test (insert, read back). No import
+logic yet — just the shape.
+*Decision needed first:* where game data comes from (D1 / Recommend.Games
+integration) is open; this chunk defines only the shape, not the source.
 
 ### B3. Critic/source record
 The reviewer or outlet. Fields likely include identity, language,
@@ -117,10 +118,11 @@ of the right abstraction.
 ## Phase D — Resolution & load
 
 ### D1. Game-title → BGG id resolution
-Reuse Recommend.Games matching rather than rebuilding. Expect a manual
-override path for the inevitable misses.
-*Decision needed first:* the Recommend.Games integration mechanism is
-open and blocks this chunk.
+Build the logic that maps a game title (and other metadata) to a
+canonical BGG id, using R.G.'s BGG game data as the lookup. Expect a
+manual override path for the inevitable misses.
+*Decision needed first:* how to access R.G.'s game data is open and
+blocks this chunk. See `DECISIONS_OPEN.md`.
 
 ### D2. JSON Lines → SQLite load
 Read extracted reviews, resolve game + critic, dedupe, insert. The step
