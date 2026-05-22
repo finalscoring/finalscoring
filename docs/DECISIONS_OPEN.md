@@ -17,9 +17,13 @@ let the maintainer choose. This list is the boundary between "agreed"
 
 ## Recommend.Games integration
 
-- The mechanism for bringing game data / BGG matching from
-  Recommend.Games into Final Scoring is not decided. Options discussed
-  but not chosen: shared database, periodic import/snapshot, shared
+- Whether to reuse Recommend.Games data and/or infrastructure at all, or
+  build equivalent capabilities independently, is not decided.
+- The source of BGG-matching / game-identity infrastructure for Final
+  Scoring is not decided. No matching mechanism currently exists in this
+  repo; one must either be built or sourced.
+- The integration mechanism itself is not decided. Options discussed but
+  not chosen: shared database, periodic import/snapshot, shared
   library/internal API, or building it into the SQLite bake step. No
   choice has been made.
 

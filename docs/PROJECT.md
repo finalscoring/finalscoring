@@ -104,9 +104,8 @@ These have been explicitly agreed by the maintainer.
 - **Recommend.Games** (sister project): comprehensive board game data
   from BGG and other sources (including Luding), covering game data,
   ratings, and user comments. Runs on SQLite, built and baked into a
-  Docker image per release. Game metadata and BGG-matching infrastructure
-  for Final Scoring should come from here rather than being rebuilt. The
-  exact integration mechanism is NOT yet decided (see `DECISIONS_OPEN.md`).
+  Docker image per release. How (or whether) its data and infrastructure
+  are reused in Final Scoring is not yet decided (see `DECISIONS_OPEN.md`).
 - **Spiel des Jahres project:** an existing, simple, proof-of-concept
   review spider (Scrapy `SitemapSpider`) and an LLM extraction pipeline
   using structured outputs (Pydantic schema via an OpenAI-compatible
