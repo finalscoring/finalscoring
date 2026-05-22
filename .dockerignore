@@ -1,0 +1,35 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+
+# Don't ship local secrets
+.env
+.env.local
+
+# Big stuff that's regenerated in the build
+data/jobs
+frontend/node_modules
+frontend/.next
+
+# Tests don't need to be in the image
+tests
+docs
+*.md
+!README.md
+
+# Frontend source — only the build output should ship
+# (frontend builder stage handles this when added)

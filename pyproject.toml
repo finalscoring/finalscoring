@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "final_scoring"
+version = "0.0.1"
+description = "A critic-focused review aggregation index for board games."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "AGPL-3.0-or-later" }
+authors = [
+  { name = "The Final Scoring contributors" },
+]
+keywords = ["board games", "reviews", "aggregator", "critics"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Games/Entertainment :: Board Games",
+]
+
+dependencies = [
+  # Core
+  "pydantic>=2.6",
+  "sqlmodel>=0.0.16",
+  "typer>=0.12",
+  "rich>=13.7",
+  "python-dotenv>=1.0",
+
+  # Scraping
+  "scrapy>=2.11",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.1",
+
+  # LLM extraction (OpenAI-compatible client, points at local model)
+  "openai>=1.30",
+  "tenacity>=8.2",
+
+  # Statistics for scoring
+  "numpy>=1.26",
+  "scipy>=1.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "ruff>=0.4",
+  "mypy>=1.8",
+  "types-beautifulsoup4",
+]
+
+[project.urls]
+Homepage = "https://finalscoring.games/"
+Repository = "https://github.com/finalscoring/final-scoring"
+Issues = "https://github.com/finalscoring/final-scoring/issues"
+
+[project.scripts]
+fs = "final_scoring.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "B",    # flake8-bugbear
+  "UP",   # pyupgrade
+  "RUF",  # ruff-specific
+  "SIM",  # flake8-simplify
+  "C4",   # flake8-comprehensions
+  "PT",   # flake8-pytest-style
+]
+ignore = [
+  "E501",  # line too long — formatter handles
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # asserts are fine in tests
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "scrapy.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
