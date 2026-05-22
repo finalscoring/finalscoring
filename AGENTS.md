@@ -21,6 +21,8 @@ starting.
   approved.
 - **Never publish without instruction.** No commit, push, merge, tag,
   release, post, or deploy unless explicitly told to.
+- **Never commit to main.** If told to commit while on `main`, create a
+  descriptive branch first, then commit there.
 - **Approval doesn't carry over.** Any approval covers only the concrete
   task at hand. It never implicitly extends to future commands.
 
