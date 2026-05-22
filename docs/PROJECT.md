@@ -44,9 +44,9 @@ collection-management functionality.
 
 ## Mantras (confirmed, binding)
 
-1. No tracking, ever.
-2. 100% open source, full transparency.
-3. Single-minded focus on the mission: board game review aggregation.
+1. **Critic opinion, aggregated — nothing else.** (We report what reviewers say: not community ratings, not our own verdicts, not a database, recommender, or social platform.)
+2. **100% open source, full transparency.**
+3. **No tracking, ever.**
 
 ## Confirmed technical decisions
 
