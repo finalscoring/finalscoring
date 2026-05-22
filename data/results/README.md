@@ -10,6 +10,3 @@ machines, share the SQLite output, not these files.
 Filename convention (set by `SCRAPER_FEED_URI` in `.env.example`):
 
     <spider-name>-<utc-timestamp>-<batch-id>.jl
-
-The build script (`fs build`) walks this directory and replays every
-`.jl` / `.jsonl` file it finds.

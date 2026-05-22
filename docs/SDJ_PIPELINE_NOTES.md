@@ -64,8 +64,8 @@ registry, with an alias-mapping step. Treat the model's `reviewer_id` as
 a hint, never the key.
 
 ### 5. `game_title` is a free string
-Expected at the PoC stage. Final Scoring resolves titles to BGG ids
-(via Recommend.Games), with a manual override path for misses. That's a
+Expected at the PoC stage. Final Scoring resolves titles to BGG ids,
+with a manual override path for misses. That's a
 separate resolution step downstream, not a spider concern — just noting
 the title stays a string until then.
 
