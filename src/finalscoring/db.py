@@ -5,6 +5,7 @@ from pathlib import Path
 from sqlalchemy import Engine, event
 from sqlmodel import SQLModel, create_engine
 
+import finalscoring.models.critic  # registers Critic in SQLModel.metadata
 import finalscoring.models.game  # registers Game in SQLModel.metadata
 import finalscoring.models.outlet  # noqa: F401 - registers Outlet in SQLModel.metadata
 
