@@ -6,19 +6,21 @@ readme = "README.md"
 requires-python = ">=3.14"
 license = { text = "AGPL-3.0-or-later" }
 authors = [
-  { name = "The Final Scoring contributors" },
+    { name = "The Final Scoring contributors" },
 ]
 keywords = ["board games", "reviews", "aggregator", "critics"]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
-  "Intended Audience :: End Users/Desktop",
-  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.14",
-  "Topic :: Games/Entertainment :: Board Games",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Games/Entertainment :: Board Games",
 ]
 
-dependencies = []
+dependencies = [
+    "sqlmodel>=0.0.38",
+]
 
 [project.urls]
 Homepage = "https://finalscoring.games/"
@@ -47,19 +49,19 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = [
-  "E",    # pycodestyle errors
-  "W",    # pycodestyle warnings
-  "F",    # pyflakes
-  "I",    # isort
-  "B",    # flake8-bugbear
-  "UP",   # pyupgrade
-  "RUF",  # ruff-specific
-  "SIM",  # flake8-simplify
-  "C4",   # flake8-comprehensions
-  "PT",   # flake8-pytest-style
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "RUF",  # ruff-specific
+    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+    "PT",   # flake8-pytest-style
 ]
 ignore = [
-  "E501",  # line too long — formatter handles
+    "E501",  # line too long — formatter handles
 ]
 
 [tool.ruff.lint.per-file-ignores]
