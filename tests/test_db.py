@@ -20,6 +20,25 @@ def test_create_tables_empty_schema():
         assert conn.execute(text("SELECT 1")).scalar() == 1
 
 
+def test_outlet_round_trip():
+    from sqlmodel import Session, select
+
+    from finalscoring.models.outlet import Outlet
+
+    engine = create_engine("sqlite:///:memory:")
+    create_tables(engine)
+
+    with Session(engine) as session:
+        session.add(Outlet(name="The Dice Tower", medium="youtube"))
+        session.commit()
+
+    with Session(engine) as session:
+        result = session.exec(select(Outlet).where(Outlet.name == "The Dice Tower")).one()
+        assert result.medium == "youtube"
+        assert result.quality_weight == 1.0
+        assert result.url is None
+
+
 def test_game_round_trip():
     from sqlmodel import Session, select
 
