@@ -18,3 +18,22 @@ def test_create_tables_empty_schema():
     create_tables(engine)
     with engine.connect() as conn:
         assert conn.execute(text("SELECT 1")).scalar() == 1
+
+
+def test_game_round_trip():
+    from sqlmodel import Session, select
+
+    from finalscoring.models.game import Game
+
+    engine = create_engine("sqlite:///:memory:")
+    create_tables(engine)
+
+    with Session(engine) as session:
+        session.add(Game(bgg_id=174430, name="Gloomhaven", year_published=2017))
+        session.commit()
+
+    with Session(engine) as session:
+        result = session.exec(select(Game).where(Game.bgg_id == 174430)).one()
+        assert result.name == "Gloomhaven"
+        assert result.year_published == 2017
+        assert result.thumbnail_url is None

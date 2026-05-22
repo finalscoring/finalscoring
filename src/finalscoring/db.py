@@ -5,6 +5,8 @@ from pathlib import Path
 from sqlalchemy import Engine, event
 from sqlmodel import SQLModel, create_engine
 
+import finalscoring.models.game  # noqa: F401
+
 
 def make_engine(db_path: Path) -> Engine:
     db_path.parent.mkdir(parents=True, exist_ok=True)
