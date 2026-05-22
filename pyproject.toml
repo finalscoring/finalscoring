@@ -17,6 +17,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Games/Entertainment :: Board Games",
 ]
+
 dependencies = []
 
 [project.urls]
@@ -24,11 +25,12 @@ Homepage = "https://finalscoring.games/"
 Repository = "https://gitlab.com/finalscoring/finalscoring"
 Issues = "https://gitlab.com/finalscoring/finalscoring/-/issues"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-  "pytest>=9.0",
-  "ruff>=0.15.0",
-  "ty>=0.0.38",
+    "pre-commit>=4.6.0",
+    "pytest>=9.0",
+    "ruff>=0.15.0",
+    "ty>=0.0.38",
 ]
 
 [build-system]
@@ -68,8 +70,3 @@ python-version = "3.14"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[dependency-groups]
-dev = [
-    "pre-commit>=4.6.0",
-]

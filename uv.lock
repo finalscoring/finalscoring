@@ -43,28 +43,23 @@ name = "finalscoring"
 version = "0.0.1"
 source = { editable = "." }
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
+    { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "pre-commit" },
-]
-
 [package.metadata]
-requires-dist = [
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.0" },
-    { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.38" },
-]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pre-commit", specifier = ">=4.6.0" }]
+dev = [
+    { name = "pre-commit", specifier = ">=4.6.0" },
+    { name = "pytest", specifier = ">=9.0" },
+    { name = "ruff", specifier = ">=0.15.0" },
+    { name = "ty", specifier = ">=0.0.38" },
+]
 
 [[package]]
 name = "identify"
