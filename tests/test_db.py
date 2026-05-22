@@ -20,6 +20,24 @@ def test_create_tables_empty_schema():
         assert conn.execute(text("SELECT 1")).scalar() == 1
 
 
+def test_critic_round_trip():
+    from sqlmodel import Session, select
+
+    from finalscoring.models.critic import Critic
+
+    engine = create_engine("sqlite:///:memory:")
+    create_tables(engine)
+
+    with Session(engine) as session:
+        session.add(Critic(name="Tom Vasel", language="en"))
+        session.commit()
+
+    with Session(engine) as session:
+        result = session.exec(select(Critic).where(Critic.name == "Tom Vasel")).one()
+        assert result.language == "en"
+        assert result.quality_weight == 1.0
+
+
 def test_outlet_round_trip():
     from sqlmodel import Session, select
 
