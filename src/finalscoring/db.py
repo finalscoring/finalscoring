@@ -7,6 +7,7 @@ from sqlmodel import SQLModel, create_engine
 
 import finalscoring.models.critic  # registers Critic in SQLModel.metadata
 import finalscoring.models.game  # registers Game in SQLModel.metadata
+import finalscoring.models.game_aggregate  # registers GameAggregate in SQLModel.metadata
 import finalscoring.models.outlet  # registers Outlet in SQLModel.metadata
 import finalscoring.models.review  # noqa: F401 - registers Review in SQLModel.metadata
 

@@ -158,3 +158,37 @@ def test_game_round_trip():
         assert result.name == "Gloomhaven"
         assert result.year_published == 2017
         assert result.thumbnail_url is None
+
+
+def test_game_aggregate_round_trip():
+    from sqlmodel import Session, select
+
+    from finalscoring.models.game import Game
+    from finalscoring.models.game_aggregate import GameAggregate
+
+    engine = create_engine("sqlite:///:memory:")
+    create_tables(engine)
+
+    with Session(engine) as session:
+        session.add(Game(bgg_id=174430, name="Gloomhaven"))
+        session.add(
+            GameAggregate(
+                game_bgg_id=174430,
+                score=82.5,
+                ci_lower=79.0,
+                ci_upper=86.0,
+                review_count=12,
+                scoring_version="v1",
+            )
+        )
+        session.commit()
+
+    with Session(engine) as session:
+        result = session.exec(
+            select(GameAggregate).where(GameAggregate.game_bgg_id == 174430)
+        ).one()
+        assert result.score == 82.5
+        assert result.ci_lower == 79.0
+        assert result.ci_upper == 86.0
+        assert result.review_count == 12
+        assert result.scoring_version == "v1"
