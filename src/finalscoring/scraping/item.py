@@ -14,7 +14,10 @@ class RawItem(BaseModel):
 
     url: str
     spider_slug: str  # identifies the fetcher, not necessarily the outlet
-    raw_text: str
+    raw_text: str  # plain-text rendering; what gets fed to the LLM
+    raw_html: str | None = (
+        None  # source HTML, preserved for reprocessing; None for non-HTML sources
+    )
     scraped_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Page / article metadata
