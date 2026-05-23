@@ -9,10 +9,10 @@ validators (ge, le, gt, @field_validator) only fire when using model_validate():
 Always use model_validate() in ingestion and scoring code.
 """
 
-from finalscoring.models.critic import Critic as Critic
-from finalscoring.models.game import Game as Game
-from finalscoring.models.game_aggregate import GameAggregate as GameAggregate
-from finalscoring.models.outlet import Outlet as Outlet
-from finalscoring.models.review import Review as Review
+from finalscoring.models.critic import Critic
+from finalscoring.models.game import Game
+from finalscoring.models.game_aggregate import GameAggregate
+from finalscoring.models.outlet import Outlet
+from finalscoring.models.review import Review
 
 __all__ = ["Critic", "Game", "GameAggregate", "Outlet", "Review"]
