@@ -7,7 +7,8 @@ from sqlmodel import SQLModel, create_engine
 
 import finalscoring.models.critic  # registers Critic in SQLModel.metadata
 import finalscoring.models.game  # registers Game in SQLModel.metadata
-import finalscoring.models.outlet  # noqa: F401 - registers Outlet in SQLModel.metadata
+import finalscoring.models.outlet  # registers Outlet in SQLModel.metadata
+import finalscoring.models.review  # noqa: F401 - registers Review in SQLModel.metadata
 
 
 def make_engine(db_path: Path) -> Engine:
