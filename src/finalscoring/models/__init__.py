@@ -1,4 +1,13 @@
-"""Public re-exports for all SQLModel table models."""
+"""Public re-exports for all SQLModel table models.
+
+Construction note: SQLModel table models bypass Pydantic's __init__, so field
+validators (ge, le, gt, @field_validator) only fire when using model_validate():
+
+    review = Review.model_validate(scraped_dict)   # validators run ✓
+    review = Review(**scraped_dict)                 # validators skipped ✗
+
+Always use model_validate() in ingestion and scoring code.
+"""
 
 from finalscoring.models.critic import Critic as Critic
 from finalscoring.models.game import Game as Game

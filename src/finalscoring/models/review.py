@@ -3,6 +3,7 @@
 from datetime import datetime
 from enum import StrEnum
 
+from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 
@@ -25,6 +26,13 @@ class Review(SQLModel, table=True):
     declared_score: float | None = Field(default=None, ge=0.0, le=100.0)  # normalised 0-100
     inferred_score: float | None = Field(default=None, ge=0.0, le=100.0)  # normalised 0-100
     sentiment: Sentiment | None = None
+
+    @field_validator("declared_score", "inferred_score")
+    @classmethod
+    def score_in_range(cls, v: float | None) -> float | None:
+        if v is not None and not (0.0 <= v <= 100.0):
+            raise ValueError("must be between 0 and 100")
+        return v
 
     @property
     def score_is_inferred(self) -> bool:
