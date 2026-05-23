@@ -7,6 +7,6 @@ class Game(SQLModel, table=True):
     __tablename__ = "games"
 
     bgg_id: int = Field(primary_key=True)
-    name: str
+    name: str = Field(index=True)
     year_published: int | None = None
     thumbnail_url: str | None = None

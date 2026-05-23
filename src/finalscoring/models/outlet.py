@@ -8,6 +8,6 @@ class Outlet(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    url: str | None = None
+    url: str | None = Field(default=None, unique=True)
     medium: str  # "blog", "youtube", "podcast", "magazine", …
     quality_weight: float = Field(default=1.0)

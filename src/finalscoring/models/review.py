@@ -15,7 +15,10 @@ class Review(SQLModel, table=True):
 
     declared_score: float | None = None  # explicit numeric score, normalised 0-100
     inferred_score: float | None = None  # LLM-mapped verbal verdict, normalised 0-100
-    score_is_inferred: bool = False
+
+    @property
+    def score_is_inferred(self) -> bool:
+        return self.inferred_score is not None and self.declared_score is None
 
     quote: str | None = None  # verbatim attributed snippet
     language: str  # ISO 639-1, e.g. "en", "de"

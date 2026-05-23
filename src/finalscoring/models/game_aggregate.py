@@ -1,5 +1,7 @@
 """GameAggregate record — computed scoring output for one game."""
 
+from datetime import datetime
+
 from sqlmodel import Field, SQLModel
 
 
@@ -12,3 +14,4 @@ class GameAggregate(SQLModel, table=True):
     ci_upper: float
     review_count: int
     scoring_version: str
+    scored_at: datetime

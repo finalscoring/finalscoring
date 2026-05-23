@@ -36,7 +36,7 @@ def test_review_round_trip():
     with Session(engine) as session:
         session.add(Game(bgg_id=174430, name="Gloomhaven"))
         outlet = Outlet(name="The Dice Tower", medium="youtube")
-        critic = Critic(name="Tom Vasel", language="en")
+        critic = Critic(name="Tom Vasel")
         session.add(outlet)
         session.add(critic)
         session.commit()
@@ -113,12 +113,11 @@ def test_critic_round_trip():
     create_tables(engine)
 
     with Session(engine) as session:
-        session.add(Critic(name="Tom Vasel", language="en"))
+        session.add(Critic(name="Tom Vasel"))
         session.commit()
 
     with Session(engine) as session:
         result = session.exec(select(Critic).where(Critic.name == "Tom Vasel")).one()
-        assert result.language == "en"
         assert result.quality_weight == 1.0
 
 
@@ -161,6 +160,8 @@ def test_game_round_trip():
 
 
 def test_game_aggregate_round_trip():
+    from datetime import datetime
+
     from sqlmodel import Session, select
 
     from finalscoring.models.game import Game
@@ -168,6 +169,8 @@ def test_game_aggregate_round_trip():
 
     engine = create_engine("sqlite:///:memory:")
     create_tables(engine)
+
+    scored = datetime(2026, 5, 23, 12, 0, 0)
 
     with Session(engine) as session:
         session.add(Game(bgg_id=174430, name="Gloomhaven"))
@@ -179,6 +182,7 @@ def test_game_aggregate_round_trip():
                 ci_upper=86.0,
                 review_count=12,
                 scoring_version="v1",
+                scored_at=scored,
             )
         )
         session.commit()
@@ -192,3 +196,4 @@ def test_game_aggregate_round_trip():
         assert result.ci_upper == 86.0
         assert result.review_count == 12
         assert result.scoring_version == "v1"
+        assert result.scored_at == scored
