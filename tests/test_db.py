@@ -27,7 +27,7 @@ def test_review_round_trip():
 
     from finalscoring.models.critic import Critic
     from finalscoring.models.game import Game
-    from finalscoring.models.outlet import Outlet
+    from finalscoring.models.outlet import Medium, Outlet
     from finalscoring.models.review import Review
 
     engine = create_engine("sqlite:///:memory:")
@@ -35,21 +35,18 @@ def test_review_round_trip():
 
     with Session(engine) as session:
         session.add(Game(bgg_id=174430, name="Gloomhaven"))
-        outlet = Outlet(name="The Dice Tower", medium="youtube")
+        session.add(Outlet(slug="dice-tower", name="The Dice Tower", medium=Medium.video))
         critic = Critic(name="Tom Vasel")
-        session.add(outlet)
         session.add(critic)
         session.commit()
-        assert outlet.id is not None
         assert critic.id is not None
-        outlet_id = outlet.id
         critic_id = critic.id
 
     with Session(engine) as session:
         session.add(
             Review(
                 game_bgg_id=174430,
-                outlet_id=outlet_id,
+                outlet_slug="dice-tower",
                 critic_id=critic_id,
                 declared_score=88.0,
                 language="en",
@@ -62,7 +59,7 @@ def test_review_round_trip():
     with Session(engine) as session:
         result = session.exec(select(Review)).one()
         assert result.game_bgg_id == 174430
-        assert result.outlet_id == outlet_id
+        assert result.outlet_slug == "dice-tower"
         assert result.critic_id == critic_id
         assert result.declared_score == 88.0
         assert result.inferred_score is None
@@ -74,7 +71,7 @@ def test_review_without_critic():
     from sqlmodel import Session, select
 
     from finalscoring.models.game import Game
-    from finalscoring.models.outlet import Outlet
+    from finalscoring.models.outlet import Medium, Outlet
     from finalscoring.models.review import Review
 
     engine = create_engine("sqlite:///:memory:")
@@ -82,17 +79,14 @@ def test_review_without_critic():
 
     with Session(engine) as session:
         session.add(Game(bgg_id=174430, name="Gloomhaven"))
-        outlet = Outlet(name="Shut Up & Sit Down", medium="blog")
-        session.add(outlet)
+        session.add(Outlet(slug="susd", name="Shut Up & Sit Down", medium=Medium.text))
         session.commit()
-        assert outlet.id is not None
-        outlet_id = outlet.id
 
     with Session(engine) as session:
         session.add(
             Review(
                 game_bgg_id=174430,
-                outlet_id=outlet_id,
+                outlet_slug="susd",
                 language="en",
                 url="https://example.com/susd-gloomhaven",
             )
@@ -124,18 +118,19 @@ def test_critic_round_trip():
 def test_outlet_round_trip():
     from sqlmodel import Session, select
 
-    from finalscoring.models.outlet import Outlet
+    from finalscoring.models.outlet import Medium, Outlet
 
     engine = create_engine("sqlite:///:memory:")
     create_tables(engine)
 
     with Session(engine) as session:
-        session.add(Outlet(name="The Dice Tower", medium="youtube"))
+        session.add(Outlet(slug="dice-tower", name="The Dice Tower", medium=Medium.video))
         session.commit()
 
     with Session(engine) as session:
-        result = session.exec(select(Outlet).where(Outlet.name == "The Dice Tower")).one()
-        assert result.medium == "youtube"
+        result = session.exec(select(Outlet).where(Outlet.slug == "dice-tower")).one()
+        assert result.name == "The Dice Tower"
+        assert result.medium == Medium.video
         assert result.quality_weight == 1.0
         assert result.url is None
 

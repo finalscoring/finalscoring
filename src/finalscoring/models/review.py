@@ -10,7 +10,7 @@ class Review(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     game_bgg_id: int = Field(foreign_key="games.bgg_id", index=True)
-    outlet_id: int = Field(foreign_key="outlets.id", index=True)
+    outlet_slug: str = Field(foreign_key="outlets.slug", index=True)
     critic_id: int | None = Field(default=None, foreign_key="critics.id", index=True)
 
     declared_score: float | None = None  # explicit numeric score, normalised 0-100
