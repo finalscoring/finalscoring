@@ -1,8 +1,17 @@
 """Review record — one verdict on one game from one outlet."""
 
-from datetime import date
+from datetime import datetime
+from enum import StrEnum
 
 from sqlmodel import Field, SQLModel
+
+
+class Sentiment(StrEnum):
+    negative = "negative"
+    mixed_negative = "mixed_negative"
+    neutral = "neutral"
+    mixed_positive = "mixed_positive"
+    positive = "positive"
 
 
 class Review(SQLModel, table=True):
@@ -15,6 +24,7 @@ class Review(SQLModel, table=True):
 
     declared_score: float | None = None  # explicit numeric score, normalised 0-100
     inferred_score: float | None = None  # LLM-mapped verbal verdict, normalised 0-100
+    sentiment: Sentiment | None = None
 
     @property
     def score_is_inferred(self) -> bool:
@@ -24,4 +34,6 @@ class Review(SQLModel, table=True):
     language: str  # ISO 639-1, e.g. "en", "de"
 
     url: str = Field(unique=True)  # deduplication key
-    review_date: date | None = None
+    published_at: datetime | None = None
+    scraped_at: datetime
+    updated_at: datetime | None = None

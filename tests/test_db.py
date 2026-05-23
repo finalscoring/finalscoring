@@ -21,7 +21,7 @@ def test_create_tables_empty_schema():
 
 
 def test_review_round_trip():
-    from datetime import date
+    from datetime import datetime
 
     from sqlmodel import Session, select
 
@@ -42,6 +42,7 @@ def test_review_round_trip():
         assert critic.id is not None
         critic_id = critic.id
 
+    scraped = datetime(2026, 5, 23, 12, 0, 0)
     with Session(engine) as session:
         session.add(
             Review(
@@ -51,7 +52,8 @@ def test_review_round_trip():
                 declared_score=88.0,
                 language="en",
                 url="https://example.com/gloomhaven-review",
-                review_date=date(2017, 3, 15),
+                published_at=datetime(2017, 3, 15, 0, 0, 0),
+                scraped_at=scraped,
             )
         )
         session.commit()
@@ -64,7 +66,9 @@ def test_review_round_trip():
         assert result.declared_score == 88.0
         assert result.inferred_score is None
         assert result.score_is_inferred is False
-        assert result.review_date == date(2017, 3, 15)
+        assert result.published_at == datetime(2017, 3, 15, 0, 0, 0)
+        assert result.scraped_at == scraped
+        assert result.updated_at is None
 
 
 def test_review_without_critic():
@@ -83,12 +87,15 @@ def test_review_without_critic():
         session.commit()
 
     with Session(engine) as session:
+        from datetime import datetime
+
         session.add(
             Review(
                 game_bgg_id=174430,
                 outlet_slug="susd",
                 language="en",
                 url="https://example.com/susd-gloomhaven",
+                scraped_at=datetime(2026, 5, 23, 12, 0, 0),
             )
         )
         session.commit()
