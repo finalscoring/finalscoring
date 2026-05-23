@@ -20,4 +20,4 @@ class Outlet(SQLModel, table=True):
     name: str = Field(index=True)
     url: str | None = Field(default=None, unique=True)
     medium: Medium
-    quality_weight: float = Field(default=1.0)
+    quality_weight: float = Field(default=1.0, gt=0.0)

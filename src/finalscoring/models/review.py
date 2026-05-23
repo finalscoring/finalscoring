@@ -22,8 +22,8 @@ class Review(SQLModel, table=True):
     outlet_slug: str = Field(foreign_key="outlets.slug", index=True)
     critic_id: int | None = Field(default=None, foreign_key="critics.id", index=True)
 
-    declared_score: float | None = None  # explicit numeric score, normalised 0-100
-    inferred_score: float | None = None  # LLM-mapped verbal verdict, normalised 0-100
+    declared_score: float | None = Field(default=None, ge=0.0, le=100.0)  # normalised 0-100
+    inferred_score: float | None = Field(default=None, ge=0.0, le=100.0)  # normalised 0-100
     sentiment: Sentiment | None = None
 
     @property

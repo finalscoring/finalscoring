@@ -8,4 +8,4 @@ class Critic(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    quality_weight: float = Field(default=1.0)
+    quality_weight: float = Field(default=1.0, gt=0.0)
