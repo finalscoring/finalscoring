@@ -1,0 +1,29 @@
+Extract board game reviews from the following text.
+
+For each distinct (game, reviewer) pair found, extract:
+
+- game_title: the title of the game as mentioned in the text
+- reviewer_name: the reviewer's name as written; use the outlet name if no individual is named
+- outlet_name: the name of the publication or outlet, if identifiable; null if unknown
+- raw_score: the score exactly as stated (e.g. "4/5", "8 out of 10", "sehr gut"); null if no explicit score is given
+- rating: a 1–10 integer derived from the score and/or sentiment:
+    10:   exceptional, must-play
+    8–9:  very positive, recommended with enthusiasm
+    6–7:  positive with reservations
+    5:    balanced or mixed
+    3–4:  mostly negative, disappointing
+    1–2:  very negative, avoid
+- sentiment: one of: negative / mixed_negative / neutral / mixed_positive / positive
+- quote: a verbatim sentence or short phrase (≤300 characters) from the text that best
+  captures the reviewer's opinion; must be copied exactly, do not paraphrase
+- language: ISO 639-1 two-letter code for the language of the review (e.g. "de", "en")
+
+Rules:
+- Extract every (game, reviewer) pair present, even if a single article covers multiple
+  games or multiple reviewers.
+- If a reviewer is not named but an opinion is clearly attributed, use the outlet name
+  as reviewer_name.
+- quote must be a direct copy from the text. If no suitable verbatim passage exists,
+  set quote to null.
+- If raw_score is null, derive rating from sentiment alone.
+- If the text contains no board game reviews, return an empty list.
