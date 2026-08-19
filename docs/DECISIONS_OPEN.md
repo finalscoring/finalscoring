@@ -15,6 +15,16 @@ let the maintainer choose. This list is the boundary between "agreed"
 - Which entity to build first (e.g. the imported game record vs. the
   review record). Not decided.
 
+## Ingestion artifacts
+
+- JSON Lines is the agreed intermediate format, but the stream layout is
+  not decided: whether the extraction step re-emits enriched `RawItem`
+  records as a single stream, or writes `ExtractedReview` records to a
+  stream of their own. The load step has to read whichever it is, so
+  settle this before D2.
+- The filename convention for those files, and the setting that
+  configures it, are not decided. No code sets either today.
+
 ## Recommend.Games integration
 
 - Recommend.Games has comprehensive BGG game data that Final Scoring
