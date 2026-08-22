@@ -74,6 +74,14 @@ These have been explicitly agreed by the maintainer.
   fresh database from sources. This pattern is confirmed as the intended
   approach, at least through proof-of-concept, and is considered a good
   fit because the workload is read-mostly and batch-updated.
+- **Data layer:** SQLModel (Pydantic models over SQLAlchemy) on SQLite.
+  The schema is materialised with `SQLModel.metadata.create_all()` at
+  build time; there are no migrations, consistent with the
+  rebuild-per-release pattern above. Five tables are in place, landed one
+  entity per merge request through Phase B: `games`, `outlets`,
+  `critics`, `reviews`, `game_aggregates`. Reviews keep `declared_score`
+  and `inferred_score` as separate nullable fields, both on the 0–100
+  scale, so an inferred rating can never masquerade as a declared one.
 - **Repository structure:** monorepo. One Python package for the backend;
   the frontend, when it exists, lives in its own top-level directory in
   the same repo.

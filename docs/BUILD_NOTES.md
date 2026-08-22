@@ -38,10 +38,9 @@ The data model is the spine; every later component depends on it. The
 mistake to avoid is landing all tables in one diff. One entity per
 commit, each with its own focused test.
 
-*Decision needed first (blocking all of Phase B):* the data-access
-choice (SQLAlchemy / SQLModel / raw sqlite3 + dataclasses / other) and
-which entity comes first. See `DECISIONS_OPEN.md`. Do not start B
-without these.
+*Settled since this memo was written:* the data-access choice is SQLModel
+and the game record came first — see `PROJECT.md`. Phase B is built; the
+chunks below stand as the record of how it was sequenced.
 
 ### B1. DB bootstrap
 The minimal "create an empty database file with no tables" helper plus
@@ -61,6 +60,11 @@ The reviewer or outlet. Fields likely include identity, language,
 medium, and a quality-weight. The weight field is where the
 "broad-crawl-with-weighting" strategy lives, so its presence is a real
 review point.
+
+*As built:* this became two entities and two chunks — `outlets` (slug,
+name, url, medium, weight) and `critics` (id, name, weight) — leaving
+two weight fields whose interaction is still open, and no language on
+either. See `DECISIONS_OPEN.md`.
 
 ### B4. Review record
 One critic's verdict on one game — the heart of the model. This is where
@@ -140,10 +144,13 @@ scheme, and CI method are open. The *shape* (per-critic normalization +
 tier weighting + bootstrap-or-other CI) is agreed; the parameters are
 not.
 
-### E1. Per-review base score + per-critic normalization
-Map each review to a common scale; adjust per critic. Property-style
-tests (an inflated critic's scores move toward the mean, outputs stay in
-range).
+### E1. Per-critic normalization
+Adjust each review's score against its critic's own distribution.
+Property-style tests (an inflated critic's scores move toward the mean,
+outputs stay in range). The map from the extractor's 1–10 rating onto the
+0–100 scale is *not* here — `reviews.declared_score`/`inferred_score` are
+already 0–100, so that conversion belongs to D2. See
+`SCORING_SKETCH.md`.
 
 ### E2. Per-game aggregation with weights
 Tier-weighted combine into a single 0–100 score. Honour the minimum
