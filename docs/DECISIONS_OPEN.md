@@ -5,15 +5,22 @@ agent must NOT pick any of these unilaterally. Surface the options and
 let the maintainer choose. This list is the boundary between "agreed"
 (see `PROJECT.md`) and "still open".
 
-## Data layer
+## Ingestion artifacts
 
-- ORM / data-access choice for the SQLite schema (e.g. SQLAlchemy,
-  SQLModel, raw sqlite3 + dataclasses/attrs, or other). Not decided.
-- Concrete schema: table set, field names, types, constraints, keys.
-  Nothing here is decided. The data model is explicitly the
-  maintainer's call.
-- Which entity to build first (e.g. the imported game record vs. the
-  review record). Not decided.
+- JSON Lines is the agreed intermediate format, but the stream layout is
+  not decided: whether the extraction step re-emits enriched `RawItem`
+  records as a single stream, or writes `ExtractedReview` records to a
+  stream of their own. The load step has to read whichever it is, so
+  settle this before D2.
+- The filename convention for those files, and the setting that
+  configures it, are not decided. No code sets either today.
+- Nothing records which prompt and model produced an extracted review.
+  Prompts are versioned files (`scraping/prompts/`), but no record
+  carries the version that generated it, so re-running under a new prompt
+  is not auditable — see `SDJ_PIPELINE_NOTES.md` gap #9. Whether the
+  stamp belongs on the extracted record, on the persisted review, or in
+  per-run metadata is not decided. Settle before C3, where the values
+  first exist.
 
 ## Recommend.Games integration
 
@@ -33,6 +40,13 @@ let the maintainer choose. This list is the boundary between "agreed"
 - Source quality tiers/weights: the broad-crawl-with-weighting strategy
   is agreed, but the actual tier definitions, values, and assignment
   process are not decided.
+- The schema carries two weights — `critics.quality_weight` and
+  `outlets.quality_weight` — and how they combine into the weight a
+  single review actually gets is not decided: critic only, outlet only,
+  their product, or outlet as the fallback when the critic is unknown
+  (`reviews.critic_id` is nullable, so that case is real).
+  `SCORING_SKETCH.md` assumes one per-critic weight; the schema offers
+  two. Settle before E2.
 
 ## Sources
 

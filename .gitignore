@@ -16,5 +16,13 @@ dist/
 # Environment
 .env
 
+# Scraping artifacts — intermediate build inputs, rebuilt by re-running
+# the pipeline. The READMEs are tracked so the directories exist in
+# fresh clones.
+data/jobs/*
+!data/jobs/README.md
+data/results/*
+!data/results/README.md
+
 # Claude
 .claude/
