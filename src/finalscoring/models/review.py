@@ -6,6 +6,9 @@ from enum import StrEnum
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
+# See docs/QUOTATION_POLICY.md
+QUOTE_MAX_LENGTH = 300
+
 
 class Sentiment(StrEnum):
     negative = "negative"
@@ -38,10 +41,17 @@ class Review(SQLModel, table=True):
     def score_is_inferred(self) -> bool:
         return self.inferred_score is not None and self.declared_score is None
 
-    quote: str | None = None  # verbatim attributed snippet
+    quote: str | None = Field(default=None, max_length=QUOTE_MAX_LENGTH)  # verbatim snippet
     language: str  # ISO 639-1, e.g. "en", "de"
 
     url: str = Field(unique=True)  # deduplication key
     published_at: datetime | None = None
     scraped_at: datetime
     updated_at: datetime | None = None
+
+    @field_validator("quote")
+    @classmethod
+    def quote_within_cap(cls, v: str | None) -> str | None:
+        if v is not None and len(v) > QUOTE_MAX_LENGTH:
+            raise ValueError(f"must be at most {QUOTE_MAX_LENGTH} characters")
+        return v

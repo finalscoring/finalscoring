@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from finalscoring.models.review import Sentiment
+from finalscoring.models.review import QUOTE_MAX_LENGTH, Sentiment
 
 PROMPT_V1 = (Path(__file__).parent / "prompts" / "extract_v1.txt").read_text()
 
@@ -25,7 +25,7 @@ class ExtractedReview(BaseModel):
     rating: int = Field(ge=1, le=10)  # 1-10 LLM interpretation
 
     sentiment: Sentiment
-    quote: str | None = Field(default=None, max_length=300)  # verbatim, ≤300 chars
+    quote: str | None = Field(default=None, max_length=QUOTE_MAX_LENGTH)  # verbatim
     language: str  # ISO 639-1
 
     @field_validator("game_title", "reviewer_name")

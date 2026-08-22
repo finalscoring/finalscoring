@@ -107,6 +107,49 @@ def test_game_aggregate_review_count_zero():
         )
 
 
+def test_review_quote_over_cap():
+    from finalscoring.models.review import QUOTE_MAX_LENGTH, Review
+
+    with pytest.raises(ValidationError):
+        Review.model_validate(
+            {
+                "game_bgg_id": 1,
+                "outlet_slug": "x",
+                "language": "en",
+                "url": "https://example.com/d",
+                "scraped_at": "2026-01-01T00:00:00",
+                "quote": "x" * (QUOTE_MAX_LENGTH + 1),
+            }
+        )
+
+
+def test_review_quote_at_cap_is_accepted():
+    from finalscoring.models.review import QUOTE_MAX_LENGTH, Review
+
+    review = Review.model_validate(
+        {
+            "game_bgg_id": 1,
+            "outlet_slug": "x",
+            "language": "en",
+            "url": "https://example.com/e",
+            "scraped_at": "2026-01-01T00:00:00",
+            "quote": "x" * QUOTE_MAX_LENGTH,
+        }
+    )
+    assert review.quote is not None
+    assert len(review.quote) == QUOTE_MAX_LENGTH
+
+
+def test_extracted_review_shares_the_review_cap():
+    """The two layers must not drift — extraction imports the model's constant."""
+    from finalscoring.models.review import QUOTE_MAX_LENGTH
+    from finalscoring.scraping.extract import ExtractedReview
+
+    field = ExtractedReview.model_fields["quote"]
+    caps = [m.max_length for m in field.metadata if hasattr(m, "max_length")]
+    assert caps == [QUOTE_MAX_LENGTH]
+
+
 def test_outlet_quality_weight_zero():
     from finalscoring.models.outlet import Outlet
 
