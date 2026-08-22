@@ -98,9 +98,10 @@ The Pydantic structured-output schema for an extracted review, plus a
 versioned prompt living as a file (not a string literal), plus a unit
 test that the schema validates expected shapes. No network call yet.
 *Decision needed first:* the extracted-review field set overlaps the
-Review entity (B4); keep them consistent. Quote length should be capped
-at the schema level for copyright safety — confirm the cap with the
-maintainer.
+Review entity (B4); keep them consistent. Quote length is capped at 300
+characters at the schema level for copyright safety — settled, see
+`PROJECT.md`. The reasoning, and the practices that matter more than the
+number, are in `QUOTATION_POLICY.md`.
 
 ### C3. LLM extraction — the call
 Wire the schema to the OpenAI-compatible client with retries. Testable

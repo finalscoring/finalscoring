@@ -36,6 +36,10 @@ starting.
 - **Tooling:** ruff (lint + format), ty (type check), pytest. Package is
   typed. Keep the repo installable and green after every chunk.
 - **License:** AGPLv3, whole repo.
+- **Quoting reviews is constrained.** Verbatim pull-quotes are capped at
+  the schema level, must stay attributed, and must never substitute for
+  the source review. Read `docs/QUOTATION_POLICY.md` before touching
+  quote fields, extraction prompts, or anything that displays a quote.
 - **Don't fabricate exact content** (license text, etc.). If it can't be
   obtained correctly, leave it out and flag it.
 

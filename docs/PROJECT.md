@@ -106,6 +106,12 @@ These have been explicitly agreed by the maintainer.
 - **Languages:** multilingual and international from the beginning.
   German and English reviews from the start, designed with expansion to
   further languages in mind.
+- **Verbatim quote cap:** 300 characters, enforced at the schema level.
+  Confirmed by the maintainer on 2026-08-22. Roughly one to two
+  sentences. The cap is an engineering guardrail, not a legal threshold —
+  no such threshold exists, and what actually protects the project is
+  attribution, linking to the source review, and one quote per review.
+  See `QUOTATION_POLICY.md`.
 
 ## Existing assets the maintainer already has
 
