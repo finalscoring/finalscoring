@@ -47,14 +47,19 @@ roundup — not the critic's own review. Final Scoring needs, per review:
 the original review URL (when the roundup links/cites it), the original
 publication date (distinct from the roundup's date), and the outlet.
 None of these are in the PoC schema. The roundup text usually contains
-them; the prompt should extract them.
+them; the prompt should extract them. This is also a copyright matter,
+not only a data-modelling one: the link back to the critic's own review
+is the main defence against a quote substituting for it. See
+`QUOTATION_POLICY.md`.
 
 ### 3. No verbatim quote field
 The PoC has a model-written `summary` only. Final Scoring wants a short,
 attributed, verbatim pull-quote *in addition to* the paraphrase — and
 for copyright safety the quote must be hard-capped (cap at the schema
 level, e.g. a max length, so it can't depend on the model or a human
-remembering to be brief). Confirm the exact cap with the maintainer.
+remembering to be brief). The cap is settled at 300 characters.
+`QUOTATION_POLICY.md` covers what the cap is for and — more importantly
+— the attribution and source-linking practices that do the actual work.
 
 ### 4. `reviewer_id` is LLM-generated and will drift
 The PoC asks the model for a snake_case `reviewer_id`. Across runs the

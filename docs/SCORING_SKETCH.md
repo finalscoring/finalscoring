@@ -8,11 +8,21 @@ starting point so Phase E doesn't begin from a blank page — not a spec.
 The scoring layer is pure functions over the review data: no I/O, highly
 testable. Three stages.
 
-## Stage 1 — Per-review base score, then per-critic normalization
+## Stage 1 — Per-critic normalization
 
-**Base score.** Map each review's 1–10 rating onto a common 0–100 scale.
-A linear map with a small offset avoids the degenerate all-zeros corner
-(e.g. rating 1 → 5, rating 10 → 95). TODO: confirm the exact mapping.
+**Where the 0–100 scale comes from — not from here.** The extractor emits
+a 1–10 `rating` on `ExtractedReview`, but `reviews.declared_score` and
+`reviews.inferred_score` are already 0–100, so the conversion has to
+happen in the load step (D2), before anything is persisted. Scoring reads
+reviews that are already on the common scale. A linear map with a small
+offset avoids the degenerate all-zeros corner (e.g. rating 1 → 5, rating
+10 → 95). TODO (open): the exact mapping — and note that it is a D2
+decision, not an E1 one.
+
+**Which score to normalize.** A review may carry a declared score, an
+inferred one, or both (`Review.score_is_inferred` distinguishes the
+cases). Whether scoring prefers the declared value, treats the two
+alike, or discounts inferred ones is not decided.
 
 **Why per-critic normalization.** Critics differ systematically in
 generosity. A reviewer who almost never gives top marks conveys more when
@@ -48,9 +58,11 @@ insufficient coverage, no headline number. TODO (open): N (discussed
 informally as ~4, not confirmed).
 
 **Weighted mean.** Combine the normalized review scores with weights
-given by each critic's source-quality tier. This is where the agreed
-"broad crawl, weight by quality" strategy is realised. TODO (open): the
-tier values and how they're assigned — only the *mechanism* (a per-critic
+given by source quality. This is where the agreed "broad crawl, weight by
+quality" strategy is realised. TODO (open): the tier values and how
+they're assigned, and which of the schema's two weight fields
+(`critics.quality_weight`, `outlets.quality_weight`) a review's weight
+comes from — see `DECISIONS_OPEN.md`. Only the *mechanism* (a per-review
 weight applied in the mean) is agreed.
 
 ## Stage 3 — Confidence interval
@@ -84,7 +96,8 @@ interval); the seed convention.
 Scoring parameters (thresholds, weights, CI settings) are part of the
 methodology and should be a versioned artefact: stamp the version onto
 each computed aggregate so a parameter change is an auditable, reviewable
-diff and old aggregates can be recomputed and compared. The methodology
+diff and old aggregates can be recomputed and compared. The slot for that
+stamp already exists: `game_aggregates.scoring_version`. The methodology
 the public sees should be generated from the same source of truth, not
 maintained separately.
 
