@@ -1,21 +1,14 @@
 """Review record — one verdict on one game from one outlet."""
 
 from datetime import datetime
-from enum import StrEnum
 
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
+from finalscoring.models.enums import Sentiment
+
 # See docs/QUOTATION_POLICY.md
 QUOTE_MAX_LENGTH = 300
-
-
-class Sentiment(StrEnum):
-    negative = "negative"
-    mixed_negative = "mixed_negative"
-    neutral = "neutral"
-    mixed_positive = "mixed_positive"
-    positive = "positive"
 
 
 class Review(SQLModel, table=True):

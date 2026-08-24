@@ -25,10 +25,7 @@ def test_review_round_trip():
 
     from sqlmodel import Session, select
 
-    from finalscoring.models.critic import Critic
-    from finalscoring.models.game import Game
-    from finalscoring.models.outlet import Medium, Outlet
-    from finalscoring.models.review import Review
+    from finalscoring.models import Critic, Game, Medium, Outlet, Review
 
     engine = create_engine("sqlite:///:memory:")
     create_tables(engine)
@@ -74,9 +71,7 @@ def test_review_round_trip():
 def test_review_without_critic():
     from sqlmodel import Session, select
 
-    from finalscoring.models.game import Game
-    from finalscoring.models.outlet import Medium, Outlet
-    from finalscoring.models.review import Review
+    from finalscoring.models import Game, Medium, Outlet, Review
 
     engine = create_engine("sqlite:///:memory:")
     create_tables(engine)
@@ -125,7 +120,7 @@ def test_critic_round_trip():
 def test_outlet_round_trip():
     from sqlmodel import Session, select
 
-    from finalscoring.models.outlet import Medium, Outlet
+    from finalscoring.models import Medium, Outlet
 
     engine = create_engine("sqlite:///:memory:")
     create_tables(engine)

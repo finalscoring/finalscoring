@@ -13,10 +13,11 @@ Always use model_validate() in ingestion and scoring code.
 """
 
 from finalscoring.models.critic import Critic
+from finalscoring.models.enums import Medium, Sentiment
 from finalscoring.models.game import Game
 from finalscoring.models.game_aggregate import GameAggregate
-from finalscoring.models.outlet import Medium, Outlet
-from finalscoring.models.review import QUOTE_MAX_LENGTH, Review, Sentiment
+from finalscoring.models.outlet import Outlet
+from finalscoring.models.review import QUOTE_MAX_LENGTH, Review
 
 __all__ = [
     "QUOTE_MAX_LENGTH",

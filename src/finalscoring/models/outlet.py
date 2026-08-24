@@ -1,17 +1,9 @@
 """Outlet record — a publication, site, or channel that publishes reviews."""
 
-from enum import StrEnum
-
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
-
-class Medium(StrEnum):
-    text = "text"
-    video = "video"
-    podcast = "podcast"
-    print_ = "print"
-    social = "social"
+from finalscoring.models.enums import Medium
 
 
 class Outlet(SQLModel, table=True):
