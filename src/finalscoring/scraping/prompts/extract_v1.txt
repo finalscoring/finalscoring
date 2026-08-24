@@ -1,0 +1,65 @@
+Extract board game reviews from the following text.
+
+For each distinct (game, reviewer) pair found, extract:
+
+- game_title: the title of the game as mentioned in the text
+- reviewer_name: the reviewer's name as written; use the outlet name if no individual is named
+- outlet_name: the name of the publication or outlet, if identifiable; null if unknown
+- medium: how the review itself was published — one of: text / video / podcast / print /
+  social; null if the text does not make it clear
+- published_in: where the review appeared, as the text describes it, including issue or
+  episode details (e.g. "Spielbox 3/2024, S. 42", "Brettspiel-Podcast Folge 143"); null
+  if the text does not say
+- review_url: the address of the reviewer's own review, if the text links to or cites
+  it; null otherwise. It must point at the review itself — not the outlet's front page,
+  not a podcast's channel page, and not the page you are reading
+- published_at: the date the reviewer's own review was published, as YYYY-MM-DD, if the
+  text states it; null otherwise. This is the review's date, not the date of the article
+  you are reading. If only a month, year, or issue number is given, return null and put
+  that detail in published_in
+- raw_score: the score exactly as stated (e.g. "4/5", "8 out of 10", "sehr gut"); null if no explicit score is given
+- rating: a 1–10 integer for the reviewer's verdict. The scale is deliberately
+  lopsided — most of it describes games worth playing, because that is where the
+  useful distinctions lie. Judge by what the text does, not by how enthusiastic it
+  sounds:
+    10:  a landmark; ranked among the best the reviewer knows
+     9:  exceptional; recommended without reservation
+     8:  great; recommended warmly, any reservations are minor
+     7:  strong; recommended, with reservations worth stating
+     6:  good; recommended for the right player
+     5:  okay; would play again but does not press it on anyone
+     4:  would not play again, though it has real merits
+     3:  poor; recommends against it
+   1–2:  nothing to salvage
+- sentiment: one of: negative / mixed_negative / neutral / mixed_positive / positive
+- quote: a verbatim sentence or short phrase (≤300 characters) from the text that best
+  captures the reviewer's opinion; must be copied exactly, do not paraphrase
+- language: ISO 639-1 two-letter code for the language of the review (e.g. "de", "en")
+
+Rules:
+- Extract every (game, reviewer) pair present, even if a single article covers multiple
+  games or multiple reviewers.
+- If a reviewer is not named but an opinion is clearly attributed, use the outlet name
+  as reviewer_name.
+- quote must be a direct copy from the text. If no suitable verbatim passage exists,
+  set quote to null.
+- The line runs between 4 and 5: 5 is the lowest rating for a game the reviewer would
+  play again, 4 the highest for one they would not. Settle that question first, then
+  choose within the half it falls in.
+- A conflicted review is not automatically a 5. Decide whether the recommendation
+  survives the criticism; if it does, rate 5 or above, and if it does not, rate 4 or
+  below.
+- Rate the verdict, not the reviewer's taste. "A brilliant design that I personally
+  find exhausting" is a strong verdict, not a lukewarm one.
+- Treat comparisons as relative. "Better than its predecessor" says nothing on its own
+  about where the game belongs on the scale.
+- Give a rating whether or not a score is stated. Where both exist they are checked
+  against each other, so judge the verdict independently rather than restating the
+  number.
+- Text that describes a game without judging it — a preview, an announcement, a rules
+  summary, a list of what is in the box — is not a review. Do not extract it.
+- Never invent or guess a review_url, published_in, or published_at. Return them only
+  when the text supplies them; otherwise null.
+- A review with no link is normal — print reviews have no address at all. Record what
+  the text does say in published_in rather than forcing a url.
+- If the text contains no board game reviews, return an empty list.
