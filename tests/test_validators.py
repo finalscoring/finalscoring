@@ -17,7 +17,7 @@ def test_review_declared_score_below_zero():
                 "game_bgg_id": 1,
                 "outlet_slug": "x",
                 "language": "en",
-                "url": "https://example.com/a",
+                "source_url": "https://example.com/a",
                 "scraped_at": "2026-01-01T00:00:00",
                 "declared_score": -1.0,
             }
@@ -33,7 +33,7 @@ def test_review_declared_score_above_100():
                 "game_bgg_id": 1,
                 "outlet_slug": "x",
                 "language": "en",
-                "url": "https://example.com/b",
+                "source_url": "https://example.com/b",
                 "scraped_at": "2026-01-01T00:00:00",
                 "declared_score": 100.1,
             }
@@ -49,7 +49,7 @@ def test_review_inferred_score_out_of_range():
                 "game_bgg_id": 1,
                 "outlet_slug": "x",
                 "language": "en",
-                "url": "https://example.com/c",
+                "source_url": "https://example.com/c",
                 "scraped_at": "2026-01-01T00:00:00",
                 "inferred_score": 101.0,
             }
@@ -116,7 +116,7 @@ def test_review_quote_over_cap():
                 "game_bgg_id": 1,
                 "outlet_slug": "x",
                 "language": "en",
-                "url": "https://example.com/d",
+                "source_url": "https://example.com/d",
                 "scraped_at": "2026-01-01T00:00:00",
                 "quote": "x" * (QUOTE_MAX_LENGTH + 1),
             }
@@ -131,7 +131,7 @@ def test_review_quote_at_cap_is_accepted():
             "game_bgg_id": 1,
             "outlet_slug": "x",
             "language": "en",
-            "url": "https://example.com/e",
+            "source_url": "https://example.com/e",
             "scraped_at": "2026-01-01T00:00:00",
             "quote": "x" * QUOTE_MAX_LENGTH,
         }
