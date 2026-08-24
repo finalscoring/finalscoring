@@ -19,6 +19,15 @@ offset avoids the degenerate all-zeros corner (e.g. rating 1 → 5, rating
 10 → 95). TODO (open): the exact mapping — and note that it is a D2
 decision, not an E1 one.
 
+**That 1–10 scale is not linear in quality.** The extraction prompt
+deliberately spends six of its ten levels on games the reviewer would
+play again and four on those they would not, because that is where the
+distinctions are worth drawing. A linear map still reads honestly — okay
+lands near 45, great near 75 — but do not assume equal steps are equal
+intervals of quality, and expect ratings to bunch in 5–10. That
+compression narrows each critic's personal spread, so the small-sample
+fallback below fires more often than a symmetric scale would trigger it.
+
 **Which score to normalize.** A review may carry a declared score, an
 inferred one, or both (`Review.score_is_inferred` distinguishes the
 cases). Whether scoring prefers the declared value, treats the two

@@ -132,6 +132,11 @@ blocks this chunk. See `DECISIONS_OPEN.md`.
 ### D2. JSON Lines → SQLite load
 Read extracted reviews, resolve game + critic, dedupe, insert. The step
 that turns intermediate files into the queryable database.
+*Decisions needed first:* the stream layout, the `ExtractedReview` →
+`Review` field mapping, how `raw_score` is parsed onto the 0–100 scale,
+and the dedupe key with its which-one-wins rule — the schema carries no
+uniqueness constraint, so this step is the only thing standing between a
+twice-cited critic and a skewed aggregate. See `DECISIONS_OPEN.md`.
 
 ---
 
