@@ -5,8 +5,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from finalscoring.models.outlet import Medium
-from finalscoring.models.review import Sentiment
+from finalscoring.models import Medium, Sentiment
 from finalscoring.scraping.extract import PROMPT_V1, ExtractedReview, ExtractionResult
 
 

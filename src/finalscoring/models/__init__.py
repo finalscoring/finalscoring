@@ -1,4 +1,7 @@
-"""Public re-exports for all SQLModel table models.
+"""Public re-exports for the SQLModel table models, plus the vocabulary the
+ingestion and scoring layers share with them — the enums and the quote cap.
+Import those from here rather than from the module that happens to define
+them, so they can be moved without touching callers.
 
 Construction note: SQLModel table models bypass Pydantic's __init__, so field
 validators (ge, le, gt, @field_validator) only fire when using model_validate():
@@ -12,7 +15,16 @@ Always use model_validate() in ingestion and scoring code.
 from finalscoring.models.critic import Critic
 from finalscoring.models.game import Game
 from finalscoring.models.game_aggregate import GameAggregate
-from finalscoring.models.outlet import Outlet
-from finalscoring.models.review import Review
+from finalscoring.models.outlet import Medium, Outlet
+from finalscoring.models.review import QUOTE_MAX_LENGTH, Review, Sentiment
 
-__all__ = ["Critic", "Game", "GameAggregate", "Outlet", "Review"]
+__all__ = [
+    "QUOTE_MAX_LENGTH",
+    "Critic",
+    "Game",
+    "GameAggregate",
+    "Medium",
+    "Outlet",
+    "Review",
+    "Sentiment",
+]

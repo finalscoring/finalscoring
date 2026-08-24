@@ -7,8 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from finalscoring.models.outlet import Medium
-from finalscoring.models.review import QUOTE_MAX_LENGTH, Sentiment
+from finalscoring.models import QUOTE_MAX_LENGTH, Medium, Sentiment
 
 PROMPT_V1 = (Path(__file__).parent / "prompts" / "extract_v1.txt").read_text()
 
