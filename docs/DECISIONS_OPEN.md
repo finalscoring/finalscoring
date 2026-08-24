@@ -12,8 +12,6 @@ let the maintainer choose. This list is the boundary between "agreed"
   records as a single stream, or writes `ExtractedReview` records to a
   stream of their own. The load step has to read whichever it is, so
   settle this before D2.
-- The filename convention for those files, and the setting that
-  configures it, are not decided. No code sets either today.
 - Nothing records which prompt and model produced an extracted review.
   Prompts are versioned files (`scraping/prompts/`), but no record
   carries the version that generated it, so re-running under a new prompt
