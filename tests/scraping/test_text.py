@@ -46,3 +46,27 @@ def test_blank_runs_are_collapsed():
 def test_empty_html_gives_empty_text():
     assert html_to_text("") == ""
     assert html_to_text("<article></article>") == ""
+
+
+def test_footnote_markers_are_bracketed():
+    """A bare digit glued to a sentence reads as a typo, not a citation."""
+    html = (
+        '<p>sagt er.<sup class="fn" data-fn="abc-123">'
+        '<a id="abc-123-link" href="#abc-123">5</a></sup></p>'
+    )
+
+    assert html_to_text(html) == "sagt er. [5]"
+
+
+def test_multiple_footnote_markers_in_one_sentence():
+    html = (
+        '<p>Meinungen<sup data-fn="a"><a href="#a">1</a></sup> gehen'
+        ' auseinander<sup data-fn="b"><a href="#b">2</a></sup>.</p>'
+    )
+
+    assert html_to_text(html) == "Meinungen [1] gehen auseinander [2]."
+
+
+def test_plain_superscript_is_not_bracketed():
+    """A footnote and an exponent both use <sup> — only data-fn is a citation."""
+    assert html_to_text("<p>10<sup>2</sup> Punkte</p>") == "102 Punkte"
