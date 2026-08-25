@@ -19,9 +19,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "pydantic>=2.0",
-    "scrapy>=2.18.0",
-    "sqlmodel>=0.0.38",
+    "pydantic>=2.0,<3",
+    "scrapy>=2.18,<3",
+    "sqlalchemy>=2.0,<3",
+    "sqlmodel>=0.0.38,<0.1",
+    "twisted>=26.4",
+    "w3lib>=2.4",
 ]
 
 [project.urls]
