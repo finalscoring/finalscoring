@@ -12,8 +12,6 @@ let the maintainer choose. This list is the boundary between "agreed"
   records as a single stream, or writes `ExtractedReview` records to a
   stream of their own. The load step has to read whichever it is, so
   settle this before D2.
-- The filename convention for those files, and the setting that
-  configures it, are not decided. No code sets either today.
 - Nothing records which prompt and model produced an extracted review.
   Prompts are versioned files (`scraping/prompts/`), but no record
   carries the version that generated it, so re-running under a new prompt
@@ -46,6 +44,15 @@ let the maintainer choose. This list is the boundary between "agreed"
   looks: one critic counted twice moves a game's aggregate *and* pads
   that critic's own distribution, skewing their normalization. See
   `SDJ_PIPELINE_NOTES.md` gap #7. Settle before D2.
+- Translated quotes are not handled. When a German roundup cites an
+  English-language critic, the jury renders their words in German, so
+  the "verbatim" quote is a translation attributed to that critic —
+  which `QUOTATION_POLICY.md` requires be copied exactly, and which
+  misrepresents them further than a paraphrase would. Whether extraction
+  should flag such a quote, store it labelled, or drop it is not
+  decided. The footnote links the SdJ spider will carry are a better
+  signal than asking the model to guess, so settle this once they exist
+  and before C3 writes a corpus.
 - `medium` now exists on both `outlets` and `reviews`, and which is
   authoritative is not decided — an outlet spans several media, so the
   per-review value is the more precise one, but the outlet value is what

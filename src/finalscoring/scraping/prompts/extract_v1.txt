@@ -34,7 +34,8 @@ For each distinct (game, reviewer) pair found, extract:
 - sentiment: one of: negative / mixed_negative / neutral / mixed_positive / positive
 - quote: a verbatim sentence or short phrase (≤300 characters) from the text that best
   captures the reviewer's opinion; must be copied exactly, do not paraphrase
-- language: ISO 639-1 two-letter code for the language of the review (e.g. "de", "en")
+- language: ISO 639-1 two-letter code for the language of the text you are quoting,
+  not the language the critic originally published in (e.g. "de", "en")
 
 Rules:
 - Extract every (game, reviewer) pair present, even if a single article covers multiple

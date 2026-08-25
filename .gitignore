@@ -24,5 +24,9 @@ data/jobs/*
 data/results/*
 !data/results/README.md
 
+# The built database — the product of a build, not an input to one. Rebuilt
+# from sources every time, never edited in place.
+data/*.db
+
 # Claude
 .claude/

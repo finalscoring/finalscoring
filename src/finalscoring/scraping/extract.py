@@ -37,7 +37,7 @@ class ExtractedReview(BaseModel):
 
     sentiment: Sentiment
     quote: str | None = Field(default=None, max_length=QUOTE_MAX_LENGTH)  # verbatim
-    language: str  # ISO 639-1
+    language: str  # ISO 639-1 of the quoted text
 
     @field_validator("game_title", "reviewer_name")
     @classmethod
