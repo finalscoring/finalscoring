@@ -150,6 +150,7 @@ class SpielDesJahresSpider(SitemapSpider):
             "locale": yoast.get("og_locale"),
             "image_url": og_image[0].get("url") if og_image else None,
             "schema_org": (yoast.get("schema") or {}).get("@graph"),
+            "extra": {"wp_json": post},
         }
         if raw_text:
             updates["raw_text"] = raw_text

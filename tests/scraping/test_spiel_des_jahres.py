@@ -105,6 +105,17 @@ def test_rest_content_wins_over_the_page():
     assert merged.published_at == datetime(2026, 4, 28, 7, 15, 29, tzinfo=UTC)
 
 
+def test_full_rest_payload_is_kept_verbatim():
+    """We don't know today what a later extraction pass will need from it."""
+    spider = _spider()
+    page_item = spider.item_from_page(_page_response())
+    assert page_item is not None
+
+    merged = spider.merge_wp_json(page_item, WP_POST)
+
+    assert merged.extra == {"wp_json": WP_POST}
+
+
 def test_naive_rest_timestamps_are_treated_as_utc():
     """date_gmt carries no offset but is UTC by definition."""
     spider = _spider()
@@ -125,6 +136,7 @@ def test_empty_rest_content_keeps_the_page_text():
     merged = spider.merge_wp_json(page_item, {"content": {"rendered": ""}})
 
     assert merged.raw_text == "Aus der Seite."
+    assert merged.extra == {"wp_json": {"content": {"rendered": ""}}}
 
 
 def test_roundup_follows_the_rest_link():
