@@ -35,7 +35,7 @@ class Review(SQLModel, table=True):
         return self.inferred_score is not None and self.declared_score is None
 
     quote: str | None = Field(default=None, max_length=QUOTE_MAX_LENGTH)  # verbatim snippet
-    language: str  # ISO 639-1, e.g. "en", "de"
+    language: str  # ISO 639-1 of the stored text, not of the critic's original
 
     # Provenance of the review itself. A print review has no address at all,
     # so published_in carries the attribution a link cannot.

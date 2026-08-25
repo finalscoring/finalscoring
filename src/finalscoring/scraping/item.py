@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 _ISO_639_1 = re.compile(r"^[a-z]{2}$")
+_LOCALE = re.compile(r"^[a-z]{2}(-[A-Za-z0-9]{2,8})*$")
 
 
 class RawItem(BaseModel):
@@ -25,6 +26,7 @@ class RawItem(BaseModel):
     description: str | None = None
     published_at: datetime | None = None
     language: str | None = None  # ISO 639-1, if detectable at scrape time
+    locale: str | None = None  # BCP 47, e.g. "de-AT" — regional variant matters
     image_url: str | None = None  # og:image / thumbnail
     tags: list[str] = Field(default_factory=list)
     duration_seconds: int | None = None  # audio / video content
@@ -53,3 +55,18 @@ class RawItem(BaseModel):
         if v is not None and not _ISO_639_1.match(v):
             raise ValueError("language must be an ISO 639-1 two-letter code, e.g. 'en'")
         return v
+
+    @field_validator("locale")
+    @classmethod
+    def valid_locale(cls, v: str | None) -> str | None:
+        # Sources spell it "de_DE" (Open Graph) or "de-DE" (html lang).
+        if v is None:
+            return None
+        normalised = v.strip().replace("_", "-")
+        if not normalised:
+            return None
+        language, _, region = normalised.partition("-")
+        normalised = f"{language.lower()}-{region.upper()}" if region else language.lower()
+        if not _LOCALE.match(normalised):
+            raise ValueError("locale must be a BCP 47 tag, e.g. 'de-AT'")
+        return normalised

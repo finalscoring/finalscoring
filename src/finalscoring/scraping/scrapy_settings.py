@@ -9,13 +9,9 @@ from typing import Any
 
 from finalscoring.settings import Settings, load_settings
 
-# Batch the feed so a long crawl does not accumulate into one enormous file,
-# and so an interrupted run leaves its completed batches behind.
+# So an interrupted crawl leaves its completed batches behind.
 FEED_BATCH_ITEM_COUNT = 10_000
 
-# %(name)s is the spider's name, %(time)s the crawl start, %(batch_id)s the
-# batch counter — all substituted by Scrapy. This is the filename convention
-# `docs/DECISIONS_OPEN.md` left to the first spider.
 FEED_TEMPLATE = "%(name)s-%(time)s-%(batch_id)05d.jl"
 
 

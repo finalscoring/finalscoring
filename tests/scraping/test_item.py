@@ -91,3 +91,31 @@ def test_invalid_language_rejected():
 def test_uppercase_language_rejected():
     with pytest.raises(ValidationError):
         _item(language="EN")
+
+
+@pytest.mark.parametrize(
+    ("given", "expected"),
+    [
+        ("de_DE", "de-DE"),
+        ("de-DE", "de-DE"),
+        ("DE_de", "de-DE"),
+        ("de", "de"),
+        ("  en_GB  ", "en-GB"),
+    ],
+)
+def test_locale_is_normalised_to_bcp_47(given: str, expected: str):
+    """Open Graph writes de_DE, html lang writes de-DE; both mean the same thing."""
+    assert _item(locale=given).locale == expected
+
+
+def test_locale_keeps_the_region_language_discards():
+    """de-AT and de-CH are different outlets, so the region has to survive."""
+    item = _item(language="de", locale="de-AT")
+
+    assert item.language == "de"
+    assert item.locale == "de-AT"
+
+
+def test_invalid_locale_rejected():
+    with pytest.raises(ValidationError):
+        _item(locale="Deutschland")
