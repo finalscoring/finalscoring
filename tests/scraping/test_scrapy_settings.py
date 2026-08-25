@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from finalscoring.scraping.dupefilter import SitemapAwareDupeFilter
 from finalscoring.scraping.scrapy_settings import (
     FEED_TEMPLATE,
     scrapy_settings,
@@ -62,3 +63,10 @@ def test_settings_fall_back_to_the_environment(monkeypatch):
     monkeypatch.setenv("FS_SCRAPER_DELAY", "3.5")
 
     assert scrapy_settings("spiel-des-jahres")["DOWNLOAD_DELAY"] == 3.5
+
+
+def test_sitemap_aware_dupefilter_is_used():
+    """Otherwise JOBDIR fingerprints the sitemap forever after the first crawl."""
+    assert (
+        scrapy_settings("spiel-des-jahres", SETTINGS)["DUPEFILTER_CLASS"] is SitemapAwareDupeFilter
+    )

@@ -7,6 +7,7 @@ scattered across each spider.
 
 from typing import Any
 
+from finalscoring.scraping.dupefilter import SitemapAwareDupeFilter
 from finalscoring.settings import Settings, load_settings
 
 # So an interrupted crawl leaves its completed batches behind.
@@ -29,6 +30,7 @@ def scrapy_settings(spider_name: str, settings: Settings | None = None) -> dict[
         "DOWNLOAD_DELAY": settings.scraper_delay,
         "CONCURRENT_REQUESTS_PER_DOMAIN": settings.scraper_concurrency,
         "JOBDIR": str(settings.jobs_dir / spider_name),
+        "DUPEFILTER_CLASS": SitemapAwareDupeFilter,
         "FEED_EXPORT_BATCH_ITEM_COUNT": FEED_BATCH_ITEM_COUNT,
         "FEEDS": {
             str(settings.results_dir / FEED_TEMPLATE): {
