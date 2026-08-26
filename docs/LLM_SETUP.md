@@ -34,7 +34,7 @@ then extract from one of them in a REPL:
 ```python
 import json
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.llm import ReviewExtractor
+from finalscoring.extraction import ReviewExtractor
 
 with open("data/results/<the file the crawl wrote>.jl") as f:
     item = RawItem.model_validate(json.loads(f.readline()))
@@ -121,7 +121,7 @@ curl -s http://localhost:11434/v1/chat/completions \
 
 A server that rejects `json_schema` may still accept
 `{"type": "json_object"}`. Either way the pydantic validation in
-`scraping/llm.py` is what actually enforces the shape — the schema is
+`extraction/llm.py` is what actually enforces the shape — the schema is
 guidance, so a weaker server costs retries rather than correctness.
 
 ## When it does not work

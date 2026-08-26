@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
-from finalscoring.scraping.extract import ExtractionResult
+from finalscoring.extraction.schema import ExtractionResult
 
 
 def prompt_sha(prompt_text: str) -> str:

@@ -3,8 +3,8 @@
 from datetime import UTC
 from typing import Any
 
-from finalscoring.scraping.extract import PROMPT_V1, ExtractedReview, ExtractionResult
-from finalscoring.scraping.extraction_record import ExtractionRecord, prompt_sha
+from finalscoring.extraction.record import ExtractionRecord, prompt_sha
+from finalscoring.extraction.schema import PROMPT_V1, ExtractedReview, ExtractionResult
 
 
 def _record(**kwargs: Any) -> ExtractionRecord:

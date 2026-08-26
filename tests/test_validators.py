@@ -142,8 +142,8 @@ def test_review_quote_at_cap_is_accepted():
 
 def test_extracted_review_shares_the_review_cap():
     """The two layers must not drift — extraction imports the model's constant."""
+    from finalscoring.extraction.schema import ExtractedReview
     from finalscoring.models.review import QUOTE_MAX_LENGTH
-    from finalscoring.scraping.extract import ExtractedReview
 
     field = ExtractedReview.model_fields["quote"]
     caps = [m.max_length for m in field.metadata if hasattr(m, "max_length")]

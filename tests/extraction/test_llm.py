@@ -10,9 +10,9 @@ import pytest
 from openai import APITimeoutError, NotFoundError, OpenAI
 from tenacity import wait_none
 
-from finalscoring.scraping.extraction_record import prompt_sha
+from finalscoring.extraction.llm import ExtractionFailed, ReviewExtractor
+from finalscoring.extraction.record import prompt_sha
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.llm import ExtractionFailed, ReviewExtractor
 from finalscoring.settings import Settings
 
 SETTINGS = Settings(
