@@ -5,8 +5,9 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
 
+import httpx2
 import pytest
-from openai import OpenAI
+from openai import APITimeoutError, NotFoundError, OpenAI
 from tenacity import wait_none
 
 from finalscoring.scraping.extraction_record import prompt_sha
@@ -193,3 +194,42 @@ def test_an_empty_review_list_is_a_valid_answer():
     record = extractor.extract(_item())
 
     assert record.result.reviews == []
+
+
+def _not_found() -> NotFoundError:
+    request = httpx2.Request("POST", "http://localhost:11434/v1/chat/completions")
+    response = httpx2.Response(404, request=request, json={"error": {"message": "no model"}})
+    return NotFoundError("model not found", response=response, body=None)
+
+
+def test_a_timeout_is_retried():
+    """Slow once is not the same as broken."""
+    extractor, stub = _extractor(
+        APITimeoutError(request=httpx2.Request("POST", "http://localhost/")),
+        json.dumps(ONE_REVIEW),
+    )
+
+    record = extractor.extract(_item())
+
+    assert len(record.result.reviews) == 1
+    assert len(stub.calls) == 2
+
+
+def test_a_missing_model_fails_without_retrying():
+    """Retrying a 404 spends three timeouts to learn what the first one said."""
+    extractor, stub = _extractor(_not_found(), _not_found(), _not_found())
+
+    with pytest.raises(ExtractionFailed):
+        extractor.extract(_item())
+
+    assert len(stub.calls) == 1
+
+
+def test_sdk_errors_surface_as_extraction_failed():
+    """Callers handle one exception type, not the SDK's hierarchy."""
+    extractor, _stub = _extractor(_not_found())
+
+    with pytest.raises(ExtractionFailed) as excinfo:
+        extractor.extract(_item())
+
+    assert "https://example.com/roundup" in str(excinfo.value)

@@ -13,7 +13,13 @@ import json
 import logging
 from typing import Any
 
-from openai import OpenAI
+from openai import (
+    APIConnectionError,
+    InternalServerError,
+    OpenAI,
+    OpenAIError,
+    RateLimitError,
+)
 from pydantic import ValidationError
 from tenacity import (
     RetryError,
@@ -46,8 +52,21 @@ _RESPONSE_FORMAT: dict[str, Any] = {
 }
 
 
+# Worth another attempt: a bad shape, an unreadable answer, a server that was
+# briefly unreachable or busy. A 404 for a missing model or a 401 is not here —
+# retrying those just wastes three timeouts on a certainty.
+_RETRYABLE = (
+    ValidationError,
+    ValueError,
+    APIConnectionError,  # includes APITimeoutError
+    RateLimitError,
+    InternalServerError,
+    OSError,
+)
+
+
 class ExtractionFailed(Exception):
-    """The model never returned something that validated."""
+    """Extraction did not produce a validated result."""
 
 
 class ReviewExtractor:
@@ -82,6 +101,10 @@ class ReviewExtractor:
                 f"extraction failed for {item.url} after {self.settings.llm_max_attempts} attempts"
             )
             raise ExtractionFailed(message) from exc.last_attempt.exception()
+        except OpenAIError as exc:
+            # Nothing retryable — a missing model, a rejected key, a malformed
+            # request. Still ours to report, not the SDK's to raise at callers.
+            raise ExtractionFailed(f"extraction failed for {item.url}: {exc}") from exc
 
         return ExtractionRecord(
             source_url=item.url,
@@ -93,7 +116,7 @@ class ReviewExtractor:
 
     def _call_with_retries(self, raw_text: str) -> ExtractionResult:
         retrying = retry(
-            retry=retry_if_exception_type((ValidationError, ValueError, OSError)),
+            retry=retry_if_exception_type(_RETRYABLE),
             wait=self.wait,
             stop=stop_after_attempt(self.settings.llm_max_attempts),
             reraise=False,
