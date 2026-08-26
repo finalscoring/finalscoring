@@ -5,21 +5,6 @@ agent must NOT pick any of these unilaterally. Surface the options and
 let the maintainer choose. This list is the boundary between "agreed"
 (see `PROJECT.md`) and "still open".
 
-## Ingestion artifacts
-
-- JSON Lines is the agreed intermediate format, but the stream layout is
-  not decided: whether the extraction step re-emits enriched `RawItem`
-  records as a single stream, or writes `ExtractedReview` records to a
-  stream of their own. The load step has to read whichever it is, so
-  settle this before D2.
-- Nothing records which prompt and model produced an extracted review.
-  Prompts are versioned files (`scraping/prompts/`), but no record
-  carries the version that generated it, so re-running under a new prompt
-  is not auditable — see `SDJ_PIPELINE_NOTES.md` gap #9. Whether the
-  stamp belongs on the extracted record, on the persisted review, or in
-  per-run metadata is not decided. Settle before C3, where the values
-  first exist.
-
 ## Loading reviews
 
 - How an `ExtractedReview` becomes a `Review` is not decided. The

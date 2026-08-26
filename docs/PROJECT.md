@@ -82,6 +82,16 @@ These have been explicitly agreed by the maintainer.
   `critics`, `reviews`, `game_aggregates`. Reviews keep `declared_score`
   and `inferred_score` as separate nullable fields, both on the 0–100
   scale, so an inferred rating can never masquerade as a declared one.
+- **Extraction output format:** the extraction step writes
+  `ExtractionRecord` (`scraping/extraction_record.py`) as its own JSON
+  Lines stream, one line per raw item processed — not an enriched
+  `RawItem`. Each record wraps the model's `ExtractionResult` in an
+  envelope stamped by the *caller*: `source_url` (joins back to the
+  `RawItem`), `model`, `prompt_version`, and `prompt_sha` — a hash of the
+  prompt file's actual bytes, so an in-place edit can't go unrecorded.
+  Nothing on `ExtractedReview` itself describes the run: asking the model
+  to report its own version invites the same fabrication risk as an
+  LLM-invented reviewer id.
 - **Repository structure:** monorepo. One Python package for the backend;
   the frontend, when it exists, lives in its own top-level directory in
   the same repo.
