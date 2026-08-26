@@ -11,6 +11,9 @@ class Settings:
 
     llm_base_url: str
     llm_model: str
+    llm_api_key: str
+    llm_timeout: float
+    llm_max_attempts: int
     scraper_user_agent: str
     scraper_delay: float
     scraper_concurrency: int
@@ -25,12 +28,16 @@ DEFAULT_USER_AGENT = "FinalScoring/0.0.1 (+https://finalscoring.games/)"
 def load_settings() -> Settings:
     """Construct a Settings instance from the current environment.
 
-    Raises ValueError if FS_SCRAPER_DELAY or FS_SCRAPER_CONCURRENCY is set to a
-    value that is not a number.
+    Raises ValueError if any of the numeric variables is set to a value that
+    is not a number.
     """
     return Settings(
         llm_base_url=os.environ.get("FS_LLM_BASE_URL", "http://localhost:11434/v1"),
         llm_model=os.environ.get("FS_LLM_MODEL", "llama3.2"),
+        # Local servers ignore the key but the OpenAI client requires one.
+        llm_api_key=os.environ.get("FS_LLM_API_KEY", "not-needed"),
+        llm_timeout=float(os.environ.get("FS_LLM_TIMEOUT", "120.0")),
+        llm_max_attempts=int(os.environ.get("FS_LLM_MAX_ATTEMPTS", "3")),
         scraper_user_agent=os.environ.get("FS_SCRAPER_USER_AGENT", DEFAULT_USER_AGENT),
         scraper_delay=float(os.environ.get("FS_SCRAPER_DELAY", "1.0")),
         scraper_concurrency=int(os.environ.get("FS_SCRAPER_CONCURRENCY", "4")),

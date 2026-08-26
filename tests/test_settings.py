@@ -7,6 +7,9 @@ from finalscoring.settings import DEFAULT_USER_AGENT, Settings, load_settings
 ENV_KEYS = (
     "FS_LLM_BASE_URL",
     "FS_LLM_MODEL",
+    "FS_LLM_API_KEY",
+    "FS_LLM_TIMEOUT",
+    "FS_LLM_MAX_ATTEMPTS",
     "FS_SCRAPER_USER_AGENT",
     "FS_SCRAPER_DELAY",
     "FS_SCRAPER_CONCURRENCY",
@@ -19,6 +22,9 @@ ENV_KEYS = (
 def test_settings_reads_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FS_LLM_BASE_URL", "http://gpu-server:8000/v1")
     monkeypatch.setenv("FS_LLM_MODEL", "qwen2.5-7b")
+    monkeypatch.setenv("FS_LLM_API_KEY", "sk-test")
+    monkeypatch.setenv("FS_LLM_TIMEOUT", "30.5")
+    monkeypatch.setenv("FS_LLM_MAX_ATTEMPTS", "5")
     monkeypatch.setenv("FS_SCRAPER_USER_AGENT", "TestBot/1.0")
     monkeypatch.setenv("FS_SCRAPER_DELAY", "2.5")
     monkeypatch.setenv("FS_SCRAPER_CONCURRENCY", "8")
@@ -30,6 +36,9 @@ def test_settings_reads_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert s.llm_base_url == "http://gpu-server:8000/v1"
     assert s.llm_model == "qwen2.5-7b"
+    assert s.llm_api_key == "sk-test"  # pragma: allowlist secret
+    assert s.llm_timeout == 30.5
+    assert s.llm_max_attempts == 5
     assert s.scraper_user_agent == "TestBot/1.0"
     assert s.scraper_delay == 2.5
     assert s.scraper_concurrency == 8
@@ -48,6 +57,9 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert s.llm_base_url == "http://localhost:11434/v1"
     assert s.llm_model == "llama3.2"
+    assert s.llm_api_key == "not-needed"  # pragma: allowlist secret
+    assert s.llm_timeout == 120.0
+    assert s.llm_max_attempts == 3
     assert s.scraper_user_agent == DEFAULT_USER_AGENT
     assert s.scraper_delay == 1.0
     assert s.scraper_concurrency == 4

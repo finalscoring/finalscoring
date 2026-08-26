@@ -1,0 +1,116 @@
+"""The extraction call: raw text in, a validated ExtractionRecord out.
+
+Written against /v1/chat/completions rather than /v1/responses because every
+OpenAI-compatible server implements it, which is what keeps the model and the
+machine a config choice rather than a code change.
+
+The JSON schema is sent with the request, but pydantic validation is the
+actual guarantee: a server with weak or absent constrained decoding degrades
+into more retries, never into silently wrong data.
+"""
+
+import json
+import logging
+from typing import Any
+
+from openai import OpenAI
+from pydantic import ValidationError
+from tenacity import (
+    RetryError,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+from tenacity.wait import wait_base
+
+from finalscoring.scraping.extract import PROMPT_V1, ExtractionResult
+from finalscoring.scraping.extraction_record import ExtractionRecord, prompt_sha
+from finalscoring.scraping.item import RawItem
+from finalscoring.settings import Settings, load_settings
+
+LOGGER = logging.getLogger(__name__)
+
+PROMPT_V1_VERSION = "extract_v1"
+
+# Not strict: pydantic's schema uses defaults and anyOf-null for optional
+# fields, which strict mode rejects outright. The schema is guidance here;
+# ExtractionResult.model_validate is what actually enforces the shape.
+_RESPONSE_FORMAT: dict[str, Any] = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "extraction_result",
+        "strict": False,
+        "schema": ExtractionResult.model_json_schema(),
+    },
+}
+
+
+class ExtractionFailed(Exception):
+    """The model never returned something that validated."""
+
+
+class ReviewExtractor:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        client: OpenAI | None = None,
+        wait: wait_base | None = None,
+    ) -> None:
+        self.settings = settings if settings is not None else load_settings()
+        self.client = client if client is not None else self._build_client(self.settings)
+        self.wait = wait if wait is not None else wait_exponential(multiplier=1, min=2, max=30)
+        self.prompt = PROMPT_V1
+        self.prompt_version = PROMPT_V1_VERSION
+        self.prompt_sha = prompt_sha(self.prompt)
+
+    @staticmethod
+    def _build_client(settings: Settings) -> OpenAI:
+        return OpenAI(
+            base_url=settings.llm_base_url,
+            api_key=settings.llm_api_key,
+            timeout=settings.llm_timeout,
+            max_retries=0,  # tenacity owns retrying, so it happens in one place
+        )
+
+    def extract(self, item: RawItem) -> ExtractionRecord:
+        """Extract every review in one raw item. Raises ExtractionFailed."""
+        try:
+            result = self._call_with_retries(item.raw_text)
+        except RetryError as exc:
+            message = (
+                f"extraction failed for {item.url} after {self.settings.llm_max_attempts} attempts"
+            )
+            raise ExtractionFailed(message) from exc.last_attempt.exception()
+
+        return ExtractionRecord(
+            source_url=item.url,
+            model=self.settings.llm_model,
+            prompt_version=self.prompt_version,
+            prompt_sha=self.prompt_sha,
+            result=result,
+        )
+
+    def _call_with_retries(self, raw_text: str) -> ExtractionResult:
+        retrying = retry(
+            retry=retry_if_exception_type((ValidationError, ValueError, OSError)),
+            wait=self.wait,
+            stop=stop_after_attempt(self.settings.llm_max_attempts),
+            reraise=False,
+        )
+        return retrying(self._call)(raw_text)
+
+    def _call(self, raw_text: str) -> ExtractionResult:
+        completion = self.client.chat.completions.create(
+            model=self.settings.llm_model,
+            messages=[
+                {"role": "system", "content": self.prompt},
+                {"role": "user", "content": raw_text},
+            ],
+            response_format=_RESPONSE_FORMAT,  # ty: ignore[invalid-argument-type]
+        )
+        content = completion.choices[0].message.content
+        if not content:
+            raise ValueError("model returned an empty response")
+
+        return ExtractionResult.model_validate(json.loads(content))
