@@ -49,5 +49,7 @@ starting.
   learn from, not components to port wholesale. See `docs/SDJ_PIPELINE_NOTES.md`.
 - Game data and BGG matching come from the maintainer's Recommend.Games
   project, not rebuilt. Integration mechanism is undecided.
+- Running the extraction step needs a local LLM; setup is in
+  `docs/LLM_SETUP.md`.
 - Scoring logic is sketched in `docs/SCORING_SKETCH.md`; the algorithm shape
   is agreed but all parameters are open.
