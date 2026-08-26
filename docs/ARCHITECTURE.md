@@ -75,7 +75,7 @@ and knowing which is which is most of the mental model.
   Lines. Deliberately fat: `raw_text` is what the model reads, while
   `raw_html` and the og/oembed/schema.org fields are kept so a page can
   be re-extracted under a new prompt without re-crawling it.
-- **`ExtractedReview`** / **`ExtractionResult`** (`scraping/extract.py`)
+- **`ExtractedReview`** / **`ExtractionResult`** (`extraction/schema.py`)
   — extraction → load. Also plain Pydantic, also JSON Lines. One article
   can yield many: the unit is a (game, reviewer) pair, not a page.
 - **The SQLModel tables** (`models/`) — `games`, `outlets`, `critics`,
@@ -89,7 +89,7 @@ as one stream or writes a second stream of its own is not settled — see
 `DECISIONS_OPEN.md`. Settle it before building the load step.
 
 Prompts are versioned files rather than string literals
-(`scraping/prompts/`), so a change to extraction behaviour arrives as a
+(`extraction/prompts/`), so a change to extraction behaviour arrives as a
 reviewable diff. Scoring is meant to be versioned the same way:
 `game_aggregates.scoring_version` exists to stamp the methodology onto
 each computed row, though the parameters it would name are still open.

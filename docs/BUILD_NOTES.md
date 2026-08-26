@@ -132,7 +132,7 @@ blocks this chunk. See `DECISIONS_OPEN.md`.
 ### D2. JSON Lines → SQLite load
 Read extracted reviews, resolve game + critic, dedupe, insert. The step
 that turns intermediate files into the queryable database.
-Reads the `ExtractionRecord` stream (`scraping/extraction_record.py`),
+Reads the `ExtractionRecord` stream (`extraction/record.py`),
 one line per raw item.
 *Decisions needed first:* the `ExtractedReview` → `Review` field mapping,
 how `raw_score` is parsed onto the 0–100 scale, and the dedupe key with

@@ -30,8 +30,8 @@ from tenacity import (
 )
 from tenacity.wait import wait_base
 
-from finalscoring.scraping.extract import PROMPT_V1, ExtractionResult
-from finalscoring.scraping.extraction_record import ExtractionRecord, prompt_sha
+from finalscoring.extraction.record import ExtractionRecord, prompt_sha
+from finalscoring.extraction.schema import PROMPT_V1, ExtractionResult
 from finalscoring.scraping.item import RawItem
 from finalscoring.settings import Settings, load_settings
 

@@ -83,7 +83,7 @@ These have been explicitly agreed by the maintainer.
   and `inferred_score` as separate nullable fields, both on the 0–100
   scale, so an inferred rating can never masquerade as a declared one.
 - **Extraction output format:** the extraction step writes
-  `ExtractionRecord` (`scraping/extraction_record.py`) as its own JSON
+  `ExtractionRecord` (`extraction/record.py`) as its own JSON
   Lines stream, one line per raw item processed — not an enriched
   `RawItem`. Each record wraps the model's `ExtractionResult` in an
   envelope stamped by the *caller*: `source_url` (joins back to the

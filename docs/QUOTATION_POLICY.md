@@ -92,7 +92,7 @@ Two further notes:
 
 The cap is **300 characters**, confirmed by the maintainer on
 2026-08-22 and recorded in `PROJECT.md`. `ExtractedReview.quote`
-enforces it at the schema level, and `scraping/prompts/extract_v1.txt`
+enforces it at the schema level, and `extraction/prompts/extract_v1.txt`
 states the same limit and requires the quote be copied verbatim.
 
 The cap's real job is **engineering, not legal**: it stops the model
