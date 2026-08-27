@@ -9,14 +9,16 @@ from finalscoring.extraction.context import build_context, clean_html
 from finalscoring.extraction.llm import ExtractionFailed, ReviewExtractor
 from finalscoring.extraction.record import ExtractionRecord, prompt_sha
 from finalscoring.extraction.schema import (
-    PROMPT_V1,
+    PROMPT,
+    PROMPT_VERSION,
     ExtractedGame,
     ExtractedReview,
     ExtractionResult,
 )
 
 __all__ = [
-    "PROMPT_V1",
+    "PROMPT",
+    "PROMPT_VERSION",
     "ExtractedGame",
     "ExtractedReview",
     "ExtractionFailed",

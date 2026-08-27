@@ -13,7 +13,10 @@ from finalscoring.models import QUOTE_MAX_LENGTH, Medium, Sentiment
 
 LOGGER = logging.getLogger(__name__)
 
-PROMPT_V1 = (Path(__file__).parent / "prompts" / "extract_v1.txt").read_text()
+# Superseded prompts stay on disk: records carry the version and sha that made
+# them, and those are only readable if the bytes are still here.
+PROMPT_VERSION = "extract_v2"
+PROMPT = (Path(__file__).parent / "prompts" / f"{PROMPT_VERSION}.txt").read_text()
 
 _BGG_HOSTS = frozenset({"boardgamegeek.com", "www.boardgamegeek.com"})
 

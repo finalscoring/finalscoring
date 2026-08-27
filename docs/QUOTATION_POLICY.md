@@ -92,8 +92,11 @@ Two further notes:
 
 The cap is **300 characters**, confirmed by the maintainer on
 2026-08-22 and recorded in `PROJECT.md`. `ExtractedReview.quote`
-enforces it at the schema level, and `extraction/prompts/extract_v1.txt`
-states the same limit and requires the quote be copied verbatim.
+enforces it at the schema level, and the current prompt
+(`extraction/prompts/`, named by `PROMPT_VERSION`) states the same limit
+and requires the quote be copied verbatim — one continuous passage of
+the reviewer's own words, never spliced, paraphrased, or truncated to
+fit.
 
 The cap's real job is **engineering, not legal**: it stops the model
 emitting three paragraphs when asked for a sentence, which is a genuine
