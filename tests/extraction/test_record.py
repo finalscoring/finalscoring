@@ -4,7 +4,12 @@ from datetime import UTC
 from typing import Any
 
 from finalscoring.extraction.record import ExtractionRecord, prompt_sha
-from finalscoring.extraction.schema import PROMPT_V1, ExtractedReview, ExtractionResult
+from finalscoring.extraction.schema import (
+    PROMPT_V1,
+    ExtractedGame,
+    ExtractedReview,
+    ExtractionResult,
+)
 
 
 def _record(**kwargs: Any) -> ExtractionRecord:
@@ -17,7 +22,7 @@ def _record(**kwargs: Any) -> ExtractionRecord:
             "result": ExtractionResult(
                 reviews=[
                     ExtractedReview(
-                        game_title="Catan",
+                        game=ExtractedGame(title="Catan"),
                         reviewer_name="Jane Doe",
                         rating=8,
                         sentiment="positive",

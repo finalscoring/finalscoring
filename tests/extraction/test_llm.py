@@ -32,7 +32,7 @@ SETTINGS = Settings(
 ONE_REVIEW = {
     "reviews": [
         {
-            "game_title": "Catan",
+            "game": {"title": "Catan"},
             "reviewer_name": "Jane Doe",
             "rating": 8,
             "sentiment": "positive",
@@ -101,7 +101,7 @@ def test_a_valid_response_becomes_a_record():
 
     assert record.source_url == "https://example.com/roundup"
     assert len(record.result.reviews) == 1
-    assert record.result.reviews[0].game_title == "Catan"
+    assert record.result.reviews[0].game.title == "Catan"
 
 
 def test_the_record_is_stamped_with_model_and_prompt():
