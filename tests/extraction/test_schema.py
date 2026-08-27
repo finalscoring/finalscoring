@@ -1,13 +1,16 @@
 """Tests for the LLM extraction schema."""
 
 import logging
+from pathlib import Path
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
+import finalscoring.extraction.schema
 from finalscoring.extraction.schema import (
-    PROMPT_V1,
+    PROMPT,
+    PROMPT_VERSION,
     ExtractedGame,
     ExtractedReview,
     ExtractionResult,
@@ -156,6 +159,14 @@ def test_unparseable_published_at_rejected():
         _review(published_at="März 2026")
 
 
+@pytest.mark.parametrize("value", ["25.4.26", "25.04.2026", "4. Mai 2025", "2026-4-25"])
+def test_a_localised_date_is_rejected_rather_than_misread(value: str):
+    """The prompt asks the model to convert these; a miss must not become a
+    plausible wrong date. Rejection costs a retry, which is the cheaper error."""
+    with pytest.raises(ValidationError):
+        _review(published_at=value)
+
+
 def test_invalid_sentiment_rejected():
     with pytest.raises(ValidationError):
         _review(sentiment="excellent")
@@ -272,9 +283,21 @@ def test_empty_reviewer_name_rejected():
         _review(reviewer_name="")
 
 
-def test_prompt_v1_loads_and_is_non_empty():
-    assert isinstance(PROMPT_V1, str)
-    assert len(PROMPT_V1) > 0
+def test_the_prompt_loads_and_is_non_empty():
+    assert isinstance(PROMPT, str)
+    assert len(PROMPT) > 0
+
+
+def test_the_prompt_version_names_the_file_that_was_loaded():
+    """prompt_sha proves the bytes; this proves they came from where we claim."""
+    path = Path(finalscoring.extraction.schema.__file__).parent / "prompts"
+    assert (path / f"{PROMPT_VERSION}.txt").read_text() == PROMPT
+
+
+def test_superseded_prompts_are_kept():
+    """Records stamped extract_v1 are only readable while those bytes exist."""
+    path = Path(finalscoring.extraction.schema.__file__).parent / "prompts"
+    assert (path / "extract_v1.txt").is_file()
 
 
 def _prompt_fields() -> list[str]:
@@ -283,11 +306,7 @@ def _prompt_fields() -> list[str]:
     return review + list(ExtractedGame.model_fields)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="extract_v1 still asks for a flat game_title; the prompt is its own chunk",
-)
-def test_prompt_v1_asks_for_every_extracted_field():
+def test_the_prompt_asks_for_every_extracted_field():
     """A field the prompt never mentions is a field the model never fills."""
     for name in _prompt_fields():
-        assert name in PROMPT_V1, f"prompt does not ask for {name}"
+        assert name in PROMPT, f"prompt does not ask for {name}"

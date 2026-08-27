@@ -1,0 +1,110 @@
+Extract board game reviews from the article below.
+
+You are given a <source> block describing the page itself, then the article in
+<article>. The article keeps its HTML. Use that structure: <p> bounds one
+passage, <strong> and headings mark names, <a href> is a real link, and
+<blockquote> marks a quotation. The tags tell you where one critic's passage
+ends and the next begins.
+
+The <source> block describes the page you are reading. It is not the review. In
+a roundup that cites other critics, the page's own site, url and date belong to
+none of them — never copy them into outlet_name, review_url, published_in or
+published_at.
+
+For each distinct (game, reviewer) pair found, extract:
+
+- game: the game under review, as an object:
+    - title: the title as the article names it, including any subtitle — prefer
+      the form used in the body over the headline's ("Endeavor: Die Tiefsee"
+      rather than "Endeavor")
+    - designers: every designer the article names, as written; [] if none
+    - publishers: every publisher the article names; a co-edition is two
+      entries, so "Frosted Games / Board Game Circus" is ["Frosted Games",
+      "Board Game Circus"]; [] if none
+    - year_published: the game's year of publication as four digits, only if the
+      article states it; null otherwise
+    - bgg_url: the game's boardgamegeek.com address, only if the article links to
+      it; null otherwise
+- reviewer_name: the reviewer's name as written; use the outlet name if no
+  individual is named
+- outlet_name: the publication or outlet this reviewer published in, when the
+  article names it for this reviewer; null otherwise. Where an article lists
+  several critics and several outlets, do not pair them up by order or
+  proximity — attribute an outlet only where the article ties it to that
+  reviewer
+- medium: how the review itself was published — one of: text / video / podcast /
+  print / social; null if the article does not make it clear. A link to a video
+  or podcast host is good evidence
+- published_in: where the review appeared, as the article describes it, including
+  issue or episode details (e.g. "Spielbox 3/2024, S. 42", "Brettagogen #276");
+  null if the article does not say. This is a place, never a date
+- review_url: the address of the reviewer's own review, if the article links to
+  or cites it; null otherwise. It must point at the review itself — not the
+  outlet's front page, not a podcast's channel page, and not the page you are
+  reading
+- published_at: the date the reviewer's own review appeared, as YYYY-MM-DD, if
+  the article states it; null otherwise. This is the review's date, not the date
+  of the article you are reading. Convert local formats: German "25.4.26" is
+  2026-04-25 and "4. Mai 2025" is 2025-05-04. If only a month, a year or an issue
+  number is given, leave this null and record that detail in published_in
+- raw_score: the score exactly as stated (e.g. "4/5", "8 out of 10", "sehr gut"); null if no explicit score is given
+- rating: a 1–10 integer for the reviewer's verdict. The scale is deliberately
+  lopsided — most of it describes games worth playing, because that is where the
+  useful distinctions lie. Judge by what the text does, not by how enthusiastic it
+  sounds:
+    10:  a landmark; ranked among the best the reviewer knows
+     9:  exceptional; recommended without reservation
+     8:  great; recommended warmly, any reservations are minor
+     7:  strong; recommended, with reservations worth stating
+     6:  good; recommended for the right player
+     5:  okay; would play again but does not press it on anyone
+     4:  would not play again, though it has real merits
+     3:  poor; recommends against it
+   1–2:  nothing to salvage
+- sentiment: one of: negative / mixed_negative / neutral / mixed_positive / positive
+- quote: one continuous passage of the reviewer's own words, copied exactly, at
+  most 300 characters; null if there is none
+- language: ISO 639-1 two-letter code for the language of the text you are quoting,
+  not the language the critic originally published in (e.g. "de", "en")
+
+Rules:
+- Extract every (game, reviewer) pair present, even if a single article covers multiple
+  games or multiple reviewers.
+- If a reviewer is not named but an opinion is clearly attributed, use the outlet name
+  as reviewer_name.
+- A quote must be one continuous run of text, copied character for character. Do
+  not join two fragments, and do not carry the article author's narration between
+  them: `„…", schreibt Bartsch. „…"` is two quotes and a splice, not a quote.
+- Quote only the reviewer's own words. Where the article's author reports what a
+  critic said rather than quoting them — in German the Konjunktiv, "Das Spiel
+  biete ihm nichts Neues" — that is a paraphrase, not a quote. Leave quote null
+  rather than passing a paraphrase off as verbatim.
+- Do not include the quotation marks that surround a quote.
+- If the best passage runs past 300 characters, choose a shorter passage that
+  fits. Never truncate one: a cut-off sentence is no longer what the reviewer
+  wrote.
+- If no passage of the reviewer's own words exists, set quote to null. That is a
+  normal outcome, not a failure.
+- The line runs between 4 and 5: 5 is the lowest rating for a game the reviewer would
+  play again, 4 the highest for one they would not. Settle that question first, then
+  choose within the half it falls in.
+- A conflicted review is not automatically a 5. Decide whether the recommendation
+  survives the criticism; if it does, rate 5 or above, and if it does not, rate 4 or
+  below.
+- Rate the verdict, not the reviewer's taste. "A brilliant design that I personally
+  find exhausting" is a strong verdict, not a lukewarm one.
+- Treat comparisons as relative. "Better than its predecessor" says nothing on its own
+  about where the game belongs on the scale.
+- Give a rating whether or not a score is stated. Where both exist they are checked
+  against each other, so judge the verdict independently rather than restating the
+  number.
+- Text that describes a game without judging it — a preview, an announcement, a rules
+  summary, a list of what is in the box — is not a review. Do not extract it.
+- Never invent or guess year_published, bgg_url, outlet_name, published_in,
+  review_url or published_at. You may recognise the game and know its year or its
+  BoardGameGeek page from elsewhere; that is not what is being asked. Report only
+  what this article states, and null otherwise. medium is the exception: reading it
+  off a link's destination is not guessing, it is reading the article.
+- A review with no link is normal — print reviews have no address at all. Record what
+  the article does say in published_in rather than forcing a url.
+- If the article contains no board game reviews, return an empty list.

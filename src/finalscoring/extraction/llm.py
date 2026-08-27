@@ -32,13 +32,11 @@ from tenacity.wait import wait_base
 
 from finalscoring.extraction.context import build_context
 from finalscoring.extraction.record import ExtractionRecord, prompt_sha
-from finalscoring.extraction.schema import PROMPT_V1, ExtractionResult
+from finalscoring.extraction.schema import PROMPT, PROMPT_VERSION, ExtractionResult
 from finalscoring.scraping.item import RawItem
 from finalscoring.settings import Settings, load_settings
 
 LOGGER = logging.getLogger(__name__)
-
-PROMPT_V1_VERSION = "extract_v1"
 
 # Not strict: pydantic's schema uses defaults and anyOf-null for optional
 # fields, which strict mode rejects outright. The schema is guidance here;
@@ -80,8 +78,8 @@ class ReviewExtractor:
         self.settings = settings if settings is not None else load_settings()
         self.client = client if client is not None else self._build_client(self.settings)
         self.wait = wait if wait is not None else wait_exponential(multiplier=1, min=2, max=30)
-        self.prompt = PROMPT_V1
-        self.prompt_version = PROMPT_V1_VERSION
+        self.prompt = PROMPT
+        self.prompt_version = PROMPT_VERSION
         self.prompt_sha = prompt_sha(self.prompt)
 
     @staticmethod

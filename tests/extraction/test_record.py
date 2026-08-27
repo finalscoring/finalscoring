@@ -5,7 +5,8 @@ from typing import Any
 
 from finalscoring.extraction.record import ExtractionRecord, prompt_sha
 from finalscoring.extraction.schema import (
-    PROMPT_V1,
+    PROMPT,
+    PROMPT_VERSION,
     ExtractedGame,
     ExtractedReview,
     ExtractionResult,
@@ -17,8 +18,8 @@ def _record(**kwargs: Any) -> ExtractionRecord:
         {
             "source_url": "https://example.com/a",
             "model": "qwen2.5:7b",
-            "prompt_version": "extract_v1",
-            "prompt_sha": prompt_sha(PROMPT_V1),
+            "prompt_version": PROMPT_VERSION,
+            "prompt_sha": prompt_sha(PROMPT),
             "result": ExtractionResult(
                 reviews=[
                     ExtractedReview(
@@ -45,8 +46,8 @@ def test_prompt_sha_changes_with_the_prompt():
 
 
 def test_prompt_sha_is_a_short_hex_string():
-    assert len(prompt_sha(PROMPT_V1)) == 12
-    assert all(c in "0123456789abcdef" for c in prompt_sha(PROMPT_V1))
+    assert len(prompt_sha(PROMPT)) == 12
+    assert all(c in "0123456789abcdef" for c in prompt_sha(PROMPT))
 
 
 def test_extracted_at_defaults_to_utc_now():
@@ -62,8 +63,8 @@ def test_record_round_trips_through_json():
 
 
 def test_record_carries_the_model_and_prompt_that_produced_it():
-    record = _record(model="qwen2.5:7b", prompt_version="extract_v1")
+    record = _record(model="qwen2.5:7b", prompt_version="extract_v0")
 
     assert record.model == "qwen2.5:7b"
-    assert record.prompt_version == "extract_v1"
-    assert record.prompt_sha == prompt_sha(PROMPT_V1)
+    assert record.prompt_version == "extract_v0"
+    assert record.prompt_sha == prompt_sha(PROMPT)

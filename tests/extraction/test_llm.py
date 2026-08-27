@@ -12,6 +12,7 @@ from tenacity import wait_none
 
 from finalscoring.extraction.llm import ExtractionFailed, ReviewExtractor
 from finalscoring.extraction.record import prompt_sha
+from finalscoring.extraction.schema import PROMPT_VERSION
 from finalscoring.scraping.item import RawItem
 from finalscoring.settings import Settings
 
@@ -112,7 +113,7 @@ def test_the_record_is_stamped_with_model_and_prompt():
     record = extractor.extract(_item())
 
     assert record.model == "qwen2.5:7b"
-    assert record.prompt_version == "extract_v1"
+    assert record.prompt_version == PROMPT_VERSION
     assert record.prompt_sha == prompt_sha(extractor.prompt)
 
 
