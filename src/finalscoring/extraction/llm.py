@@ -1,4 +1,4 @@
-"""The extraction call: raw text in, a validated ExtractionRecord out.
+"""The extraction call: a raw item in, a validated ExtractionRecord out.
 
 Written against /v1/chat/completions rather than /v1/responses because every
 OpenAI-compatible server implements it, which is what keeps the model and the
@@ -30,6 +30,7 @@ from tenacity import (
 )
 from tenacity.wait import wait_base
 
+from finalscoring.extraction.context import build_context
 from finalscoring.extraction.record import ExtractionRecord, prompt_sha
 from finalscoring.extraction.schema import PROMPT_V1, ExtractionResult
 from finalscoring.scraping.item import RawItem
@@ -95,7 +96,8 @@ class ReviewExtractor:
     def extract(self, item: RawItem) -> ExtractionRecord:
         """Extract every review in one raw item. Raises ExtractionFailed."""
         try:
-            result = self._call_with_retries(item.raw_text)
+            context = build_context(item, markup=self.settings.llm_context == "html")
+            result = self._call_with_retries(context)
         except RetryError as exc:
             message = (
                 f"extraction failed for {item.url} after {self.settings.llm_max_attempts} attempts"
@@ -114,21 +116,21 @@ class ReviewExtractor:
             result=result,
         )
 
-    def _call_with_retries(self, raw_text: str) -> ExtractionResult:
+    def _call_with_retries(self, context: str) -> ExtractionResult:
         retrying = retry(
             retry=retry_if_exception_type(_RETRYABLE),
             wait=self.wait,
             stop=stop_after_attempt(self.settings.llm_max_attempts),
             reraise=False,
         )
-        return retrying(self._call)(raw_text)
+        return retrying(self._call)(context)
 
-    def _call(self, raw_text: str) -> ExtractionResult:
+    def _call(self, context: str) -> ExtractionResult:
         completion = self.client.chat.completions.create(
             model=self.settings.llm_model,
             messages=[
                 {"role": "system", "content": self.prompt},
-                {"role": "user", "content": raw_text},
+                {"role": "user", "content": context},
             ],
             response_format=_RESPONSE_FORMAT,  # ty: ignore[invalid-argument-type]
         )

@@ -15,6 +15,7 @@ SETTINGS = Settings(
     llm_api_key="not-needed",  # pragma: allowlist secret
     llm_timeout=120.0,
     llm_max_attempts=3,
+    llm_context="html",
     scraper_user_agent="TestBot/1.0 (+https://example.com/)",
     scraper_delay=2.5,
     scraper_concurrency=8,
