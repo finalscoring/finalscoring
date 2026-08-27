@@ -10,6 +10,7 @@ ENV_KEYS = (
     "FS_LLM_API_KEY",
     "FS_LLM_TIMEOUT",
     "FS_LLM_MAX_ATTEMPTS",
+    "FS_LLM_CONTEXT",
     "FS_SCRAPER_USER_AGENT",
     "FS_SCRAPER_DELAY",
     "FS_SCRAPER_CONCURRENCY",
@@ -25,6 +26,7 @@ def test_settings_reads_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FS_LLM_API_KEY", "sk-test")
     monkeypatch.setenv("FS_LLM_TIMEOUT", "30.5")
     monkeypatch.setenv("FS_LLM_MAX_ATTEMPTS", "5")
+    monkeypatch.setenv("FS_LLM_CONTEXT", "text")
     monkeypatch.setenv("FS_SCRAPER_USER_AGENT", "TestBot/1.0")
     monkeypatch.setenv("FS_SCRAPER_DELAY", "2.5")
     monkeypatch.setenv("FS_SCRAPER_CONCURRENCY", "8")
@@ -39,6 +41,7 @@ def test_settings_reads_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.llm_api_key == "sk-test"  # pragma: allowlist secret
     assert s.llm_timeout == 30.5
     assert s.llm_max_attempts == 5
+    assert s.llm_context == "text"
     assert s.scraper_user_agent == "TestBot/1.0"
     assert s.scraper_delay == 2.5
     assert s.scraper_concurrency == 8
@@ -60,6 +63,7 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.llm_api_key == "not-needed"  # pragma: allowlist secret
     assert s.llm_timeout == 120.0
     assert s.llm_max_attempts == 3
+    assert s.llm_context == "html"
     assert s.scraper_user_agent == DEFAULT_USER_AGENT
     assert s.scraper_delay == 1.0
     assert s.scraper_concurrency == 4
@@ -90,3 +94,11 @@ def test_default_user_agent_names_the_project_and_a_contact(
 
     assert "FinalScoring" in agent
     assert "finalscoring.games" in agent
+
+
+def test_an_unknown_context_mode_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A typo must not silently fall back and invalidate an A/B run."""
+    monkeypatch.setenv("FS_LLM_CONTEXT", "markdown")
+
+    with pytest.raises(ValueError, match="FS_LLM_CONTEXT"):
+        load_settings()

@@ -21,6 +21,7 @@ SETTINGS = Settings(
     llm_api_key="not-needed",  # pragma: allowlist secret
     llm_timeout=5.0,
     llm_max_attempts=3,
+    llm_context="html",
     scraper_user_agent="TestBot/1.0",
     scraper_delay=0.0,
     scraper_concurrency=1,
@@ -115,7 +116,7 @@ def test_the_record_is_stamped_with_model_and_prompt():
     assert record.prompt_sha == prompt_sha(extractor.prompt)
 
 
-def test_the_prompt_and_text_are_sent_separately():
+def test_the_prompt_and_the_article_are_sent_separately():
     """The article is user content; the instructions are not."""
     extractor, stub = _extractor(json.dumps(ONE_REVIEW))
 
@@ -126,7 +127,34 @@ def test_the_prompt_and_text_are_sent_separately():
     assert system["role"] == "system"
     assert system["content"] == extractor.prompt
     assert user["role"] == "user"
-    assert user["content"] == "Ein wirklich gutes Spiel."
+    assert "Ein wirklich gutes Spiel." in user["content"]
+
+
+def test_the_page_metadata_is_sent_with_the_article():
+    """The model was being asked to name outlets without the page's site name."""
+    extractor, stub = _extractor(json.dumps(ONE_REVIEW))
+
+    extractor.extract(_item(og_site_name="Spiel des Jahres", title="Kritikenrundschau"))
+
+    (call,) = stub.calls
+    user = call["messages"][1]["content"]
+    assert "site: Spiel des Jahres" in user
+    assert "title: Kritikenrundschau" in user
+
+
+def test_the_context_mode_is_configurable():
+    """So the two can be measured against each other on one corpus."""
+    html = "<p>Ein <strong>wirklich</strong> gutes Spiel.</p>"
+    as_text, stub_text = _extractor(
+        json.dumps(ONE_REVIEW), settings=replace(SETTINGS, llm_context="text")
+    )
+    as_html, stub_html = _extractor(json.dumps(ONE_REVIEW))
+
+    as_text.extract(_item(raw_html=html))
+    as_html.extract(_item(raw_html=html))
+
+    assert "<strong>" not in stub_text.calls[0]["messages"][1]["content"]
+    assert "<strong>" in stub_html.calls[0]["messages"][1]["content"]
 
 
 def test_a_schema_is_requested():
