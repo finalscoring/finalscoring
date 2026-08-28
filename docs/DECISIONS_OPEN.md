@@ -78,6 +78,22 @@ let the maintainer choose. This list is the boundary between "agreed"
 - Whether/how to treat BGG user comments: discussed only as "a subset of
   high-quality BGG users could be added as critics by explicit editorial
   decision". This was not confirmed as a decision.
+- A narrower variant of the above: some critics who write prose-only
+  reviews (no stated score) also rate on BGG under a known username and
+  link back to their own review from the comment. Verified for Dan
+  Thurot / space-biff — BGG user `the innocent` has 1755 ratings, many
+  with a comment containing the review's exact URL, e.g. "Read my review
+  here: http://spacebiff.com/2015/10/06/samurai/". This is not a new
+  critic, unlike the item above — it is a possible source for
+  `raw_score` on a critic already ingested via their own outlet, for the
+  reviews where prose alone gives the extractor no number. Needs no new
+  scraping: Recommend.Games' `board-game-data/scraped/bgg_RatingItem.jl`
+  already carries `bgg_user_name`, `bgg_user_rating`, and `comment` per
+  rating. Not decided: whether to build this at all; whether the match
+  key is the review URL found in the comment (highest confidence) or
+  something looser; where `bgg_username` lives (a field on `critics`, or
+  per-source config); and how a miss should degrade — presumably to
+  leaving `declared_score` unset rather than discarding the review.
 
 ## LLM specifics
 
