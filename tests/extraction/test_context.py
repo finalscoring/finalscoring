@@ -79,6 +79,21 @@ def test_the_metadata_header_names_the_page():
     assert "language: de-DE" in context
 
 
+def test_tags_are_sent():
+    """Some sites file a review under its verdict, so the score is only here."""
+    context = build_context(_item(tags=["**** solide"]))
+
+    assert "tags: **** solide" in context
+
+
+def test_several_tags_are_joined():
+    assert "tags: Rezension, Kennerspiel" in build_context(_item(tags=["Rezension", "Kennerspiel"]))
+
+
+def test_no_tags_means_no_tag_line():
+    assert "tags:" not in build_context(_item())
+
+
 def test_absent_metadata_is_omitted_not_nulled():
     """`title: None` would invite the model to treat the string as a value."""
     context = build_context(_item())
