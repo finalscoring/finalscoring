@@ -26,16 +26,21 @@ _DROP = re.compile(
 _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _TAG = re.compile(r"<([a-zA-Z0-9]+)((?:\s+[^>]*?)?)(/?)>")
 _HREF = re.compile(r"""href\s*=\s*["']([^"']*)["']""", re.IGNORECASE)
+_ALT = re.compile(r"""alt\s*=\s*["']([^"']*)["']""", re.IGNORECASE)
 _BLANK_RUN = re.compile(r"\n{3,}")
 _SPACE_RUN = re.compile(r"[ \t]{2,}")
 
 
 def _strip_attributes(match: re.Match[str]) -> str:
-    """Keep the tag and, on a link, its target. Class soup helps nobody."""
+    """Keep the tag, a link's target, and an image's alt. Class soup helps nobody."""
     tag, attrs, self_closing = match.group(1), match.group(2), match.group(3)
+    name = tag.lower()
     href = _HREF.search(attrs)
-    if href and tag.lower() == "a":
+    if href and name == "a":
         return f'<a href="{href.group(1)}">'
+    alt = _ALT.search(attrs)
+    if alt and name == "img" and alt.group(1).strip():
+        return f'<img alt="{alt.group(1).strip()}">'
     return f"<{tag}{self_closing}>"
 
 
@@ -54,9 +59,6 @@ def _metadata(item: RawItem) -> Iterator[str]:
         ("site", item.og_site_name),
         ("published", item.published_at.date().isoformat() if item.published_at else None),
         ("language", item.locale or item.language),
-        # Sites file reviews under their verdict: Bartsch's labels are his star
-        # rating, "**** solide". Where that happens the score is in the tags and
-        # nowhere else, so dropping them would drop the review's score.
         ("tags", ", ".join(item.tags) or None),
     ):
         if value:
