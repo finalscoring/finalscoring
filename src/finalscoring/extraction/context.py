@@ -54,9 +54,6 @@ def _metadata(item: RawItem) -> Iterator[str]:
         ("site", item.og_site_name),
         ("published", item.published_at.date().isoformat() if item.published_at else None),
         ("language", item.locale or item.language),
-        # Sites file reviews under their verdict: Bartsch's labels are his star
-        # rating, "**** solide". Where that happens the score is in the tags and
-        # nowhere else, so dropping them would drop the review's score.
         ("tags", ", ".join(item.tags) or None),
     ):
         if value:
