@@ -6,11 +6,11 @@ one share endpoint in its robots.txt — `ROBOTSTXT_OBEY` is fixed to True for
 every spider in `scrapy_settings`, so that route is closed regardless of what
 the API itself would allow. The rendered page is therefore the only source.
 
-The site's own `sitemap.xml` is far stranger than "stale": it holds exactly
-1001 of 1847 posts, all from mid-2019 onward, and nothing before. What covers
-every post instead is the blog's own chronological pagination — follow "Older
-Posts" from the front page and it terminates, by construction, at the first
-post ever published. 185 pages times ~10 posts each accounts for all 1847.
+The site's own `sitemap.xml` is capped near a thousand entries: 997 posts
+back to mid-2019 plus four non-post URLs. The blog's chronological pagination
+("Older Posts" from the front page) reaches back to the first post. Neither
+alone enumerates the archive, so the spider reads both and lets the dupefilter
+merge them.
 
 Thurot writes prose verdicts, not a score of any kind — no graphic, no
 microdata, nothing structured to gate on the way the other two single-critic
@@ -30,10 +30,11 @@ import re
 from collections.abc import AsyncIterator, Iterator
 from datetime import datetime
 
-from scrapy import Request, Spider
+from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
 from scrapy.settings import BaseSettings
+from scrapy.spiders.sitemap import SitemapSpider
 
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.scrapy_settings import scrapy_settings
@@ -79,9 +80,15 @@ def published_at(timestamp: str | None) -> datetime | None:
         return None
 
 
-class SpaceBiffSpider(Spider):
+class SpaceBiffSpider(SitemapSpider):
     name = "space-biff"
     allowed_domains = ("spacebiff.com",)
+
+    sitemap_urls = (f"{BASE_URL}sitemap.xml",)
+    # Every post is /YYYY/MM/DD/slug/; this drops the four non-post URLs the
+    # sitemap also lists, and needn't be exhaustive — pagination backstops
+    # anything it misses.
+    sitemap_rules = ((r"/\d{4}/\d{2}/\d{2}/", "parse_review"),)
 
     outlet_slug = "space-biff"
     language = "en"  # he writes only in English
@@ -95,6 +102,9 @@ class SpaceBiffSpider(Spider):
         settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
+        """The sitemap stops at mid-2019, so the archive is paged as well."""
+        async for request in super().start():
+            yield request
         yield self.index_request(BASE_URL)
 
     def index_request(self, url: str) -> Request:

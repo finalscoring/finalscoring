@@ -4,6 +4,8 @@ The HTML here is written for the test, not copied from the site — it carries
 the shapes the spider depends on, nothing else.
 """
 
+import asyncio
+import re
 from datetime import UTC, datetime
 
 from itemadapter import is_item
@@ -141,6 +143,27 @@ def test_the_last_index_page_has_no_older_posts_link():
     results = list(_spider().parse_index(_response(LAST_INDEX_HTML, BASE_URL)))
 
     assert all("page/" not in r.url for r in results)
+
+
+def test_start_seeds_both_the_sitemap_and_the_archive():
+    """The sitemap stops at mid-2019; the archive seed is what reaches the rest."""
+
+    async def drain() -> list[str]:
+        return [request.url async for request in _spider().start()]
+
+    urls = asyncio.run(drain())
+
+    assert f"{BASE_URL}sitemap.xml" in urls
+    assert BASE_URL in urls
+
+
+def test_sitemap_rule_matches_dated_posts_only():
+    """The sitemap also lists the front page and a few standalone pages."""
+    (pattern, callback) = SpaceBiffSpider.sitemap_rules[0]
+
+    assert re.search(pattern, f"{BASE_URL}2015/10/06/samurai/")
+    assert not re.search(pattern, f"{BASE_URL}about/")
+    assert callback == "parse_review"
 
 
 def test_a_review_becomes_an_item():
