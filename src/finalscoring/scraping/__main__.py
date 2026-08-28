@@ -9,9 +9,9 @@ import sys
 
 from scrapy.crawler import CrawlerProcess
 
-from finalscoring.scraping.spiders import SpielDesJahresSpider
+from finalscoring.scraping.spiders import GamesWePlaySpider, SpielDesJahresSpider
 
-SPIDERS = {SpielDesJahresSpider.name: SpielDesJahresSpider}
+SPIDERS = {spider.name: spider for spider in (SpielDesJahresSpider, GamesWePlaySpider)}
 
 
 def main(argv: list[str]) -> int:
