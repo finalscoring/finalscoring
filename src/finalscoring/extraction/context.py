@@ -39,9 +39,6 @@ def _strip_attributes(match: re.Match[str]) -> str:
     if href and name == "a":
         return f'<a href="{href.group(1)}">'
     alt = _ALT.search(attrs)
-    # An image's alt is content, and sometimes the only place a verdict is
-    # written down: on games we play the difficulty grade, the age
-    # recommendation and the TOPspiel badge exist nowhere else on the page.
     if alt and name == "img" and alt.group(1).strip():
         return f'<img alt="{alt.group(1).strip()}">'
     return f"<{tag}{self_closing}>"
