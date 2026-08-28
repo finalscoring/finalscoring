@@ -54,6 +54,7 @@ def _metadata(item: RawItem) -> Iterator[str]:
         ("site", item.og_site_name),
         ("published", item.published_at.date().isoformat() if item.published_at else None),
         ("language", item.locale or item.language),
+        ("tags", ", ".join(item.tags) or None),
     ):
         if value:
             yield f"{label}: {value}"
