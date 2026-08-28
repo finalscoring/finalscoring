@@ -39,9 +39,6 @@ def _strip_attributes(match: re.Match[str]) -> str:
     if href and name == "a":
         return f'<a href="{href.group(1)}">'
     alt = _ALT.search(attrs)
-    # An image's alt is content, and sometimes the only place a verdict is
-    # written down: on games we play the difficulty grade, the age
-    # recommendation and the TOPspiel badge exist nowhere else on the page.
     if alt and name == "img" and alt.group(1).strip():
         return f'<img alt="{alt.group(1).strip()}">'
     return f"<{tag}{self_closing}>"
@@ -62,9 +59,6 @@ def _metadata(item: RawItem) -> Iterator[str]:
         ("site", item.og_site_name),
         ("published", item.published_at.date().isoformat() if item.published_at else None),
         ("language", item.locale or item.language),
-        # Sites file reviews under their verdict: Bartsch's labels are his star
-        # rating, "**** solide". Where that happens the score is in the tags and
-        # nowhere else, so dropping them would drop the review's score.
         ("tags", ", ".join(item.tags) or None),
     ):
         if value:
