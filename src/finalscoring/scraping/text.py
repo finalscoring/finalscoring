@@ -1,8 +1,9 @@
 """Turning article HTML into the plain text the extraction step reads."""
 
 import re
+from html import unescape
 
-from w3lib.html import remove_tags, replace_entities
+from w3lib.html import remove_tags
 
 # Without these breaks one critic's passage runs into the next.
 _BLOCK_END = re.compile(
@@ -22,6 +23,9 @@ _FOOTNOTE_MARKER = re.compile(
 def html_to_text(html: str) -> str:
     """Extract readable text, preserving the breaks between blocks."""
     html = _FOOTNOTE_MARKER.sub(lambda m: f" [{remove_tags(m.group(1)).strip()}]", html)
-    text = replace_entities(remove_tags(_BLOCK_END.sub("\n", html)))
+    # unescape, not w3lib's replace_entities: that silently *deletes* any
+    # entity it cannot resolve, and its table predates HTML5 — so "&neArr;",
+    # the trend arrow in a games we play verdict, vanished without a trace.
+    text = unescape(remove_tags(_BLOCK_END.sub("\n", html)))
     lines = [line.strip() for line in text.split("\n")]
     return _BLANK_RUN.sub("\n\n", "\n".join(lines)).strip()
