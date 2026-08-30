@@ -16,6 +16,7 @@ from scrapy.crawler import CrawlerProcess
 
 from finalscoring.scraping.spiders import (
     GamesWePlaySpider,
+    Hall9000Spider,
     LudingSpider,
     RezensionenFuerMillionenSpider,
     SpaceBiffSpider,
@@ -26,10 +27,11 @@ SPIDERS = {
     spider.name: spider
     for spider in (
         GamesWePlaySpider,
+        Hall9000Spider,
+        LudingSpider,
+        RezensionenFuerMillionenSpider,
         SpaceBiffSpider,
         SpielDesJahresSpider,
-        RezensionenFuerMillionenSpider,
-        LudingSpider,
     )
 }
 
