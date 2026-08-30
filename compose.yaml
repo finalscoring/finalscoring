@@ -1,0 +1,51 @@
+name: finalscoring-scraping
+
+# One spider per service. Runs are one-shot: `docker compose run --rm spiel-des-jahres`
+# (or `up spiel-des-jahres`) crawls once and exits. Scrapy's JOBDIR under data/jobs
+# means the next run resumes where this one stopped.
+x-spider: &spider
+  build: .
+  image: finalscoring-scraping
+  env_file: .env
+  volumes:
+    - ./data:/app/data
+  stop_signal: SIGINT       # let Scrapy flush its resume state on shutdown
+  stop_grace_period: 5m
+  restart: "no"
+
+services:
+  games-we-play:
+    <<: *spider
+    command: [games-we-play]
+
+  hall9000:
+    <<: *spider
+    command: [hall9000]
+
+  meeple-mountain:
+    <<: *spider
+    command: [meeple-mountain]
+
+  rezensionen-fuer-millionen:
+    <<: *spider
+    command: [rezensionen-fuer-millionen]
+
+  shut-up-and-sit-down:
+    <<: *spider
+    command: [shut-up-and-sit-down]
+
+  space-biff:
+    <<: *spider
+    command: [space-biff]
+
+  spiel-des-jahres:
+    <<: *spider
+    command: [spiel-des-jahres]
+
+  # Reads luding_GameItem.jl from the Recommend.Games checkout — see FS_LUDING_DIR in .env.
+  luding:
+    <<: *spider
+    command: [luding, -a, "files=/app/luding/luding_GameItem.jl"]
+    volumes:
+      - ./data:/app/data
+      - ${FS_LUDING_DIR}:/app/luding:ro
