@@ -8,6 +8,7 @@ from finalscoring.scraping.spiders.review_links import ReviewLinksSpider
 from finalscoring.scraping.spiders.rezensionen_fuer_millionen import (
     RezensionenFuerMillionenSpider,
 )
+from finalscoring.scraping.spiders.shut_up_and_sit_down import ShutUpAndSitDownSpider
 from finalscoring.scraping.spiders.space_biff import SpaceBiffSpider
 from finalscoring.scraping.spiders.spiel_des_jahres import SpielDesJahresSpider
 
@@ -18,6 +19,7 @@ __all__ = [
     "MeepleMountainSpider",
     "ReviewLinksSpider",
     "RezensionenFuerMillionenSpider",
+    "ShutUpAndSitDownSpider",
     "SpaceBiffSpider",
     "SpielDesJahresSpider",
 ]

@@ -20,6 +20,7 @@ from finalscoring.scraping.spiders import (
     LudingSpider,
     MeepleMountainSpider,
     RezensionenFuerMillionenSpider,
+    ShutUpAndSitDownSpider,
     SpaceBiffSpider,
     SpielDesJahresSpider,
 )
@@ -32,6 +33,7 @@ SPIDERS = {
         LudingSpider,
         MeepleMountainSpider,
         RezensionenFuerMillionenSpider,
+        ShutUpAndSitDownSpider,
         SpaceBiffSpider,
         SpielDesJahresSpider,
     )
