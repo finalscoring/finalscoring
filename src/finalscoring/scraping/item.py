@@ -10,6 +10,14 @@ _ISO_639_1 = re.compile(r"^[a-z]{2}$")
 _LOCALE = re.compile(r"^[a-z]{2}(-[A-Za-z0-9]{2,8})*$")
 
 
+def language_from_locale(locale: str | None) -> str | None:
+    """ "de_DE" / "de-DE" -> "de"; None for anything not a two-letter language."""
+    if not locale:
+        return None
+    code = locale.replace("-", "_").split("_", 1)[0].strip().lower()
+    return code if _ISO_639_1.match(code) else None
+
+
 class RawItem(BaseModel):
     """Contract between a spider and the LLM extraction pipeline."""
 

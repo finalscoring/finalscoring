@@ -10,60 +10,28 @@ which is preferred over the rendered page: `content.rendered` is the post body
 without the theme's wrapper, and it does not move when the theme changes.
 """
 
-from datetime import UTC, datetime
 from typing import Any
 
 from scrapy.http import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
-from scrapy.spiders.sitemap import SitemapSpider
 from twisted.python.failure import Failure
 
-from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.item import RawItem, language_from_locale
+from finalscoring.scraping.spider import ReviewSitemapSpider
 from finalscoring.scraping.text import html_to_text
+from finalscoring.scraping.timestamps import as_utc
 
 WP_JSON_LINK = "//link[@rel='alternate' and @type='application/json']/@href"
 
 
-def language_from_locale(locale: str | None) -> str | None:
-    """ "de_DE" -> "de". Returns None for anything not a two-letter language."""
-    if not locale:
-        return None
-    code = locale.replace("-", "_").split("_")[0].lower()
-    return code if len(code) == 2 and code.isalpha() else None
-
-
-def _utc(timestamp: str | None) -> datetime | None:
-    """Parse an ISO timestamp, treating a naive one as UTC.
-
-    The REST API reports `date_gmt` without an offset; it is UTC by definition.
-    """
-    if not timestamp:
-        return None
-    try:
-        parsed = datetime.fromisoformat(timestamp)
-    except ValueError:
-        return None
-    return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed
-
-
-class SpielDesJahresSpider(SitemapSpider):
+class SpielDesJahresSpider(ReviewSitemapSpider):
     name = "spiel-des-jahres"
     allowed_domains = ("spiel-des-jahres.de",)
 
     sitemap_urls = ("https://www.spiel-des-jahres.de/sitemap_index.xml",)
     sitemap_rules = ((r"/kritikenrundschau-", "parse_roundup"),)
 
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
-
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred
-    # a returned RawItem into (name, value) pairs.
     def parse_roundup(
         self,
         response: TextResponse,
@@ -108,7 +76,7 @@ class SpielDesJahresSpider(SitemapSpider):
             raw_html=article_html,
             title=response.xpath("//title/text()").get(),
             description=response.xpath("//meta[@name='description']/@content").get(),
-            published_at=_utc(
+            published_at=as_utc(
                 response.xpath("//meta[@property='article:published_time']/@content").get(),
             ),
             language=language_from_locale(page_locale),
@@ -144,7 +112,8 @@ class SpielDesJahresSpider(SitemapSpider):
 
         updates: dict[str, Any] = {
             "title": (post.get("title") or {}).get("rendered"),
-            "published_at": _utc(post.get("date_gmt")),
+            # date_gmt has no offset; it is UTC by definition.
+            "published_at": as_utc(post.get("date_gmt")),
             "og_site_name": yoast.get("og_site_name"),
             "language": language_from_locale(yoast.get("og_locale")),
             "locale": yoast.get("og_locale"),

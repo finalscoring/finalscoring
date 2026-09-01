@@ -32,11 +32,9 @@ from typing import Any
 from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
-from scrapy.spiders.sitemap import SitemapSpider
 
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.spider import ReviewSitemapSpider
 from finalscoring.scraping.text import html_to_text
 
 BASE_URL = "https://gamesweplay.de/"
@@ -75,7 +73,7 @@ def _int(value: str | None) -> int | None:
         return None
 
 
-class GamesWePlaySpider(SitemapSpider):
+class GamesWePlaySpider(ReviewSitemapSpider):
     name = "games-we-play"
     allowed_domains = ("gamesweplay.de",)
 
@@ -90,12 +88,6 @@ class GamesWePlaySpider(SitemapSpider):
     language = "de"
 
     reviews_only = True
-
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
         """The sitemap misses ~200 pages, so the archives are crawled as well."""
@@ -116,8 +108,6 @@ class GamesWePlaySpider(SitemapSpider):
             callback = self.parse_index if _INDEX_PAGE.match(slug) else self.parse_review
             yield response.follow(href, callback=callback)
 
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred
-    # a returned RawItem into (name, value) pairs.
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)

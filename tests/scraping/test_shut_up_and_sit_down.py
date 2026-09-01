@@ -8,7 +8,6 @@ from datetime import datetime
 
 from itemadapter import is_item
 from scrapy.http import HtmlResponse, Request
-from scrapy.utils.spider import iterate_spider_output
 
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.spiders import ShutUpAndSitDownSpider
@@ -239,11 +238,3 @@ def test_items_are_yielded_as_raw_items():
 
     assert isinstance(item, RawItem)
     assert is_item(item)
-
-
-def test_a_raw_item_is_never_returned_bare():
-    """Pydantic models are iterable, so Scrapy shreds one into (name, value) pairs."""
-    item = RawItem(url=REVIEW_URL, spider_slug="shut-up-and-sit-down", raw_text="hi")
-
-    assert len(list(iterate_spider_output(item))) > 1
-    assert list(iterate_spider_output((item,))) == [item]

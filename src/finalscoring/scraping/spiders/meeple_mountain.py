@@ -21,17 +21,15 @@ is a load-step decision.
 
 import json
 import re
-from datetime import datetime
 from typing import Any
 
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
-from scrapy.spiders.sitemap import SitemapSpider
 
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.spider import ReviewSitemapSpider
 from finalscoring.scraping.text import html_to_text
+from finalscoring.scraping.timestamps import parse_iso
 
 BASE_URL = "https://www.meeplemountain.com/"
 
@@ -51,15 +49,6 @@ def star_rating(title: str | None) -> dict[str, str] | None:
     return {"value": match.group(1), "best": match.group(2), "tier": match.group(3).strip()}
 
 
-def published_at(timestamp: str | None) -> datetime | None:
-    if not timestamp:
-        return None
-    try:
-        return datetime.fromisoformat(timestamp)
-    except ValueError:
-        return None
-
-
 def schema_org_rating(response: TextResponse) -> dict[str, Any] | None:
     """The `reviewRating` from the page's JSON-LD `Review` node, if present."""
     for blob in response.xpath('//script[@type="application/ld+json"]/text()').getall():
@@ -75,7 +64,7 @@ def schema_org_rating(response: TextResponse) -> dict[str, Any] | None:
     return None
 
 
-class MeepleMountainSpider(SitemapSpider):
+class MeepleMountainSpider(ReviewSitemapSpider):
     name = "meeple-mountain"
     allowed_domains = ("meeplemountain.com",)
 
@@ -87,14 +76,6 @@ class MeepleMountainSpider(SitemapSpider):
     outlet_slug = "meeple-mountain"
     language = "en"  # the site is English-only
 
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
-
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred
-    # a returned RawItem into (name, value) pairs.
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -125,7 +106,7 @@ class MeepleMountainSpider(SitemapSpider):
                 raw_html=content_html,
                 title=heading or response.xpath("//title/text()").get(),
                 description=response.xpath("//meta[@name='description']/@content").get(),
-                published_at=published_at(
+                published_at=parse_iso(
                     response.xpath("//meta[@property='article:published_time']/@content").get()
                 ),
                 language=self.language,

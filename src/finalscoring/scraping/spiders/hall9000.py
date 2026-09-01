@@ -32,13 +32,12 @@ from datetime import datetime
 from typing import Any
 
 from parsel import Selector
-from scrapy import Request, Spider
+from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
 
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.spider import ReviewSpider
 from finalscoring.scraping.text import html_to_text
 
 BASE_URL = "https://www.hall9000.de/"
@@ -82,18 +81,12 @@ def score_from_src(src: str | None) -> int | None:
     return int(match.group(1)) if match else None
 
 
-class Hall9000Spider(Spider):
+class Hall9000Spider(ReviewSpider):
     name = "hall9000"
     allowed_domains = ("hall9000.de",)
 
     outlet_slug = "hall9000"
     language = "de"  # the site is German-only
-
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
         yield self.list_request(0, found=0)
@@ -135,8 +128,6 @@ class Hall9000Spider(Spider):
                 expected.group(1),
             )
 
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred
-    # a returned RawItem into (name, value) pairs.
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)

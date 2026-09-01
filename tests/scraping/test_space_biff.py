@@ -10,11 +10,10 @@ from datetime import UTC, datetime
 
 from itemadapter import is_item
 from scrapy.http import HtmlResponse, Request
-from scrapy.utils.spider import iterate_spider_output
 
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.spiders import SpaceBiffSpider
-from finalscoring.scraping.spiders.space_biff import category_slug, is_review, published_at
+from finalscoring.scraping.spiders.space_biff import category_slug, is_review
 
 BASE_URL = "https://spacebiff.com/"
 REVIEW_URL = "https://spacebiff.com/2026/08/26/thunder-road-ignition/"
@@ -114,12 +113,6 @@ def test_is_review_requires_board_game_and_excludes_columns():
     assert is_review({"board-game"})
     assert is_review({"board-game", "retrospective"}) is False
     assert is_review({"podcast"}) is False
-
-
-def test_published_at_parses_the_offset_timestamp():
-    assert published_at("2026-08-27T00:11:51+00:00") == datetime(2026, 8, 27, 0, 11, 51, tzinfo=UTC)
-    assert published_at(None) is None
-    assert published_at("not a date") is None
 
 
 def test_index_yields_a_request_per_post_and_follows_older_posts():
@@ -224,11 +217,3 @@ def test_items_are_yielded_as_raw_items():
 
     assert isinstance(item, RawItem)
     assert is_item(item)
-
-
-def test_a_raw_item_is_never_returned_bare():
-    """Pydantic models are iterable, so Scrapy shreds one into (name, value) pairs."""
-    item = RawItem(url=REVIEW_URL, spider_slug="space-biff", raw_text="hi")
-
-    assert len(list(iterate_spider_output(item))) > 1
-    assert list(iterate_spider_output((item,))) == [item]
