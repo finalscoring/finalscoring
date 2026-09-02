@@ -36,6 +36,11 @@ class SpielDesJahresSpider(ReviewSitemapSpider):
         self,
         response: TextResponse,
     ) -> tuple[RawItem | Request] | None:
+        """Smoke-test that a live roundup still parses and finds its REST link.
+
+        @url https://www.spiel-des-jahres.de/kritikenrundschau-harry-potter-kampf-um-hogwarts-lumos-oder-cruciatus/
+        @returns requests 1 1
+        """
         item = self.item_from_page(response)
         if item is None:
             self.logger.warning("No article content at %s", response.url)
@@ -90,6 +95,18 @@ class SpielDesJahresSpider(ReviewSitemapSpider):
         response: Response,
         item: RawItem,
     ) -> tuple[RawItem]:
+        """Smoke-test that the live WordPress REST post still fetches and parses.
+
+        Post 11440 is the roundup `parse_roundup`'s `@url` points at. The
+        injected `item` is synthetic; `@populated extra` is what tells the two
+        apart — `merge_wp_json` only fills `extra` when the REST payload parsed,
+        so an empty `extra` means the merge fell back to the (synthetic) page.
+
+        @url https://www.spiel-des-jahres.de/wp-json/wp/v2/posts/11440
+        @raw_item item
+        @returns items 1 1
+        @populated extra
+        """
         # Response, not TextResponse: that is what Scrapy promises a callback.
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text REST response from %s", response.url)

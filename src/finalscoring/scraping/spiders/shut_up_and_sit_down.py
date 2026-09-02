@@ -108,6 +108,11 @@ class ShutUpAndSitDownSpider(ReviewSpider):
         return Request(url, callback=self.parse_list, dont_filter=True)
 
     def parse_list(self, response: Response) -> Iterator[Request]:
+        """Smoke-test that the live reviews archive still yields review links.
+
+        @url https://www.shutupandsitdown.com/category/reviews/
+        @returns requests 1
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text list response from %s", response.url)
             return
@@ -129,6 +134,12 @@ class ShutUpAndSitDownSpider(ReviewSpider):
             self.logger.warning("review walk stopped at page %d of %d", this_page, last_page)
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
+        """Smoke-test that a live review still yields a populated item.
+
+        @url https://www.shutupandsitdown.com/miniatures-game-review-gaslands-refueled/
+        @returns items 1 1
+        @populated url spider_slug raw_text outlet_slug language title tags
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None

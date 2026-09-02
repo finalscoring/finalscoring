@@ -96,7 +96,11 @@ class GamesWePlaySpider(ReviewSitemapSpider):
         yield Request(f"{BASE_URL}index.html", callback=self.parse_index)
 
     def parse_index(self, response: Response) -> Iterator[Request]:
-        """Yearly archives link on to each other; everything else is a candidate."""
+        """Yearly archives link on to each other; everything else is a candidate.
+
+        @url https://gamesweplay.de/index.html
+        @returns requests 1
+        """
         # Response, not TextResponse: that is what Scrapy promises a callback.
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text index response from %s", response.url)
@@ -109,6 +113,12 @@ class GamesWePlaySpider(ReviewSitemapSpider):
             yield response.follow(href, callback=callback)
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
+        """Smoke-test that a live scored review still yields a populated item.
+
+        @url https://gamesweplay.de/dewan.html
+        @returns items 1 1
+        @populated url spider_slug raw_text outlet_slug language title tags
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None

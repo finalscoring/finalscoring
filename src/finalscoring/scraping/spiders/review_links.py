@@ -175,6 +175,17 @@ class ReviewLinksSpider(ReviewSpider):
         response: Response,
         rows: list[dict[str, Any]],
     ) -> tuple[RawItem] | None:
+        """Smoke-test that trafilatura still lifts an article from a fetched page.
+
+        The URL is a static review in a long-lived archive; the check is that
+        generic extraction still returns non-empty text and a title. Inherited
+        by every subclass (`luding`), so they are exercised too.
+
+        @url http://www.gamecabinet.com/reviews/LongShort.html
+        @cb_kwargs {"rows": [{"name": "Kingsburg"}]}
+        @returns items 1 1
+        @populated url spider_slug raw_text title
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("non-text response from %s", response.url)
             return None

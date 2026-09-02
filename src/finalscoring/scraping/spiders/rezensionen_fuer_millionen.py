@@ -100,6 +100,12 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
         return Request(url, callback=self.parse_feed, dont_filter=True)
 
     def parse_feed(self, response: Response) -> Iterator[RawItem | Request]:
+        """Smoke-test that the live Blogger feed still yields review items.
+
+        @url https://rezensionen-fuer-millionen.blogspot.com/feeds/posts/default?alt=json&max-results=150&start-index=1
+        @returns items 1
+        @populated url spider_slug raw_text outlet_slug language title tags
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text feed response from %s", response.url)
             return

@@ -103,6 +103,12 @@ class Hall9000Spider(ReviewSpider):
         )
 
     def parse_list(self, response: Response, page: int, found: int) -> Iterator[Request]:
+        """Smoke-test that the live review list still yields review links.
+
+        @url https://www.hall9000.de/html/spielsucheliste.html?topic=1&sort=7&dir=1&displaytype=2&page/0
+        @cb_kwargs {"page": 0, "found": 0}
+        @returns requests 1
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text list response from %s", response.url)
             return
@@ -129,6 +135,12 @@ class Hall9000Spider(ReviewSpider):
             )
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
+        """Smoke-test that a live review page still yields a populated item.
+
+        @url https://www.hall9000.de/html/spiel/carcassonne
+        @returns items 1 1
+        @populated url spider_slug raw_text outlet_slug language title tags
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None

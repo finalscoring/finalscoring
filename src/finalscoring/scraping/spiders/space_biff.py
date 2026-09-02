@@ -97,6 +97,11 @@ class SpaceBiffSpider(ReviewSitemapSpider):
         return Request(url, callback=self.parse_index, dont_filter=True)
 
     def parse_index(self, response: Response) -> Iterator[Request]:
+        """Walk one archive page, following each post and the "Older Posts" link.
+
+        @url https://spacebiff.com/
+        @returns requests 1
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text index response from %s", response.url)
             return
@@ -110,6 +115,12 @@ class SpaceBiffSpider(ReviewSitemapSpider):
             yield self.index_request(older)
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
+        """Smoke-test that a live board-game review still yields a populated item.
+
+        @url https://spacebiff.com/2019/06/18/keyforge/
+        @returns items 1 1
+        @populated url spider_slug raw_text outlet_slug language title tags
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None

@@ -1,0 +1,61 @@
+# Spider contracts
+
+Every parsing callback in the site-specific spiders carries [Scrapy spider
+contracts](https://docs.scrapy.org/en/latest/topics/contracts.html) in its
+docstring: a lightweight smoke test that fetches one stable known-good URL and
+checks the callback still parses it. They exist to catch an upstream layout
+change that would otherwise turn a crawl into silent empty output — there is
+essentially no other signal that a scraper still does what it should.
+
+Every spider is covered. `review_links` and `luding` parse arbitrary
+third-party markup rather than one known site, so their inherited
+`parse_review` contract points at a static review in a long-lived archive and
+just checks generic trafilatura extraction still returns text and a title.
+
+A failing contract means the source is either down or has changed shape — leave
+it red and have a human check what happened; don't delete it to force `scrapy
+check` green.
+
+## Running them
+
+```sh
+uv run scrapy check          # every spider
+uv run scrapy check hall9000 # one spider
+```
+
+`scrapy.cfg` points Scrapy at `finalscoring.scraping.scrapy_settings`, which
+sets `SPIDER_MODULES` so `scrapy check` discovers the spiders — the pipeline
+itself runs them through `python -m finalscoring.scraping`, not the CLI.
+
+## The checks
+
+Each callback declares:
+
+- `@url` — a stable, long-lived review or index URL. If one 404s, swap it for
+  another stable page on the same site rather than deleting the contract.
+- `@returns items 1` / `@returns requests 1` — the load-bearing assertion.
+  Every item callback returns `None` when its selectors stop matching, so
+  "returned 0 items" *is* the layout-break signal.
+- `@populated <fields>` — a **custom** contract (`scraping/contracts.py`).
+  Scrapy's built-in `@scrapes` only checks a field *exists*, which is always
+  true for a Pydantic `RawItem`; `@populated` checks it has a truthy value, so
+  a selector that quietly stops matching (empty `title`, no `tags`, lost
+  `outlet_slug`) fails instead of passing.
+
+Callbacks that take `cb_kwargs`:
+
+- `hall9000.parse_list`, `review_links.parse_review` — `@cb_kwargs` with plain
+  JSON.
+- `spiel_des_jahres.parse_wp_json` — the custom `@raw_item` contract injects a
+  synthetic `RawItem` (there is no upstream callback under `scrapy check`).
+  `@populated extra` tells success from fallback: `merge_wp_json` only fills
+  `extra` when the REST payload parsed.
+
+## CI
+
+These make real HTTP requests to third-party sites — slow, and occasionally
+flaky — so they do not belong in the per-commit pytest run (which is fully
+offline against hand-written fixtures). They *do* belong in CI as a **separate
+scheduled job** (e.g. nightly) that is allowed to fail without blocking a
+merge: a red run there is the alert that a site changed shape. No pipeline is
+wired yet; when one exists, add a `scrapy check` stage on a schedule trigger.
