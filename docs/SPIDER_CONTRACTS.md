@@ -8,17 +8,15 @@ change that would otherwise turn a crawl into silent empty output — there is
 essentially no other signal that a scraper still does what it should.
 
 Covered: `spiel_des_jahres`, `games_we_play`, `space_biff`,
-`rezensionen_fuer_millionen`, `meeple_mountain`, `hall9000`, and
-`shut_up_and_sit_down.parse_list`.
+`rezensionen_fuer_millionen`, `meeple_mountain`, `hall9000`,
+`shut_up_and_sit_down`.
 
-Not covered:
+Not covered: `review_links` and `luding` parse arbitrary third-party markup
+with trafilatura and take no single stable URL, so contracts do not fit them.
 
-- `shut_up_and_sit_down.parse_review` — against the current live site it
-  returns `None` for every review (the theme dropped the `meta-category` span
-  the `reviews_only` gate keys on), and the site 503s intermittently behind bot
-  protection. The spider needs its own fix before a contract can be green.
-- `review_links`, `luding` — parse arbitrary third-party markup with
-  trafilatura and take no single stable URL, so contracts do not fit them.
+A failing contract means the source is either down or has changed shape — leave
+it red and have a human check what happened; don't delete it to force `scrapy
+check` green.
 
 ## Running them
 

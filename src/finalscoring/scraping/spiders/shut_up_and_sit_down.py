@@ -134,10 +134,12 @@ class ShutUpAndSitDownSpider(ReviewSpider):
             self.logger.warning("review walk stopped at page %d of %d", this_page, last_page)
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
-        # No contract: against the current live site this returns None for every
-        # review — the theme no longer emits the `meta-category` span inside
-        # `entry-content` that the `reviews_only` gate keys on, and the site
-        # 503s intermittently behind bot protection. Needs its own fix first.
+        """Smoke-test that a live review still yields a populated item.
+
+        @url https://www.shutupandsitdown.com/miniatures-game-review-gaslands-refueled/
+        @returns items 1 1
+        @populated url spider_slug raw_text outlet_slug language title tags
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None
