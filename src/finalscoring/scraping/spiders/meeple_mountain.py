@@ -77,6 +77,12 @@ class MeepleMountainSpider(ReviewSitemapSpider):
     language = "en"  # the site is English-only
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
+        """Smoke-test that a live review page still yields a populated item.
+
+        @url https://www.meeplemountain.com/reviews/azul/
+        @returns items 1 1
+        @scrapes url spider_slug raw_text outlet_slug language
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None
