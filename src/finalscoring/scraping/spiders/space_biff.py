@@ -119,7 +119,7 @@ class SpaceBiffSpider(ReviewSitemapSpider):
 
         @url https://spacebiff.com/2019/06/18/keyforge/
         @returns items 1 1
-        @scrapes url spider_slug raw_text outlet_slug language
+        @populated url spider_slug raw_text outlet_slug language title tags
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)

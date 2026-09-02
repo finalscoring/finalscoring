@@ -14,8 +14,11 @@ from finalscoring.settings import Settings, load_settings
 # otherwise runs them through `python -m finalscoring.scraping`, not the CLI.
 SPIDER_MODULES = ["finalscoring.scraping.spiders"]
 
-# `@raw_item <name>` — see finalscoring.scraping.contracts.
-SPIDER_CONTRACTS = {"finalscoring.scraping.contracts.RawItemContract": 10}
+# `@populated` / `@raw_item` — see finalscoring.scraping.contracts.
+SPIDER_CONTRACTS = {
+    "finalscoring.scraping.contracts.PopulatedContract": 10,
+    "finalscoring.scraping.contracts.RawItemContract": 10,
+}
 
 # So an interrupted crawl leaves its completed batches behind.
 FEED_BATCH_ITEM_COUNT = 10_000

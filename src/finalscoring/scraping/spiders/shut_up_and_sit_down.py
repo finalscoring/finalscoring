@@ -108,6 +108,11 @@ class ShutUpAndSitDownSpider(ReviewSpider):
         return Request(url, callback=self.parse_list, dont_filter=True)
 
     def parse_list(self, response: Response) -> Iterator[Request]:
+        """Smoke-test that the live reviews archive still yields review links.
+
+        @url https://www.shutupandsitdown.com/category/reviews/
+        @returns requests 1
+        """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text list response from %s", response.url)
             return
@@ -129,6 +134,10 @@ class ShutUpAndSitDownSpider(ReviewSpider):
             self.logger.warning("review walk stopped at page %d of %d", this_page, last_page)
 
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
+        # No contract: against the current live site this returns None for every
+        # review — the theme no longer emits the `meta-category` span inside
+        # `entry-content` that the `reviews_only` gate keys on, and the site
+        # 503s intermittently behind bot protection. Needs its own fix first.
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
             return None

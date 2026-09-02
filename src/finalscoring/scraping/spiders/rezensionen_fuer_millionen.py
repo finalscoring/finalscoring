@@ -104,7 +104,7 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
 
         @url https://rezensionen-fuer-millionen.blogspot.com/feeds/posts/default?alt=json&max-results=150&start-index=1
         @returns items 1
-        @scrapes url spider_slug raw_text outlet_slug language
+        @populated url spider_slug raw_text outlet_slug language title tags
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text feed response from %s", response.url)

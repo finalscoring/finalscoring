@@ -98,12 +98,14 @@ class SpielDesJahresSpider(ReviewSitemapSpider):
         """Smoke-test that the live WordPress REST post still fetches and parses.
 
         Post 11440 is the roundup `parse_roundup`'s `@url` points at. The
-        injected `item` is synthetic, so this only checks the REST call is
-        reachable and the parse does not raise — not that the merge found text.
+        injected `item` is synthetic; `@populated extra` is what tells the two
+        apart — `merge_wp_json` only fills `extra` when the REST payload parsed,
+        so an empty `extra` means the merge fell back to the (synthetic) page.
 
         @url https://www.spiel-des-jahres.de/wp-json/wp/v2/posts/11440
         @raw_item item
         @returns items 1 1
+        @populated extra
         """
         # Response, not TextResponse: that is what Scrapy promises a callback.
         if not isinstance(response, TextResponse):
