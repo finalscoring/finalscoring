@@ -7,12 +7,10 @@ checks the callback still parses it. They exist to catch an upstream layout
 change that would otherwise turn a crawl into silent empty output — there is
 essentially no other signal that a scraper still does what it should.
 
-Covered: `spiel_des_jahres`, `games_we_play`, `space_biff`,
-`rezensionen_fuer_millionen`, `meeple_mountain`, `hall9000`,
-`shut_up_and_sit_down`.
-
-Not covered: `review_links` and `luding` parse arbitrary third-party markup
-with trafilatura and take no single stable URL, so contracts do not fit them.
+Every spider is covered. `review_links` and `luding` parse arbitrary
+third-party markup rather than one known site, so their inherited
+`parse_review` contract points at a static review in a long-lived archive and
+just checks generic trafilatura extraction still returns text and a title.
 
 A failing contract means the source is either down or has changed shape — leave
 it red and have a human check what happened; don't delete it to force `scrapy
@@ -44,9 +42,10 @@ Each callback declares:
   a selector that quietly stops matching (empty `title`, no `tags`, lost
   `outlet_slug`) fails instead of passing.
 
-Two callbacks take `cb_kwargs`:
+Callbacks that take `cb_kwargs`:
 
-- `hall9000.parse_list` — `@cb_kwargs` with plain JSON.
+- `hall9000.parse_list`, `review_links.parse_review` — `@cb_kwargs` with plain
+  JSON.
 - `spiel_des_jahres.parse_wp_json` — the custom `@raw_item` contract injects a
   synthetic `RawItem` (there is no upstream callback under `scrapy check`).
   `@populated extra` tells success from fallback: `merge_wp_json` only fills
