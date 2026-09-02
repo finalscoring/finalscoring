@@ -29,13 +29,12 @@ import re
 from collections.abc import AsyncIterator, Iterator
 from datetime import datetime
 
-from scrapy import Request, Spider
+from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
 
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.spider import ReviewSpider
 from finalscoring.scraping.text import html_to_text
 
 BASE_URL = "https://www.shutupandsitdown.com/"
@@ -90,7 +89,7 @@ def published_at(text: str | None) -> datetime | None:
         return None
 
 
-class ShutUpAndSitDownSpider(Spider):
+class ShutUpAndSitDownSpider(ReviewSpider):
     name = "shut-up-and-sit-down"
     allowed_domains = ("shutupandsitdown.com",)
 
@@ -98,12 +97,6 @@ class ShutUpAndSitDownSpider(Spider):
     language = "en"  # the site is English-only
 
     reviews_only = True
-
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
         yield self.list_request(REVIEWS_URL)
@@ -135,8 +128,6 @@ class ShutUpAndSitDownSpider(Spider):
         elif this_page < last_page:
             self.logger.warning("review walk stopped at page %d of %d", this_page, last_page)
 
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred
-    # a returned RawItem into (name, value) pairs.
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)

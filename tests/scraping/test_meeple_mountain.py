@@ -9,12 +9,10 @@ from datetime import datetime
 
 from itemadapter import is_item
 from scrapy.http import HtmlResponse, Request
-from scrapy.utils.spider import iterate_spider_output
 
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.spiders import MeepleMountainSpider
 from finalscoring.scraping.spiders.meeple_mountain import (
-    published_at,
     schema_org_rating,
     star_rating,
 )
@@ -82,14 +80,6 @@ def test_star_rating_splits_value_scale_and_tier():
     assert star_rating("2.5 / 5 stars — Fair.") == {"value": "2.5", "best": "5", "tier": "Fair"}
     assert star_rating("no dash here") is None
     assert star_rating(None) is None
-
-
-def test_published_at_parses_the_offset_timestamp():
-    assert published_at("2026-08-27T13:00:20+00:00") == datetime.fromisoformat(
-        "2026-08-27T13:00:20+00:00"
-    )
-    assert published_at(None) is None
-    assert published_at("not a date") is None
 
 
 def test_schema_org_rating_walks_the_json_ld_graph():
@@ -206,11 +196,3 @@ def test_items_are_yielded_as_raw_items():
 
     assert isinstance(item, RawItem)
     assert is_item(item)
-
-
-def test_a_raw_item_is_never_returned_bare():
-    """Pydantic models are iterable, so Scrapy shreds one into (name, value) pairs."""
-    item = RawItem(url=REVIEW_URL, spider_slug="meeple-mountain", raw_text="hi")
-
-    assert len(list(iterate_spider_output(item))) > 1
-    assert list(iterate_spider_output((item,))) == [item]

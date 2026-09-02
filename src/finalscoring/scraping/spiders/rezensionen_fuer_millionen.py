@@ -19,13 +19,12 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import datetime
 from typing import Any
 
-from scrapy import Request, Spider
+from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
 
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.spider import ReviewSpider
 from finalscoring.scraping.text import html_to_text
 
 FEED_URL = "https://rezensionen-fuer-millionen.blogspot.com/feeds/posts/default"
@@ -80,7 +79,7 @@ def is_review(entry: dict[str, Any]) -> bool:
     return any(_RATING_LABEL.match(label) for label in labels(entry))
 
 
-class RezensionenFuerMillionenSpider(Spider):
+class RezensionenFuerMillionenSpider(ReviewSpider):
     name = "rezensionen-fuer-millionen"
     allowed_domains = ("rezensionen-fuer-millionen.blogspot.com",)
 
@@ -89,12 +88,6 @@ class RezensionenFuerMillionenSpider(Spider):
     language = "de"  # the feed carries no locale, and he writes only in German
 
     reviews_only = True
-
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
         yield self.feed_request(start_index=1)

@@ -25,9 +25,7 @@ setting `files`, `url_column`, and which row fields to carry.
 
 import csv
 import json
-import re
 from collections.abc import AsyncIterator, Iterator
-from datetime import UTC, datetime
 from glob import glob
 from os.path import expanduser
 from pathlib import Path
@@ -37,40 +35,43 @@ from urllib.parse import urlparse
 from scrapy import Request, Spider
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
 from scrapy.utils.misc import arg_to_iter
 from trafilatura import bare_extraction
 from trafilatura.htmlprocessing import build_html_output
 from trafilatura.settings import Document
 from twisted.python.failure import Failure
 
-from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.item import RawItem, language_from_locale
+from finalscoring.scraping.spider import ReviewSpider
+from finalscoring.scraping.timestamps import as_utc
 
 _JSONL_SUFFIXES = (".jl", ".jsonl", ".ndjson")
-_ISO_639_1 = re.compile(r"^[a-z]{2}$")
-
-# Hosts that have their own spider; a generic pass over them would only produce a
-# lower-fidelity duplicate. Suffix-matched, so "www.hall9000.de" counts as
-# "hall9000.de". Grows as spiders are added. Delegating these links to the
-# dedicated spider's own parse instead of skipping them is possible later - the
-# per-page parsers take a bare Response - but is out of scope here.
-DEDICATED_SPIDER_DOMAINS = frozenset(
-    {
-        "gamesweplay.de",
-        "spacebiff.com",
-        "spiel-des-jahres.de",
-        "rezensionen-fuer-millionen.blogspot.com",
-        "meeplemountain.com",
-        "hall9000.de",
-        "shutupandsitdown.com",
-    },
-)
 
 
-def has_dedicated_spider(netloc: str) -> bool:
+def covered_domains() -> frozenset[str]:
+    """Hosts a dedicated spider already handles: the union of every registered
+    spider's `allowed_domains`. Derived rather than hand-listed so a new spider
+    cannot leave a generic pass silently shadowing it with a lower-fidelity copy.
+    Delegating such links to the dedicated parser instead of skipping them is
+    possible later - the per-page parsers take a bare Response - but out of scope.
+    """
+    from finalscoring.scraping import spiders
+
+    return frozenset(
+        domain
+        for obj in vars(spiders).values()
+        if isinstance(obj, type)
+        and issubclass(obj, Spider)
+        and not issubclass(obj, ReviewLinksSpider)
+        for domain in (getattr(obj, "allowed_domains", None) or ())
+    )
+
+
+def has_dedicated_spider(netloc: str, covered: frozenset[str] | None = None) -> bool:
+    """True when `netloc` is, or is a subdomain of, a host a dedicated spider covers."""
+    domains = covered_domains() if covered is None else covered
     host = netloc.lower().split(":", 1)[0]
-    return any(host == d or host.endswith(f".{d}") for d in DEDICATED_SPIDER_DOMAINS)
+    return any(host == d or host.endswith(f".{d}") for d in domains)
 
 
 def iter_rows(path: Path) -> Iterator[dict[str, Any]]:
@@ -95,26 +96,7 @@ def iter_urls(value: Any) -> Iterator[str]:
             yield stripped.split("#", 1)[0]
 
 
-def language_from_locale(locale: str | None) -> str | None:
-    """ "de-DE" / "de_DE" -> "de"; None for anything not a two-letter language."""
-    if not locale:
-        return None
-    code = locale.replace("-", "_").split("_", 1)[0].strip().lower()
-    return code if _ISO_639_1.match(code) else None
-
-
-def as_utc(value: str | None) -> datetime | None:
-    """htmldate hands back a date string; treat a naive one as UTC, like the SdJ spider."""
-    if not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError:
-        return None
-    return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed
-
-
-class ReviewLinksSpider(Spider):
+class ReviewLinksSpider(ReviewSpider):
     name = "review-links"
 
     # No allowed_domains: the links point anywhere, and OffsiteMiddleware would
@@ -127,12 +109,6 @@ class ReviewLinksSpider(Spider):
     # Row fields whose values are folded into RawItem.tags (the game name, so the
     # model can match a review with no bgg_id to a game).
     tag_fields: tuple[str, ...] = ()
-
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
         targets = self._collect()
@@ -167,12 +143,13 @@ class ReviewLinksSpider(Spider):
         targets: dict[str, list[dict[str, Any]]] = {}
         self._rows_read = 0
         self._covered: set[str] = set()
+        covered = covered_domains()
         for path in self._files():
             for row in iter_rows(path):
                 self._rows_read += 1
                 context = self._context(row)
                 for url in iter_urls(row.get(self.url_column)):
-                    if has_dedicated_spider(urlparse(url).netloc):
+                    if has_dedicated_spider(urlparse(url).netloc, covered):
                         self._covered.add(url)
                     else:
                         targets.setdefault(url, []).append(context)
@@ -193,8 +170,6 @@ class ReviewLinksSpider(Spider):
                         tags.append(text)
         return tags
 
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred a
-    # returned RawItem into (name, value) pairs.
     def parse_review(
         self,
         response: Response,
@@ -235,6 +210,7 @@ class ReviewLinksSpider(Spider):
                 # outlet_slug left unset: the outlet is the host, resolved downstream.
                 title=document.title or None,
                 description=document.description or None,
+                # htmldate hands back a bare day-string; read it as UTC.
                 published_at=as_utc(document.date),
                 language=language_from_locale(locale),
                 locale=locale,

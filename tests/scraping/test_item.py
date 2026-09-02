@@ -5,8 +5,9 @@ from typing import Any
 
 import pytest
 from pydantic import ValidationError
+from scrapy.utils.spider import iterate_spider_output
 
-from finalscoring.scraping.item import RawItem
+from finalscoring.scraping.item import RawItem, language_from_locale
 
 
 def _item(**kwargs: Any) -> RawItem:
@@ -119,3 +120,31 @@ def test_locale_keeps_the_region_language_discards():
 def test_invalid_locale_rejected():
     with pytest.raises(ValidationError):
         _item(locale="Deutschland")
+
+
+@pytest.mark.parametrize(
+    ("locale", "expected"),
+    [
+        ("de-AT", "de"),
+        ("de_DE", "de"),
+        ("en-GB", "en"),
+        ("en", "en"),
+        ("de", "de"),
+        ("EN-us", "en"),
+        (None, None),
+        ("", None),
+        ("x-default", None),
+        ("deu_DE", None),
+    ],
+)
+def test_language_from_locale(locale: str | None, expected: str | None):
+    assert language_from_locale(locale) == expected
+
+
+def test_a_raw_item_is_never_returned_bare():
+    """A pydantic model is iterable: a bare return gets shredded into (name, value) pairs,
+    so every spider callback wraps a RawItem in a one-tuple. This is the invariant."""
+    item = _item()
+
+    assert len(list(iterate_spider_output(item))) > 1
+    assert list(iterate_spider_output((item,))) == [item]

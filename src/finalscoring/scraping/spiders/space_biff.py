@@ -28,17 +28,15 @@ through `tags`, in case the cut is wrong on a given post.
 
 import re
 from collections.abc import AsyncIterator, Iterator
-from datetime import datetime
 
 from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
-from scrapy.settings import BaseSettings
-from scrapy.spiders.sitemap import SitemapSpider
 
 from finalscoring.scraping.item import RawItem
-from finalscoring.scraping.scrapy_settings import scrapy_settings
+from finalscoring.scraping.spider import ReviewSitemapSpider
 from finalscoring.scraping.text import html_to_text
+from finalscoring.scraping.timestamps import parse_iso
 
 BASE_URL = "https://spacebiff.com/"
 
@@ -71,16 +69,7 @@ def is_review(category_slugs: set[str]) -> bool:
     return "board-game" in category_slugs and not (category_slugs & NON_REVIEW_CATEGORIES)
 
 
-def published_at(timestamp: str | None) -> datetime | None:
-    if not timestamp:
-        return None
-    try:
-        return datetime.fromisoformat(timestamp)
-    except ValueError:
-        return None
-
-
-class SpaceBiffSpider(SitemapSpider):
+class SpaceBiffSpider(ReviewSitemapSpider):
     name = "space-biff"
     allowed_domains = ("spacebiff.com",)
 
@@ -94,12 +83,6 @@ class SpaceBiffSpider(SitemapSpider):
     language = "en"  # he writes only in English
 
     reviews_only = True
-
-    @classmethod
-    def update_settings(cls, settings: BaseSettings) -> None:
-        # Not custom_settings: that would read the environment at import time.
-        super().update_settings(settings)
-        settings.setdict(scrapy_settings(cls.name), priority="spider")
 
     async def start(self) -> AsyncIterator[Request]:
         """The sitemap stops at mid-2019, so the archive is paged as well."""
@@ -126,8 +109,6 @@ class SpaceBiffSpider(SitemapSpider):
         if older:
             yield self.index_request(older)
 
-    # Wrapped, never bare: a pydantic model is iterable, so Scrapy would shred
-    # a returned RawItem into (name, value) pairs.
     def parse_review(self, response: Response) -> tuple[RawItem] | None:
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -165,7 +146,7 @@ class SpaceBiffSpider(SitemapSpider):
                     response.xpath('//h1[@class="single-title"]/text()').get()
                     or response.xpath("//title/text()").get()
                 ),
-                published_at=published_at(
+                published_at=parse_iso(
                     response.xpath("//meta[@property='article:published_time']/@content").get()
                 ),
                 language=self.language,

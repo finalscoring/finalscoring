@@ -11,16 +11,14 @@ import json
 import pytest
 from itemadapter import is_item
 from scrapy.http import HtmlResponse, Request
-from scrapy.utils.spider import iterate_spider_output
 
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.spiders import ReviewLinksSpider
 from finalscoring.scraping.spiders.review_links import (
-    as_utc,
+    covered_domains,
     has_dedicated_spider,
     iter_rows,
     iter_urls,
-    language_from_locale,
 )
 
 REVIEW_URL = "https://www.spieletest.at/artikel/catan"
@@ -87,6 +85,21 @@ def test_has_dedicated_spider_matches_host_and_subdomains_only():
     assert not has_dedicated_spider("spieletest.at")
 
 
+def test_covered_domains_is_derived_from_the_registered_spiders():
+    """Adding a spider must not require also editing a hand-kept list here."""
+    from finalscoring.scraping import spiders
+
+    expected = {
+        domain
+        for name in spiders.__all__
+        for domain in (getattr(getattr(spiders, name), "allowed_domains", None) or ())
+    }
+
+    assert covered_domains() == expected
+    assert "hall9000.de" in covered_domains()
+    assert "review-links" not in covered_domains()  # the meta-sources contribute nothing
+
+
 def test_iter_urls_keeps_http_links_and_drops_the_fragment():
     assert list(iter_urls("https://a.test/x#top")) == ["https://a.test/x"]
     assert list(iter_urls(["https://a.test/1", "http://b.test/2"])) == [
@@ -114,24 +127,6 @@ def test_iter_rows_rejects_an_unknown_file_type(tmp_path):
     bad.write_text("whatever")
     with pytest.raises(ValueError, match="unsupported file type"):
         list(iter_rows(bad))
-
-
-def test_language_from_locale():
-    assert language_from_locale("de-AT") == "de"
-    assert language_from_locale("de_DE") == "de"
-    assert language_from_locale("en") == "en"
-    assert language_from_locale("EN-us") == "en"
-    assert language_from_locale(None) is None
-    assert language_from_locale("x-default") is None
-
-
-def test_as_utc_treats_a_naive_date_as_utc():
-    from datetime import UTC, datetime
-
-    assert as_utc("2011-03-14") == datetime(2011, 3, 14, tzinfo=UTC)
-    assert as_utc("2011-03-14T09:00:00+00:00") == datetime(2011, 3, 14, 9, tzinfo=UTC)
-    assert as_utc(None) is None
-    assert as_utc("not a date") is None
 
 
 # --- start(): reading the file, deduping, skipping covered hosts -------------
@@ -277,13 +272,6 @@ def test_thin_content_still_becomes_an_item_for_the_llm_to_judge():
     """Deciding a blurb is not a review is the extraction step's call, not the spider's."""
     html = "<html lang='de'><body><article><p>Nettes Spiel.</p></article></body></html>"
     assert _item(html=html) is not None
-
-
-def test_the_item_is_never_returned_bare():
-    out = _spider().parse_review(_response(), rows=[{}])
-    assert out is not None
-    assert list(iterate_spider_output(out)) == [out[0]]
-    assert len(list(iterate_spider_output(out[0]))) > 1
 
 
 # --- subclassing -----------------------------------------------------------

@@ -8,11 +8,9 @@ from datetime import UTC, datetime
 
 from itemadapter import is_item
 from scrapy.http import HtmlResponse, Request, Response, TextResponse
-from scrapy.utils.spider import iterate_spider_output
 
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.spiders import SpielDesJahresSpider
-from finalscoring.scraping.spiders.spiel_des_jahres import language_from_locale
 
 PAGE_URL = "https://www.spiel-des-jahres.de/kritikenrundschau-beispiel/"
 WP_JSON_URL = "https://www.spiel-des-jahres.de/wp-json/wp/v2/posts/1"
@@ -195,20 +193,3 @@ def test_items_are_yielded_as_raw_items():
     (item,) = results
     assert isinstance(item, RawItem)
     assert is_item(item)
-
-
-def test_locale_parsing():
-    assert language_from_locale("de_DE") == "de"
-    assert language_from_locale("en-GB") == "en"
-    assert language_from_locale("de") == "de"
-    assert language_from_locale(None) is None
-    assert language_from_locale("") is None
-    assert language_from_locale("deu_DE") is None
-
-
-def test_a_raw_item_is_never_returned_bare():
-    """Pydantic models are iterable, so Scrapy shreds one into (name, value) pairs."""
-    item = RawItem(url=PAGE_URL, spider_slug="spiel-des-jahres", raw_text="hi")
-
-    assert len(list(iterate_spider_output(item))) > 1
-    assert list(iterate_spider_output((item,))) == [item]
