@@ -122,21 +122,24 @@ def test_the_outlet_and_language_are_known_at_scrape_time():
     assert item.outlet_slug == "meeple-mountain"
     assert item.language == "en"
     assert item.locale == "en-US"
-    assert item.og_site_name == "Meeple Mountain"
+    assert item.site_name == "Meeple Mountain"
 
 
-def test_the_verdict_reaches_the_model_through_tags():
-    """The score is theme markup; without the tags the review carries no verdict."""
+def test_the_review_hint_carries_the_byline_and_both_ratings():
+    """The score is theme markup; without the SourceRatings the review has no verdict."""
+    (review,) = _item().reviews
+
+    assert review.critic_names == ["Mark Iradian"]
+    by_system = {r.system.value: r for r in review.ratings}
+    assert (by_system["star_label"].value, by_system["star_label"].scale_max) == (4.0, 5.0)
+    assert by_system["star_label"].label == "Great - Would recommend"
+    assert (by_system["schema_org"].value, by_system["schema_org"].scale_min) == (4.0, 0.5)
+
+
+def test_the_raw_rating_parse_is_kept_in_extra():
     item = _item()
 
-    assert "Meeple Mountain rating: 4.0 / 5" in item.tags
-    assert "Great - Would recommend" in item.tags
-
-
-def test_the_rating_is_kept_structured_in_extra():
-    item = _item()
-
-    assert item.extra["rating"] == {
+    assert item.raw_metadata["rating"] == {
         "value": "4.0",
         "best": "5",
         "tier": "Great - Would recommend",
@@ -147,27 +150,31 @@ def test_the_rating_is_kept_structured_in_extra():
             "bestRating": "5.0",
         },
     }
-    assert item.extra["author"] == "Mark Iradian"
 
 
-def test_the_title_string_wins_when_the_json_ld_number_disagrees():
-    """On older video reviews the JSON-LD ratingValue is 0.0 and the title is right."""
+def test_a_placeholder_json_ld_score_is_dropped_not_ingested():
+    """The CMS emits ratingValue 0.0 — below its own worstRating — on unscored reviews."""
     html = REVIEW_HTML.replace('"ratingValue":"4.0"', '"ratingValue":"0.0"')
 
-    item = _item(html)
+    (review,) = _item(html).reviews
 
-    assert "Meeple Mountain rating: 4.0 / 5" in item.tags
-    assert item.extra["rating"]["value"] == "4.0"
-    assert item.extra["rating"]["schema_org"]["ratingValue"] == "0.0"
+    systems = {r.system.value for r in review.ratings}
+    assert systems == {"star_label"}  # the star tier is real; the 0.0 is not
+    assert review.ratings[0].value == 4.0
 
 
-def test_the_post_taxonomy_is_read_off_the_article_class():
+def test_the_taxonomy_feeds_categories_and_the_game_hint():
     item = _item()
 
-    assert "adventure-board-games" in item.tags
-    assert "fantasy-board-games" in item.tags
-    assert item.extra["taxonomy"]["designers"] == ["eric-goldberg"]
-    assert item.extra["taxonomy"]["publishers"] == ["devir"]
+    assert item.categories == ["adventure-board-games", "fantasy-board-games"]
+    assert item.taxonomy["mechanisms"] == ["dice-rolling"]
+    game = item.reviews[0].game
+    assert game is not None
+    assert game.titles == ["Tales of the Arabian Nights"]  # the " Game Review" suffix is stripped
+    assert game.designers == ["eric-goldberg"]
+    assert game.publishers == ["devir"]
+    assert game.mechanics == ["dice-rolling"]
+    assert game.year_published is None  # release_year-1247 is not a plausible year
 
 
 def test_a_review_without_a_rating_still_produces_an_item():
@@ -180,8 +187,10 @@ def test_a_review_without_a_rating_still_produces_an_item():
     item = _item(html)
 
     assert item is not None
-    assert not any(t.startswith("Meeple Mountain rating") for t in item.tags)
-    assert "rating" not in item.extra
+    assert "rating" not in item.raw_metadata
+    (review,) = item.reviews  # the review still exists, by its author, with no score
+    assert review.critic_names == ["Mark Iradian"]
+    assert review.ratings == []
 
 
 def test_a_page_with_no_entry_content_is_skipped():

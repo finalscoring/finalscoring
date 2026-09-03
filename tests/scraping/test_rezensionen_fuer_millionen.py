@@ -7,8 +7,10 @@ import pytest
 from scrapy import Request
 from scrapy.http import TextResponse
 
+from finalscoring.models import RatingSystem
 from finalscoring.scraping.item import RawItem
 from finalscoring.scraping.spiders import RezensionenFuerMillionenSpider
+from finalscoring.scraping.spiders.rezensionen_fuer_millionen import star_rating
 
 FEED_URL = "https://rezensionen-fuer-millionen.blogspot.com/feeds/posts/default?alt=json"
 POST_URL = "https://rezensionen-fuer-millionen.blogspot.com/2016/11/costa-rica.html"
@@ -73,19 +75,42 @@ def test_a_starred_post_becomes_an_item():
     assert "COSTA RICA ist ein hübsches Spiel" in item.raw_text
 
 
-def test_the_outlet_is_known_at_scrape_time():
-    """Unlike a roundup: one blog, one critic, so the outlet is not in doubt."""
+def test_the_outlet_and_critic_are_known_at_scrape_time():
+    """Unlike a roundup: one blog, one critic, so neither is in doubt."""
     (item,) = _items(_spider().parse_feed(_response(_feed(_entry()))))
 
     assert item.outlet_slug == "rezensionen-fuer-millionen"
-    assert item.og_site_name == "Rezensionen für Millionen"
+    assert item.known_critic_name == "Udo Bartsch"
+    assert item.site_name == "Rezensionen für Millionen"
 
 
-def test_the_star_label_is_carried_as_a_tag():
-    """The label is his rating, and it reaches the model through the tags."""
+@pytest.mark.parametrize(
+    ("label", "value", "word"),
+    [
+        ("**** solide", 4, "solide"),
+        ("******* genial", 7, "genial"),
+        ("*** mäßig", 3, "mäßig"),
+        ("****", 4, None),
+    ],
+)
+def test_star_rating_reads_the_count_and_keeps_the_word(label, value, word):
+    rating = star_rating(label)
+
+    assert rating.system is RatingSystem.star_label
+    assert rating.value == value
+    assert rating.label == word
+    assert rating.verbatim == label
+    assert rating.scale_max is None  # the label states no maximum
+
+
+def test_the_star_label_becomes_a_review_with_a_rating():
+    """The label is his verdict; it becomes the review hint's structured rating."""
     (item,) = _items(_spider().parse_feed(_response(_feed(_entry()))))
 
-    assert item.tags == ["**** solide"]
+    assert item.tags == []
+    (review,) = item.reviews
+    (rating,) = review.ratings
+    assert (rating.value, rating.label) == (4, "solide")
 
 
 def test_the_thumbnail_is_read_from_its_attribute():
@@ -95,13 +120,14 @@ def test_the_thumbnail_is_read_from_its_attribute():
     assert item.image_url == "https://example.com/thumb.jpg"
 
 
-def test_a_post_covering_two_games_keeps_both_ratings():
+def test_a_post_covering_two_games_becomes_two_review_hints():
     """Four of his posts carry two stars because they review two games."""
     entry = _entry(category=[{"term": "**** solide"}, {"term": "***** reizvoll"}])
 
     (item,) = _items(_spider().parse_feed(_response(_feed(entry))))
 
-    assert item.tags == ["**** solide", "***** reizvoll"]
+    assert [r.ratings[0].value for r in item.reviews] == [4, 5]
+    assert [r.ratings[0].label for r in item.reviews] == ["solide", "reizvoll"]
 
 
 def test_the_post_body_is_kept_as_html():
@@ -123,7 +149,7 @@ def test_the_whole_entry_is_preserved():
     """Same bargain as wp_json: keep the source payload, decide later."""
     (item,) = _items(_spider().parse_feed(_response(_feed(_entry()))))
 
-    assert item.extra["blogger_entry"]["author"][0]["name"]["$t"] == "Udo Bartsch"
+    assert item.raw_metadata["blogger_entry"]["author"][0]["name"]["$t"] == "Udo Bartsch"
 
 
 @pytest.mark.parametrize("label", ["Gern gespielt", "Vor 20 Jahren"])

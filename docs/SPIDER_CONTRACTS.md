@@ -39,8 +39,11 @@ Each callback declares:
 - `@populated <fields>` — a **custom** contract (`scraping/contracts.py`).
   Scrapy's built-in `@scrapes` only checks a field *exists*, which is always
   true for a Pydantic `RawItem`; `@populated` checks it has a truthy value, so
-  a selector that quietly stops matching (empty `title`, no `tags`, lost
-  `outlet_slug`) fails instead of passing.
+  a selector that quietly stops matching (empty `title`, lost `outlet_slug`, an
+  empty `reviews` list where the page has scored notes) fails instead of
+  passing. A field is only worth listing here if the callback fills it for
+  *every* page — `tags` is optional on most sources now, `reviews` is the load-
+  bearing one for a scored source.
 
 Callbacks that take `cb_kwargs`:
 
@@ -48,8 +51,8 @@ Callbacks that take `cb_kwargs`:
   JSON.
 - `spiel_des_jahres.parse_wp_json` — the custom `@raw_item` contract injects a
   synthetic `RawItem` (there is no upstream callback under `scrapy check`).
-  `@populated extra` tells success from fallback: `merge_wp_json` only fills
-  `extra` when the REST payload parsed.
+  `@populated raw_metadata` tells success from fallback: `merge_wp_json` only
+  fills `raw_metadata` when the REST payload parsed.
 
 ## CI
 

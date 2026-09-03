@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 # Superseded prompts stay on disk: records carry the version and sha that made
 # them, and those are only readable if the bytes are still here.
-PROMPT_VERSION = "extract_v2"
+PROMPT_VERSION = "extract_v3"
 PROMPT = (Path(__file__).parent / "prompts" / f"{PROMPT_VERSION}.txt").read_text()
 
 _BGG_HOSTS = frozenset({"boardgamegeek.com", "www.boardgamegeek.com"})

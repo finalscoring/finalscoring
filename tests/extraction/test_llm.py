@@ -135,7 +135,7 @@ def test_the_page_metadata_is_sent_with_the_article():
     """The model was being asked to name outlets without the page's site name."""
     extractor, stub = _extractor(json.dumps(ONE_REVIEW))
 
-    extractor.extract(_item(og_site_name="Spiel des Jahres", title="Kritikenrundschau"))
+    extractor.extract(_item(site_name="Spiel des Jahres", title="Kritikenrundschau"))
 
     (call,) = stub.calls
     user = call["messages"][1]["content"]

@@ -21,8 +21,12 @@ the way it does for the other spiders.
 The reviews are conversational prose with no score, graphic or structured
 verdict of any kind — nothing to gate on but the category, which also carries
 the odd buyer's guide and awards round-up. That is a coarse cut, matching
-space-biff; every category and tag on the page reaches the model through `tags`
-regardless.
+space-biff. So `reviews` stays empty and the verdict is the model's to read.
+
+Unlike space-biff it is multi-writer, so there is no `known_critic_name`. The
+theme's byline is often the migration placeholder "webdeveloper" with the real
+name only in the prose ("Quinns:"); when it is a real name it goes in
+`bylines`, a weaker signal than a spider-level critic.
 """
 
 import re
@@ -138,7 +142,7 @@ class ShutUpAndSitDownSpider(ReviewSpider):
 
         @url https://www.shutupandsitdown.com/miniatures-game-review-gaslands-refueled/
         @returns items 1 1
-        @populated url spider_slug raw_text outlet_slug language title tags
+        @populated url spider_slug raw_text outlet_slug language title categories
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -193,10 +197,14 @@ class ShutUpAndSitDownSpider(ReviewSpider):
                 language=self.language,
                 locale=response.xpath("//meta[@property='og:locale']/@content").get(),
                 image_url=image_url,
-                tags=meta_tags + categories + ([fun_tags] if fun_tags else []),
+                tags=meta_tags,
+                categories=categories,
+                # Migrated posts credit "webdeveloper"; the real name, when present, is weak
+                # signal — it is often only in the prose.
+                bylines=[author] if author and author != "webdeveloper" else [],
                 outlet_slug=self.outlet_slug,
-                og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
-                extra=self.extra(author, fun_tags, category_slugs),
+                site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
+                raw_metadata=self.raw_metadata(fun_tags, category_slugs),
             ),
         )
 
@@ -208,15 +216,11 @@ class ShutUpAndSitDownSpider(ReviewSpider):
         og_title = response.xpath("//meta[@property='og:title']/@content").get() or ""
         return og_title.rsplit(" - Shut Up", 1)[0].strip() or None
 
-    def extra(
-        self, author: str | None, fun_tags: str | None, category_slugs: set[str]
-    ) -> dict[str, object]:
+    def raw_metadata(self, fun_tags: str | None, category_slugs: set[str]) -> dict[str, object]:
         collected: dict[str, object] = {}
-        # Migrated posts credit "webdeveloper"; the real byline is in the prose.
-        if author and author != "webdeveloper":
-            collected["author"] = author
+        # A joke subtitle, not a topic tag — kept for reference, out of `tags`.
         if fun_tags:
             collected["fun_tags"] = fun_tags
         if category_slugs:
-            collected["categories"] = sorted(category_slugs)
+            collected["category_slugs"] = sorted(category_slugs)
         return collected

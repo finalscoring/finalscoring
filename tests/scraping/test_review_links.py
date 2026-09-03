@@ -215,8 +215,16 @@ def test_the_outlet_is_left_for_the_load_step_but_the_host_is_recorded():
     item = _item()
 
     assert item.outlet_slug is None
-    assert item.extra["host"] == "www.spieletest.at"
-    assert item.og_site_name == "spieletest.at"
+    assert item.source_host == "www.spieletest.at"
+    assert item.site_name == "spieletest.at"
+
+
+def test_a_base_spider_carries_rows_but_builds_no_game_hint():
+    """`row_game` returns None until a subclass that knows the row shape overrides it."""
+    item = _item(rows=[{"name": "Catan", "bgg_id": 13}])
+
+    assert item.reviews == []
+    assert item.raw_metadata["source_rows"] == [{"name": "Catan", "bgg_id": 13}]
 
 
 def test_the_pointing_rows_are_carried_and_the_game_name_reaches_tags():
@@ -228,7 +236,7 @@ def test_the_pointing_rows_are_carried_and_the_game_name_reaches_tags():
     assert out is not None
     item = out[0]
 
-    assert item.extra["source_rows"] == rows
+    assert item.raw_metadata["source_rows"] == rows
     assert item.tags == ["Catan", "Catan: Seafarers"]
 
 

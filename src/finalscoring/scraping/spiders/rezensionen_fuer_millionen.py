@@ -10,7 +10,11 @@ page for the same reason the WordPress REST API is on the other spider: the
 entry's `content` is the post body, where the page around it is 260 kB of
 theme. The feed also carries each post's labels, and Bartsch's labels are his
 star rating — `**** solide`, `******* genial` — which is why a post without one
-is not a review.
+is not a review. Each star label becomes one review hint; the four posts that
+carry two labels review two games, so they yield two hints. He is the sole
+critic, so `known_critic_name` carries him and the hints do not repeat it. The
+label states no maximum, so `scale_max` is left for the load step to fill from
+what it knows of his scale.
 """
 
 import json
@@ -23,7 +27,8 @@ from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
 
-from finalscoring.scraping.item import RawItem
+from finalscoring.models import RatingSystem
+from finalscoring.scraping.item import RawItem, RawReviewHint, SourceRating
 from finalscoring.scraping.spider import ReviewSpider
 from finalscoring.scraping.text import html_to_text
 
@@ -33,6 +38,17 @@ FEED_URL = "https://rezensionen-fuer-millionen.blogspot.com/feeds/posts/default"
 PAGE_SIZE = 150
 
 _RATING_LABEL = re.compile(r"^\*+(\s|$)")
+
+
+def star_rating(label: str) -> SourceRating:
+    """ "**** solide" -> a four-star rating with the word kept. Caller ensures stars."""
+    stars, _, word = label.strip().partition(" ")
+    return SourceRating(
+        system=RatingSystem.star_label,
+        value=len(stars),
+        label=word.strip() or None,
+        verbatim=label.strip(),
+    )
 
 
 def _text(node: Any) -> str | None:
@@ -85,6 +101,7 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
 
     # One author, one blog — so unlike the roundups, both are known up front.
     outlet_slug = "rezensionen-fuer-millionen"
+    known_critic_name = "Udo Bartsch"
     language = "de"  # the feed carries no locale, and he writes only in German
 
     reviews_only = True
@@ -104,7 +121,7 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
 
         @url https://rezensionen-fuer-millionen.blogspot.com/feeds/posts/default?alt=json&max-results=150&start-index=1
         @returns items 1
-        @populated url spider_slug raw_text outlet_slug language title tags
+        @populated url spider_slug raw_text outlet_slug known_critic_name language title reviews
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text feed response from %s", response.url)
@@ -155,6 +172,11 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
             self.logger.warning("Empty post body at %s", url)
             return None
 
+        # Every label on a review post is a star; a non-star would be a column
+        # label, and no post mixes the two. Keep the split anyway.
+        stars = [label for label in labels(entry) if _RATING_LABEL.match(label)]
+        other = [label for label in labels(entry) if not _RATING_LABEL.match(label)]
+
         return RawItem(
             url=url,
             spider_slug=self.name,
@@ -164,8 +186,10 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
             published_at=_published(entry),
             language=self.language,
             image_url=_thumbnail(entry),
-            tags=labels(entry),
+            tags=other,
+            reviews=[RawReviewHint(ratings=[star_rating(label)]) for label in stars],
+            known_critic_name=self.known_critic_name,
             outlet_slug=self.outlet_slug,
-            og_site_name=site_name,
-            extra={"blogger_entry": entry},
+            site_name=site_name,
+            raw_metadata={"blogger_entry": entry},
         )

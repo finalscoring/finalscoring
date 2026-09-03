@@ -6,6 +6,7 @@ import pytest
 from scrapy import Request
 from scrapy.http import HtmlResponse
 
+from finalscoring.models import RatingSystem
 from finalscoring.scraping.spiders.games_we_play import (
     GamesWePlaySpider,
     rating_from_image,
@@ -122,16 +123,18 @@ def test_the_filter_can_be_turned_off():
     assert out is not None
 
 
-def test_the_score_reaches_the_model_through_the_tags():
+def test_the_graphic_becomes_the_editorial_rating():
     """The verdict is a picture, so without this the review carries no score."""
-    item = _item(MODERN)
+    (review,) = _item(MODERN).reviews
+    (editorial,) = [r for r in review.ratings if r.system is RatingSystem.editorial]
 
-    assert "Wertung: 5 von 6 Punkten" in item.tags
+    assert (editorial.value, editorial.scale_min, editorial.scale_max) == (5, 0, 6)
+    assert editorial.verbatim == "5 von 6"
 
 
 def test_every_verdict_on_the_page_is_captured():
     """He rates six ways at once and the prose states none of them."""
-    ratings = _item(MODERN).extra["ratings"]
+    ratings = _item(MODERN).raw_metadata["ratings"]
 
     assert ratings["graphic"] == {"points": 5, "max": 6, "alt": "5 von 6"}
     assert ratings["microdata"] == {"value": 8, "max": 10}
@@ -141,20 +144,28 @@ def test_every_verdict_on_the_page_is_captured():
     assert ratings["badge"] == "games we play Tip: Das TOPspiel"
 
 
-def test_every_verdict_reaches_the_model():
-    """extra is for the load step; tags are what the extractor actually sees."""
-    tags = _item(MODERN).tags
+def test_every_verdict_reaches_the_model_structured():
+    """The raw parse stays in extra; the review hint is what the extractor sees."""
+    (review,) = _item(MODERN).reviews
 
-    assert tags[:2] == ["Wertung: 5 von 6 Punkten", "Rating: 8/10"]
-    assert any(t.startswith("Rating: 8/10") and len(t) > 12 for t in tags)
-    assert "Schwierigkeit: 2 von 4" in tags
-    assert "Verpackung: ++" in tags
-    assert "games we play Tip: Das TOPspiel" in tags
+    by_system = {r.system: r for r in review.ratings}
+    assert by_system[RatingSystem.editorial].value == 5
+    assert (
+        by_system[RatingSystem.schema_org].value,
+        by_system[RatingSystem.schema_org].scale_max,
+    ) == (8, 10)
+    assert (
+        by_system[RatingSystem.signature].value,
+        by_system[RatingSystem.signature].scale_max,
+    ) == (8, 10)
+    assert review.game is not None
+    assert review.game.complexity_label == "2 von 4"
+    assert review.editorial_flags == ["Verpackung: ++", "games we play Tip: Das TOPspiel"]
 
 
 def test_the_signature_keeps_its_die_and_arrow_verbatim():
     """They mean something to him; guessing would be worse than passing them on."""
-    signature = _item(MODERN).extra["ratings"]["signature"]
+    signature = _item(MODERN).raw_metadata["ratings"]["signature"]
 
     assert "\u2684" in signature
     assert "\u21d7" in signature
@@ -164,17 +175,29 @@ def test_a_legacy_review_states_its_difficulty_only_in_alt_text():
     """No microdata and no signature line; the grade is a picture's alt."""
     item = _item(LEGACY, "https://gamesweplay.de/attika.html")
 
-    assert item.extra["ratings"]["difficulty"] == {"label": "einfach (ab ca. 10 Jahre)"}
-    assert "microdata" not in item.extra["ratings"]
-    assert "signature" not in item.extra["ratings"]
-    assert "Schwierigkeit: einfach (ab ca. 10 Jahre)" in item.tags
+    assert item.raw_metadata["ratings"]["difficulty"] == {"label": "einfach (ab ca. 10 Jahre)"}
+    assert "microdata" not in item.raw_metadata["ratings"]
+    assert "signature" not in item.raw_metadata["ratings"]
+    (review,) = item.reviews
+    assert [r.system for r in review.ratings] == [RatingSystem.editorial]
+    assert review.game is not None
+    assert review.game.complexity_label == "einfach (ab ca. 10 Jahre)"
 
 
-def test_the_outlet_is_known_at_scrape_time():
+def test_the_outlet_and_critic_are_known_at_scrape_time():
     item = _item(MODERN)
 
     assert item.outlet_slug == "games-we-play"
-    assert item.og_site_name == "games we play"
+    assert item.known_critic_name == "Harald Schrapers"
+    assert item.site_name == "games we play"
+    assert item.tags == []  # the site files no topic tags
+
+
+def test_the_review_hint_names_the_game_the_spider_read():
+    (review,) = _item(MODERN).reviews
+
+    assert review.game is not None
+    assert review.game.titles == ["Dewan"]
 
 
 def test_a_relative_og_image_is_made_absolute():
@@ -195,7 +218,7 @@ def test_latin1_text_survives_decoding():
 
 def test_the_masthead_is_not_mistaken_for_a_rating():
     """Every page opens with the logo image before any rating graphic."""
-    assert _item(MODERN).extra["ratings"]["graphic"]["points"] == 5
+    assert _item(MODERN).raw_metadata["ratings"]["graphic"]["points"] == 5
 
 
 # Six images, four with alt — the shape that dropped 27 reviews when src and
@@ -217,8 +240,8 @@ def test_a_rating_graphic_after_an_image_without_alt_is_still_found():
     item = _item(SPARSE_ALT, "https://gamesweplay.de/tikal.html")
 
     assert item is not None
-    assert item.extra["ratings"]["graphic"]["points"] == 5
-    assert item.extra["ratings"]["difficulty"] == {"label": "mittel (ab ca. 12 Jahre)"}
+    assert item.raw_metadata["ratings"]["graphic"]["points"] == 5
+    assert item.raw_metadata["ratings"]["difficulty"] == {"label": "mittel (ab ca. 12 Jahre)"}
 
 
 def test_a_page_with_no_body_content_is_skipped():

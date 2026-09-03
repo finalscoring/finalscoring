@@ -15,10 +15,12 @@ than lifted whole, and the reader ratings are simply never picked up.
 
 The verdict is images. Each score is a `wN_w.gif` / `wN_b.gif` whose filename
 is the number, on a 1-to-6 scale across five axes (Aufmachung, Spielbarkeit,
-Interaktion, Einfluss, Spielreiz); the site also shows a rounded overall out of
-six. None of it is in the prose, so each critic's five axes are phrased into
-`tags` and kept structured in `extra`. Nothing is reconciled or converted onto
-the 0-100 scale — that is a load-step decision.
+Interaktion, Einfluss, Spielreiz). None of it is in the prose, so each scored
+note becomes one review hint — its critic, its date, its comment kept verbatim,
+and its five axes as `SourceRating`s. The prose review is one more hint under
+its own author when that author left no note. The rounded site overall is an
+aggregate across those critics, not a review, so it stays in `raw_metadata` only.
+Nothing is converted onto the 0-100 scale — that is a load-step decision.
 
 The site is a custom CMS: no sitemap, no feed, no REST. Discovery walks the
 review list (`spielsucheliste.html?topic=1`, the "Rezension" filter, newest
@@ -36,7 +38,8 @@ from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
 
-from finalscoring.scraping.item import RawItem
+from finalscoring.models import RatingSystem
+from finalscoring.scraping.item import RawGameHint, RawItem, RawReviewHint, SourceRating
 from finalscoring.scraping.spider import ReviewSpider
 from finalscoring.scraping.text import html_to_text
 
@@ -51,8 +54,6 @@ _SCRIPT = re.compile(r"<script\b[^>]*>.*?</script>", re.IGNORECASE | re.DOTALL)
 # "/html/images/w5_w.gif" -> 5. The suffix (_w plain, _b emphasised) carries no score.
 _SCORE_IMG = re.compile(r"/w(\d)_[a-z]\.gif")
 _ONLINE_SINCE = re.compile(r"Online seit\s*(\d{2})\.(\d{2})\.(\d{4})")
-# "5,5 H@LL9000" in the info box; the comma is the German decimal separator.
-_OVERALL = re.compile(r"(\d+(?:,\d+)?)\s*H@LL9000")
 _TREFFER = re.compile(r"Suchergebnis:\s*(\d+)\s*Treffer")
 
 AXES = ("aufmachung", "spielbarkeit", "interaktion", "einfluss", "spielreiz")
@@ -79,6 +80,14 @@ def online_since(text: str | None) -> datetime | None:
 def score_from_src(src: str | None) -> int | None:
     match = _SCORE_IMG.search(src or "")
     return int(match.group(1)) if match else None
+
+
+def note_date(text: str | None) -> datetime | None:
+    """ "11.04.26" -> a datetime; the notes carry a two-digit year."""
+    try:
+        return datetime.strptime(text.strip(), "%d.%m.%y") if text else None
+    except ValueError, AttributeError:
+        return None
 
 
 class Hall9000Spider(ReviewSpider):
@@ -139,7 +148,7 @@ class Hall9000Spider(ReviewSpider):
 
         @url https://www.hall9000.de/html/spiel/carcassonne
         @returns items 1 1
-        @populated url spider_slug raw_text outlet_slug language title tags
+        @populated url spider_slug raw_text outlet_slug language title reviews
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -164,7 +173,8 @@ class Hall9000Spider(ReviewSpider):
         ).get()
         title = response.xpath("//div[@class='rezi']//h2/text()").get("").strip() or None
         info = self.info_box(response)
-        ratings = [self.critic_rating(block) for block in notes]
+        notes_raw = [self.critic_rating(block) for block in notes]
+        game = self.game_hint(info, title)
 
         # Assembled from named parts rather than lifted whole: the review block is
         # also full of nav links, an affiliate panel and the reader ratings.
@@ -194,10 +204,11 @@ class Hall9000Spider(ReviewSpider):
                 published_at=online_since(online),
                 language=self.language,
                 image_url=self.cover_image(response),
-                tags=self.game_tags(response) + self.rating_tags(info, ratings),
+                tags=self.game_tags(response),
+                reviews=self.review_hints(info, notes_raw, game),
                 outlet_slug=self.outlet_slug,
-                og_site_name="H@LL9000",
-                extra=self.extra(info, ratings),
+                site_name="H@LL9000",
+                raw_metadata=self.raw_metadata(info, notes_raw),
             ),
         )
 
@@ -260,29 +271,62 @@ class Hall9000Spider(ReviewSpider):
         ).getall()
         return [tag.strip() for tag in tags if tag.strip() and tag.strip() != "Tags:"]
 
-    def rating_tags(
-        self, info: dict[str, str | list[str]], ratings: list[dict[str, Any]]
-    ) -> list[str]:
-        """The verdicts phrased so they survive into the model's context.
+    def game_hint(self, info: dict[str, str | list[str]], title: str | None) -> RawGameHint | None:
+        """The game the info box names — designer, publisher, year — as match evidence."""
+        designers = _named(_as_list(info.get("Autor")))
+        publishers = _named(_as_list(info.get("Verlag")))
+        year = next((int(y) for y in _as_list(info.get("Jahr")) if y.isdigit()), None)
+        if not (title or designers or publishers or year):
+            return None
+        return RawGameHint(
+            titles=[title] if title else [],
+            designers=designers,
+            publishers=publishers,
+            year_published=year,
+            source="hall9000 info box",
+        )
 
-        The scores are image filenames; without this the reviews reach
-        extraction carrying no verdict at all.
+    def review_hints(
+        self,
+        info: dict[str, str | list[str]],
+        notes_raw: list[dict[str, Any]],
+        game: RawGameHint | None,
+    ) -> list[RawReviewHint]:
+        """One hint per scored note, plus one for the prose review's own author.
+
+        The prose author (the `Rezension:` row) is a distinct reviewer from the
+        note-writers — unless they also left a note, in which case that hint
+        already covers them.
         """
-        tags = []
-        overall = _OVERALL.search(" ".join(_as_list(info.get("Bewertung"))))
-        if overall:
-            tags.append(f"H@LL9000-Gesamtwertung: {overall.group(1)} von 6")
-        for rating in ratings:
-            axes = ", ".join(
-                f"{axis.capitalize()} {rating['scores'][axis]}"
-                for axis in AXES
-                if axis in rating["scores"]
-            )
-            if axes and rating["critic"]:
-                tags.append(f"{rating['critic']} (H@LL9000, je 1-6): {axes}")
-        return tags
+        hints = [self._note_hint(raw, game) for raw in notes_raw]
+        scored_critics = {c for hint in hints for c in hint.critic_names}
 
-    def extra(
+        prose_author = next(iter(_as_list(info.get("Rezension"))), None)
+        if prose_author and prose_author not in scored_critics:
+            hints.insert(0, RawReviewHint(critic_names=[prose_author], game=game))
+        return hints
+
+    def _note_hint(self, raw: dict[str, Any], game: RawGameHint | None) -> RawReviewHint:
+        ratings = [
+            SourceRating(
+                system=RatingSystem.axis,
+                axis=axis.capitalize(),
+                value=raw["scores"][axis],
+                scale_min=1,
+                scale_max=6,
+            )
+            for axis in AXES
+            if axis in raw["scores"]
+        ]
+        return RawReviewHint(
+            critic_names=[raw["critic"]] if raw["critic"] else [],
+            published_at=note_date(raw["date"]),
+            note=raw["comment"],
+            ratings=ratings,
+            game=game,
+        )
+
+    def raw_metadata(
         self, info: dict[str, str | list[str]], ratings: list[dict[str, Any]]
     ) -> dict[str, Any]:
         collected: dict[str, Any] = {"info": info} if info else {}
@@ -295,3 +339,11 @@ def _as_list(value: Any) -> list[str]:
     if value is None:
         return []
     return [str(v) for v in value] if isinstance(value, list) else [str(value)]
+
+
+# The info box writes "keine Angabe" where a field is unknown — not a name.
+_INFO_BLANKS = frozenset({"keine angabe", "n/a", "unbekannt", "-", "?"})
+
+
+def _named(values: list[str]) -> list[str]:
+    return [v for v in values if v.strip().lower() not in _INFO_BLANKS]

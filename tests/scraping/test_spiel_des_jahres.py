@@ -111,7 +111,7 @@ def test_full_rest_payload_is_kept_verbatim():
 
     merged = spider.merge_wp_json(page_item, WP_POST)
 
-    assert merged.extra == {"wp_json": WP_POST}
+    assert merged.raw_metadata == {"wp_json": WP_POST}
 
 
 def test_naive_rest_timestamps_are_treated_as_utc():
@@ -134,7 +134,7 @@ def test_empty_rest_content_keeps_the_page_text():
     merged = spider.merge_wp_json(page_item, {"content": {"rendered": ""}})
 
     assert merged.raw_text == "Aus der Seite."
-    assert merged.extra == {"wp_json": {"content": {"rendered": ""}}}
+    assert merged.raw_metadata == {"wp_json": {"content": {"rendered": ""}}}
 
 
 def test_roundup_follows_the_rest_link():

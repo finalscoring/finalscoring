@@ -171,21 +171,22 @@ def test_a_review_becomes_an_item():
     assert item.image_url == "https://spacebiff.com/wp-content/uploads/2026/08/header.jpg"
 
 
-def test_the_outlet_and_language_are_known_at_scrape_time():
+def test_the_outlet_critic_and_language_are_known_at_scrape_time():
     item = _item(REVIEW_HTML)
 
     assert item.outlet_slug == "space-biff"
+    assert item.known_critic_name == "Dan Thurot"
+    assert item.reviews == []  # nothing structured to lift; the score is in the prose
     assert item.language == "en"
-    assert item.og_site_name == "SPACE-BIFF!"
+    assert item.site_name == "SPACE-BIFF!"
 
 
-def test_categories_and_tags_reach_the_model_through_tags():
+def test_categories_and_tags_are_split_and_both_reach_the_model():
     item = _item(REVIEW_HTML)
 
-    assert "Board Game" in item.tags
-    assert "Board Games" in item.tags
-    assert "Restoration Games" in item.tags
-    assert item.extra == {"categories": ["board-game"]}
+    assert item.categories == ["Board Game"]
+    assert item.tags == ["Board Games", "Restoration Games"]
+    assert item.raw_metadata == {"category_slugs": ["board-game"]}
 
 
 def test_a_podcast_episode_is_not_a_review():

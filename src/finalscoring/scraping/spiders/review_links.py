@@ -13,11 +13,11 @@ the whole page would be an order of magnitude more bytes for markup nobody reads
 back.
 
 A meta-source in the Spiel des Jahres sense - `outlet_slug` stays unset, because
-the outlet is whoever runs the page at the far end of the link, not something
-this spider fetched. The far-end host and the file row that pointed here go into
-`extra` for the load step to resolve; for the ~95% of links with no `bgg_id`,
-that row is the only signal for which game the review is about, so its game name
-is also folded into `tags`, where the model sees it.
+the outlet is whoever runs the page at the far end of the link. `source_host`
+records that host for the load step to resolve. The file row that pointed here
+is the signal for which game the review is about - a subclass turns each row
+into a `RawGameHint` on a review hint through `row_game`, so a `bgg_id` in the
+row settles the match outright.
 
 Not runnable on its own: it has no `files` to read. A source subclasses it,
 setting `files`, `url_column`, and which row fields to carry.
@@ -41,7 +41,7 @@ from trafilatura.htmlprocessing import build_html_output
 from trafilatura.settings import Document
 from twisted.python.failure import Failure
 
-from finalscoring.scraping.item import RawItem, language_from_locale
+from finalscoring.scraping.item import RawGameHint, RawItem, RawReviewHint, language_from_locale
 from finalscoring.scraping.spider import ReviewSpider
 from finalscoring.scraping.timestamps import as_utc
 
@@ -104,7 +104,7 @@ class ReviewLinksSpider(ReviewSpider):
 
     files: tuple[str, ...] | str = ()
     url_column: str = "review_url"
-    # Row fields kept in extra["source_rows"]; None keeps every field but url_column.
+    # Row fields kept in raw_metadata["source_rows"]; None keeps every field but url_column.
     context_fields: tuple[str, ...] | None = None
     # Row fields whose values are folded into RawItem.tags (the game name, so the
     # model can match a review with no bgg_id to a game).
@@ -170,6 +170,13 @@ class ReviewLinksSpider(ReviewSpider):
                         tags.append(text)
         return tags
 
+    def row_game(self, row: dict[str, Any]) -> RawGameHint | None:
+        """The game a pointing file row identifies, if the subclass knows its shape.
+
+        Base spiders carry rows only as opaque context; `luding` overrides this.
+        """
+        return None
+
     def parse_review(
         self,
         response: Response,
@@ -184,7 +191,7 @@ class ReviewLinksSpider(ReviewSpider):
         @url http://www.gamecabinet.com/reviews/LongShort.html
         @cb_kwargs {"rows": [{"name": "Kingsburg"}]}
         @returns items 1 1
-        @populated url spider_slug raw_text title
+        @populated url spider_slug source_host raw_text title
         """
         if not isinstance(response, TextResponse):
             self.logger.error("non-text response from %s", response.url)
@@ -212,6 +219,10 @@ class ReviewLinksSpider(ReviewSpider):
             or response.xpath("//meta[@property='og:locale']/@content").get()
         )
 
+        review_hints = [
+            RawReviewHint(game=game) for row in rows if (game := self.row_game(row)) is not None
+        ]
+
         return (
             RawItem(
                 url=response.url,
@@ -226,10 +237,12 @@ class ReviewLinksSpider(ReviewSpider):
                 language=language_from_locale(locale),
                 locale=locale,
                 image_url=document.image or None,
-                tags=self._tags(rows),
-                og_site_name=document.sitename or None,
-                extra={
-                    "host": urlparse(response.url).netloc,
+                tags=self._tags(rows) + list(document.tags or []),
+                categories=list(document.categories or []),
+                reviews=review_hints,
+                bylines=[document.author] if document.author else [],
+                site_name=document.sitename or None,
+                raw_metadata={
                     "source_rows": rows,
                     "trafilatura": {
                         "author": document.author,

@@ -295,9 +295,10 @@ def test_the_prompt_version_names_the_file_that_was_loaded():
 
 
 def test_superseded_prompts_are_kept():
-    """Records stamped extract_v1 are only readable while those bytes exist."""
+    """Records stamped an older version are only readable while those bytes exist."""
     path = Path(finalscoring.extraction.schema.__file__).parent / "prompts"
     assert (path / "extract_v1.txt").is_file()
+    assert (path / "extract_v2.txt").is_file()
 
 
 def _prompt_fields() -> list[str]:
