@@ -22,8 +22,13 @@ podcast episodes, session diaries, year-end lists, and convention reports,
 none of which is a verdict on one game. `reviews_only` excludes those
 categories; it is a coarse cut; a handful of posts on either side of the line
 have no consistent taxonomy in fifteen years of the blog for anything cleaner
-to key on. Every category and tag on the page reaches the model regardless,
-through `tags`, in case the cut is wrong on a given post.
+to key on. The categories and tags reach the model regardless — in
+`categories` and `tags` — in case the cut is wrong on a given post.
+
+The reviewer is always Dan Thurot; the theme prints no per-post byline, so
+`known_critic_name` is the only place that says so. There is no structured
+verdict to lift, so `reviews` stays empty and the score is the model's to read
+from the prose.
 """
 
 import re
@@ -80,6 +85,7 @@ class SpaceBiffSpider(ReviewSitemapSpider):
     sitemap_rules = ((r"/\d{4}/\d{2}/\d{2}/", "parse_review"),)
 
     outlet_slug = "space-biff"
+    known_critic_name = "Dan Thurot"  # the sole reviewer; the theme prints no byline
     language = "en"  # he writes only in English
 
     reviews_only = True
@@ -119,7 +125,7 @@ class SpaceBiffSpider(ReviewSitemapSpider):
 
         @url https://spacebiff.com/2019/06/18/keyforge/
         @returns items 1 1
-        @populated url spider_slug raw_text outlet_slug language title tags
+        @populated url spider_slug raw_text outlet_slug known_critic_name language title categories
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -162,9 +168,11 @@ class SpaceBiffSpider(ReviewSitemapSpider):
                 ),
                 language=self.language,
                 image_url=response.urljoin(image_url) if image_url else None,
-                tags=categories + tag_names,
+                tags=tag_names,
+                categories=categories,
+                known_critic_name=self.known_critic_name,
                 outlet_slug=self.outlet_slug,
                 og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
-                extra={"categories": sorted(category_slugs)} if category_slugs else {},
+                extra={"category_slugs": sorted(category_slugs)} if category_slugs else {},
             ),
         )
