@@ -189,18 +189,56 @@ def test_each_critic_note_is_kept_structured():
     assert andersch["comment"] == "Grauselig korrekturgelesene Regel."
 
 
-def test_the_verdicts_reach_the_model_through_tags():
-    """The scores are image filenames; the tags are the only place they survive."""
+def test_each_scored_note_becomes_a_review_hint():
+    """The scores are image filenames; one hint per critic is where they survive."""
     item = _item()
 
-    assert "H@LL9000-Gesamtwertung: 5,5 von 6" in item.tags
-    assert (
-        "Michael Andersch (H@LL9000, je 1-6): Aufmachung 5, Spielbarkeit 4, "
-        "Interaktion 4, Einfluss 5, Spielreiz 5"
-    ) in item.tags
-    assert "Arbeitereinsatz" in item.tags
-    assert "Erforschung" in item.tags
+    assert [h.critic_names for h in item.reviews] == [["Michael Andersch"], ["Andrea Poganiuch"]]
+    andersch = item.reviews[0]
+    assert andersch.published_at == datetime(2026, 4, 11)
+    assert andersch.note == "Grauselig korrekturgelesene Regel."
+    assert [(r.axis, r.value, r.scale_min, r.scale_max) for r in andersch.ratings] == [
+        ("Aufmachung", 5, 1, 6),
+        ("Spielbarkeit", 4, 1, 6),
+        ("Interaktion", 4, 1, 6),
+        ("Einfluss", 5, 1, 6),
+        ("Spielreiz", 5, 1, 6),
+    ]
+
+
+def test_every_hint_carries_the_game_the_info_box_names():
+    game = _item().reviews[0].game
+
+    assert game is not None
+    assert game.titles == ["The Royal Society of Archeology"]
+    assert game.designers == ["Eric Jumel"]
+    assert game.publishers == ["HUCH!", "Atalia"]
+    assert game.year_published == 2025
+
+
+def test_a_prose_author_with_no_note_becomes_its_own_hint():
+    """The Rezension: row is a distinct reviewer unless they also left a note."""
+    html = REVIEW_HTML.replace(">Michael Andersch<", ">Britta Stöckmann<", 1)  # the info-box row
+
+    hints = _item(html).reviews
+
+    assert hints[0].critic_names == ["Britta Stöckmann"]
+    assert hints[0].ratings == []
+    assert [h.critic_names for h in hints[1:]] == [["Michael Andersch"], ["Andrea Poganiuch"]]
+
+
+def test_the_spiele_tags_stay_in_tags():
+    item = _item()
+
+    assert item.tags == ["Arbeitereinsatz", "Erforschung"]
     assert "Tags:" not in item.tags
+
+
+def test_the_site_overall_is_not_ingested_as_a_review():
+    """5,5 H@LL9000 is an aggregate across the critics we already have."""
+    item = _item()
+
+    assert all(r.system.value != "overall" for h in item.reviews for r in h.ratings)
 
 
 def test_a_page_with_no_review_block_is_skipped():
