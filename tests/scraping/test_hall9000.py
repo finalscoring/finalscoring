@@ -216,6 +216,16 @@ def test_every_hint_carries_the_game_the_info_box_names():
     assert game.year_published == 2025
 
 
+def test_an_unknown_info_box_field_is_not_taken_as_a_name():
+    """ "keine Angabe" is the info box's way of saying it does not know."""
+    html = REVIEW_HTML.replace(">HUCH!</a><br>Atalia<br>", ">keine Angabe</a>")
+
+    game = _item(html).reviews[0].game
+
+    assert game is not None
+    assert game.publishers == []
+
+
 def test_a_prose_author_with_no_note_becomes_its_own_hint():
     """The Rezension: row is a distinct reviewer unless they also left a note."""
     html = REVIEW_HTML.replace(">Michael Andersch<", ">Britta Stöckmann<", 1)  # the info-box row

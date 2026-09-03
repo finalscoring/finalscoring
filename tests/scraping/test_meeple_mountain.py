@@ -152,15 +152,15 @@ def test_the_raw_rating_parse_is_kept_in_extra():
     }
 
 
-def test_both_ratings_survive_when_the_json_ld_number_disagrees():
-    """On older video reviews the JSON-LD ratingValue is 0.0 and the title is right."""
+def test_a_placeholder_json_ld_score_is_dropped_not_ingested():
+    """The CMS emits ratingValue 0.0 — below its own worstRating — on unscored reviews."""
     html = REVIEW_HTML.replace('"ratingValue":"4.0"', '"ratingValue":"0.0"')
 
     (review,) = _item(html).reviews
 
-    by_system = {r.system.value: r for r in review.ratings}
-    assert by_system["star_label"].value == 4.0
-    assert by_system["schema_org"].value == 0.0  # kept faithfully; the load step prefers the star
+    systems = {r.system.value for r in review.ratings}
+    assert systems == {"star_label"}  # the star tier is real; the 0.0 is not
+    assert review.ratings[0].value == 4.0
 
 
 def test_the_taxonomy_feeds_categories_and_the_game_hint():

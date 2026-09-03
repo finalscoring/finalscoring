@@ -12,10 +12,11 @@ API, which would hand extraction a review with no score at all.
 
 The theme states the rating twice. A `rating-container` element's `title`
 reads "4.0 / 5 stars — Great - Would recommend." — value, scale and tier in
-one string — and a JSON-LD `Review` node repeats the number. They disagree on
-the older video reviews, where the JSON-LD number is 0.0 and the title string
-is right, so both become `SourceRating`s (a `star_label` and a `schema_org`)
-and the load step picks. Nothing is converted to the 0-100 scale.
+one string — and a JSON-LD `Review` node repeats the number. Both become
+`SourceRating`s (a `star_label` and a `schema_org`) and the load step picks.
+On reviews with no numeric score — mostly video — the JSON-LD still carries
+`ratingValue` 0.0, below its own `worstRating`; that is a placeholder, not a
+verdict, and is dropped. Nothing is converted to the 0-100 scale.
 
 One review per page by one named critic, so the `<meta name=author>` byline
 goes on the review hint. The theme's per-post taxonomy — designers, publishers,
@@ -175,13 +176,22 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                     label=rating["tier"],
                 )
             )
-        if schema_rating and schema_rating.get("ratingValue") is not None:
+        schema_value = _float((schema_rating or {}).get("ratingValue"))
+        schema_floor = _float((schema_rating or {}).get("worstRating"))
+        # The CMS emits ratingValue 0.0 — below its own worstRating — on reviews
+        # that carry no numeric score (mostly video). That is a placeholder, not
+        # a verdict.
+        if (
+            schema_value is not None
+            and schema_value > 0
+            and (schema_floor is None or schema_value >= schema_floor)
+        ):
             scores.append(
                 SourceRating(
                     system=RatingSystem.schema_org,
-                    value=_float(schema_rating.get("ratingValue")),
-                    scale_min=_float(schema_rating.get("worstRating")),
-                    scale_max=_float(schema_rating.get("bestRating")),
+                    value=schema_value,
+                    scale_min=schema_floor,
+                    scale_max=_float((schema_rating or {}).get("bestRating")),
                 )
             )
 

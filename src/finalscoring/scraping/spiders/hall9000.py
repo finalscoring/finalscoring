@@ -273,8 +273,8 @@ class Hall9000Spider(ReviewSpider):
 
     def game_hint(self, info: dict[str, str | list[str]], title: str | None) -> RawGameHint | None:
         """The game the info box names — designer, publisher, year — as match evidence."""
-        designers = _as_list(info.get("Autor"))
-        publishers = _as_list(info.get("Verlag"))
+        designers = _named(_as_list(info.get("Autor")))
+        publishers = _named(_as_list(info.get("Verlag")))
         year = next((int(y) for y in _as_list(info.get("Jahr")) if y.isdigit()), None)
         if not (title or designers or publishers or year):
             return None
@@ -339,3 +339,11 @@ def _as_list(value: Any) -> list[str]:
     if value is None:
         return []
     return [str(v) for v in value] if isinstance(value, list) else [str(value)]
+
+
+# The info box writes "keine Angabe" where a field is unknown — not a name.
+_INFO_BLANKS = frozenset({"keine angabe", "n/a", "unbekannt", "-", "?"})
+
+
+def _named(values: list[str]) -> list[str]:
+    return [v for v in values if v.strip().lower() not in _INFO_BLANKS]
