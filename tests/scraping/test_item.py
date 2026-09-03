@@ -38,10 +38,10 @@ def test_minimal_valid_item():
     assert item.tags == []
     assert item.duration_seconds is None
     assert item.outlet_slug is None
-    assert item.og_site_name is None
+    assert item.site_name is None
     assert item.oembed is None
     assert item.schema_org == []
-    assert item.extra == {}
+    assert item.raw_metadata == {}
     assert item.canonical_url is None
     assert item.modified_at is None
     assert item.categories == []
@@ -75,10 +75,10 @@ def test_full_item():
         tags=["strategy", "family"],
         duration_seconds=480,
         outlet_slug="spielbox",
-        og_site_name="Spielbox",
+        site_name="Spielbox",
         oembed={"type": "rich", "title": "Review of Catan"},
         schema_org=[{"@type": "Review", "name": "Catan"}],
-        extra={"wp_json": {"id": 42}},
+        raw_metadata={"wp_json": {"id": 42}},
         canonical_url="https://example.com/catan",
         modified_at=datetime(2025, 7, 1, tzinfo=UTC),
         categories=["reviews"],
@@ -102,7 +102,7 @@ def test_full_item():
     assert item.outlet_slug == "spielbox"
     assert item.oembed == {"type": "rich", "title": "Review of Catan"}
     assert item.schema_org == [{"@type": "Review", "name": "Catan"}]
-    assert item.extra == {"wp_json": {"id": 42}}
+    assert item.raw_metadata == {"wp_json": {"id": 42}}
     assert item.canonical_url == "https://example.com/catan"
     assert item.categories == ["reviews"]
     assert item.taxonomy == {"mechanics": ["trading", "dice-rolling"]}

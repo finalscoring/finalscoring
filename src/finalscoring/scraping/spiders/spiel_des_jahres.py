@@ -87,7 +87,7 @@ class SpielDesJahresSpider(ReviewSitemapSpider):
             language=language_from_locale(page_locale),
             locale=page_locale,
             image_url=response.xpath("//meta[@property='og:image']/@content").get(),
-            og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
+            site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
         )
 
     def parse_wp_json(
@@ -98,14 +98,14 @@ class SpielDesJahresSpider(ReviewSitemapSpider):
         """Smoke-test that the live WordPress REST post still fetches and parses.
 
         Post 11440 is the roundup `parse_roundup`'s `@url` points at. The
-        injected `item` is synthetic; `@populated extra` is what tells the two
-        apart — `merge_wp_json` only fills `extra` when the REST payload parsed,
-        so an empty `extra` means the merge fell back to the (synthetic) page.
+        injected `item` is synthetic; `@populated raw_metadata` is what tells the two
+        apart — `merge_wp_json` only fills `raw_metadata` when the REST payload
+        parsed, so an empty `raw_metadata` means the merge fell back to the page.
 
         @url https://www.spiel-des-jahres.de/wp-json/wp/v2/posts/11440
         @raw_item item
         @returns items 1 1
-        @populated extra
+        @populated raw_metadata
         """
         # Response, not TextResponse: that is what Scrapy promises a callback.
         if not isinstance(response, TextResponse):
@@ -131,12 +131,12 @@ class SpielDesJahresSpider(ReviewSitemapSpider):
             "title": (post.get("title") or {}).get("rendered"),
             # date_gmt has no offset; it is UTC by definition.
             "published_at": as_utc(post.get("date_gmt")),
-            "og_site_name": yoast.get("og_site_name"),
+            "site_name": yoast.get("og_site_name"),
             "language": language_from_locale(yoast.get("og_locale")),
             "locale": yoast.get("og_locale"),
             "image_url": og_image[0].get("url") if og_image else None,
             "schema_org": (yoast.get("schema") or {}).get("@graph"),
-            "extra": {"wp_json": post},
+            "raw_metadata": {"wp_json": post},
         }
         if raw_text:
             updates["raw_text"] = raw_text

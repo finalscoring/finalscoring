@@ -11,7 +11,7 @@ The game a link sits next to - name, year, designers, publishers, and a
 `bgg_id` for the ~5% that have one - becomes a `RawGameHint` on a review hint
 via `row_game`. A `bgg_id` there settles the game match outright; the rest is
 match evidence for the resolution step. The raw row still rides along in
-`extra["source_rows"]`. One link can be listed by several games (a base game
+`raw_metadata["source_rows"]`. One link can be listed by several games (a base game
 and its expansion), so one page can carry several hints.
 
 `files` is deliberately unset. Where the luding scrape lives is a

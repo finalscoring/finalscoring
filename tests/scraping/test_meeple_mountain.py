@@ -122,7 +122,7 @@ def test_the_outlet_and_language_are_known_at_scrape_time():
     assert item.outlet_slug == "meeple-mountain"
     assert item.language == "en"
     assert item.locale == "en-US"
-    assert item.og_site_name == "Meeple Mountain"
+    assert item.site_name == "Meeple Mountain"
 
 
 def test_the_review_hint_carries_the_byline_and_both_ratings():
@@ -139,7 +139,7 @@ def test_the_review_hint_carries_the_byline_and_both_ratings():
 def test_the_raw_rating_parse_is_kept_in_extra():
     item = _item()
 
-    assert item.extra["rating"] == {
+    assert item.raw_metadata["rating"] == {
         "value": "4.0",
         "best": "5",
         "tier": "Great - Would recommend",
@@ -187,7 +187,7 @@ def test_a_review_without_a_rating_still_produces_an_item():
     item = _item(html)
 
     assert item is not None
-    assert "rating" not in item.extra
+    assert "rating" not in item.raw_metadata
     (review,) = item.reviews  # the review still exists, by its author, with no score
     assert review.critic_names == ["Mark Iradian"]
     assert review.ratings == []

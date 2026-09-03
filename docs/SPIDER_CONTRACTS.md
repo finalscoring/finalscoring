@@ -51,8 +51,8 @@ Callbacks that take `cb_kwargs`:
   JSON.
 - `spiel_des_jahres.parse_wp_json` — the custom `@raw_item` contract injects a
   synthetic `RawItem` (there is no upstream callback under `scrapy check`).
-  `@populated extra` tells success from fallback: `merge_wp_json` only fills
-  `extra` when the REST payload parsed.
+  `@populated raw_metadata` tells success from fallback: `merge_wp_json` only
+  fills `raw_metadata` when the REST payload parsed.
 
 ## CI
 

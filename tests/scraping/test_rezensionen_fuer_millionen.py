@@ -81,7 +81,7 @@ def test_the_outlet_and_critic_are_known_at_scrape_time():
 
     assert item.outlet_slug == "rezensionen-fuer-millionen"
     assert item.known_critic_name == "Udo Bartsch"
-    assert item.og_site_name == "Rezensionen für Millionen"
+    assert item.site_name == "Rezensionen für Millionen"
 
 
 @pytest.mark.parametrize(
@@ -149,7 +149,7 @@ def test_the_whole_entry_is_preserved():
     """Same bargain as wp_json: keep the source payload, decide later."""
     (item,) = _items(_spider().parse_feed(_response(_feed(_entry()))))
 
-    assert item.extra["blogger_entry"]["author"][0]["name"]["$t"] == "Udo Bartsch"
+    assert item.raw_metadata["blogger_entry"]["author"][0]["name"]["$t"] == "Udo Bartsch"
 
 
 @pytest.mark.parametrize("label", ["Gern gespielt", "Vor 20 Jahren"])

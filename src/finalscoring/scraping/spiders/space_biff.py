@@ -172,7 +172,7 @@ class SpaceBiffSpider(ReviewSitemapSpider):
                 categories=categories,
                 known_critic_name=self.known_critic_name,
                 outlet_slug=self.outlet_slug,
-                og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
-                extra={"category_slugs": sorted(category_slugs)} if category_slugs else {},
+                site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
+                raw_metadata={"category_slugs": sorted(category_slugs)} if category_slugs else {},
             ),
         )

@@ -137,8 +137,8 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                 taxonomy=taxonomy,
                 reviews=self.review_hints(author, rating, schema_rating, heading, taxonomy),
                 outlet_slug=self.outlet_slug,
-                og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
-                extra=self.extra(rating, schema_rating),
+                site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
+                raw_metadata=self.raw_metadata(rating, schema_rating),
             ),
         )
 
@@ -222,7 +222,7 @@ class MeepleMountainSpider(ReviewSitemapSpider):
             source="meeple mountain taxonomy",
         )
 
-    def extra(
+    def raw_metadata(
         self, rating: dict[str, str] | None, schema_rating: dict[str, Any] | None
     ) -> dict[str, Any]:
         # The raw parse, for cross-checking the two ratings the load step gets.

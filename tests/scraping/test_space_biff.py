@@ -178,7 +178,7 @@ def test_the_outlet_critic_and_language_are_known_at_scrape_time():
     assert item.known_critic_name == "Dan Thurot"
     assert item.reviews == []  # nothing structured to lift; the score is in the prose
     assert item.language == "en"
-    assert item.og_site_name == "SPACE-BIFF!"
+    assert item.site_name == "SPACE-BIFF!"
 
 
 def test_categories_and_tags_are_split_and_both_reach_the_model():
@@ -186,7 +186,7 @@ def test_categories_and_tags_are_split_and_both_reach_the_model():
 
     assert item.categories == ["Board Game"]
     assert item.tags == ["Board Games", "Restoration Games"]
-    assert item.extra == {"category_slugs": ["board-game"]}
+    assert item.raw_metadata == {"category_slugs": ["board-game"]}
 
 
 def test_a_podcast_episode_is_not_a_review():

@@ -203,8 +203,8 @@ class ShutUpAndSitDownSpider(ReviewSpider):
                 # signal — it is often only in the prose.
                 bylines=[author] if author and author != "webdeveloper" else [],
                 outlet_slug=self.outlet_slug,
-                og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
-                extra=self.extra(fun_tags, category_slugs),
+                site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
+                raw_metadata=self.raw_metadata(fun_tags, category_slugs),
             ),
         )
 
@@ -216,7 +216,7 @@ class ShutUpAndSitDownSpider(ReviewSpider):
         og_title = response.xpath("//meta[@property='og:title']/@content").get() or ""
         return og_title.rsplit(" - Shut Up", 1)[0].strip() or None
 
-    def extra(self, fun_tags: str | None, category_slugs: set[str]) -> dict[str, object]:
+    def raw_metadata(self, fun_tags: str | None, category_slugs: set[str]) -> dict[str, object]:
         collected: dict[str, object] = {}
         # A joke subtitle, not a topic tag — kept for reference, out of `tags`.
         if fun_tags:

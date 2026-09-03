@@ -143,7 +143,7 @@ def test_the_outlet_and_language_are_known_at_scrape_time():
     assert item.outlet_slug == "shut-up-and-sit-down"
     assert item.language == "en"
     assert item.locale == "en-US"
-    assert item.og_site_name == "Shut Up & Sit Down"
+    assert item.site_name == "Shut Up & Sit Down"
 
 
 def test_it_is_multi_writer_with_no_structured_verdict():
@@ -169,7 +169,9 @@ def test_post_tags_and_categories_are_split_and_the_joke_subtitle_stays_out_of_t
     assert item.tags == ["Elysium", "Heavy Games"]
     assert item.categories == ["Reviews"]
     assert "poseidon" not in " ".join(item.tags)
-    assert item.extra["fun_tags"] == "poseidon the god of jerks, apollo the god of extra bits"
+    assert (
+        item.raw_metadata["fun_tags"] == "poseidon the god of jerks, apollo the god of extra bits"
+    )
 
 
 def test_a_migrated_byline_is_dropped_but_a_real_one_reaches_bylines():

@@ -190,6 +190,6 @@ class RezensionenFuerMillionenSpider(ReviewSpider):
             reviews=[RawReviewHint(ratings=[star_rating(label)]) for label in stars],
             known_critic_name=self.known_critic_name,
             outlet_slug=self.outlet_slug,
-            og_site_name=site_name,
-            extra={"blogger_entry": entry},
+            site_name=site_name,
+            raw_metadata={"blogger_entry": entry},
         )

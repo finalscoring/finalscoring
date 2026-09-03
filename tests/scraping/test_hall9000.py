@@ -168,14 +168,14 @@ def test_reader_ratings_never_reach_the_item():
 
     assert "Reader opinion, must not leak" not in item.raw_text
     assert "Leser Lieschen" not in item.raw_text
-    assert all(r["critic"] != "Leser Lieschen" for r in item.extra["critic_ratings"])
-    assert "6,0 Leser" not in str(item.extra["info"])
+    assert all(r["critic"] != "Leser Lieschen" for r in item.raw_metadata["critic_ratings"])
+    assert "6,0 Leser" not in str(item.raw_metadata["info"])
 
 
 def test_each_critic_note_is_kept_structured():
     item = _item()
 
-    ratings = item.extra["critic_ratings"]
+    ratings = item.raw_metadata["critic_ratings"]
     assert [r["critic"] for r in ratings] == ["Michael Andersch", "Andrea Poganiuch"]
     andersch = ratings[0]
     assert andersch["date"] == "11.04.26"

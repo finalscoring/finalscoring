@@ -65,7 +65,7 @@ def _metadata(item: RawItem) -> Iterator[str]:
     for label, value in (
         ("url", item.url),
         ("title", item.title),
-        ("site", item.og_site_name),
+        ("site", item.site_name),
         ("byline", byline),
         ("medium", item.medium.value if item.medium else None),
         ("published", item.published_at.date().isoformat() if item.published_at else None),

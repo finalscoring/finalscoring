@@ -22,7 +22,7 @@ a filename, an `alt` attribute. Each scored verdict becomes a `SourceRating` on
 the page's one review hint, the difficulty goes on the game hint, and the
 packaging mark and badge become editorial flags. Nothing is reconciled or
 converted: which of his scales becomes the score is a load-step decision. The
-raw parse stays in `extra` alongside.
+raw parse stays in `raw_metadata` alongside.
 
 He is the sole critic, so `known_critic_name` carries Harald Schrapers.
 """
@@ -169,8 +169,8 @@ class GamesWePlaySpider(ReviewSitemapSpider):
                 reviews=[hint] if hint is not None else [],
                 known_critic_name=self.known_critic_name,
                 outlet_slug=self.outlet_slug,
-                og_site_name=self.site_name,
-                extra={"ratings": ratings} if ratings else {},
+                site_name=self.site_name,
+                raw_metadata={"ratings": ratings} if ratings else {},
             ),
         )
 

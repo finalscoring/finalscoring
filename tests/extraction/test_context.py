@@ -65,7 +65,7 @@ def test_the_metadata_header_names_the_page():
     context = build_context(
         _item(
             title="Kritikenrundschau: Dewan",
-            og_site_name="Spiel des Jahres",
+            site_name="Spiel des Jahres",
             published_at="2026-04-20T08:00:00Z",
             locale="de-DE",
         )
@@ -104,7 +104,7 @@ def test_absent_metadata_is_omitted_not_nulled():
 
 def test_the_page_and_the_article_are_delimited():
     """A roundup's own site is emphatically not where the cited critic published."""
-    context = build_context(_item(og_site_name="Spiel des Jahres"))
+    context = build_context(_item(site_name="Spiel des Jahres"))
 
     source = context.index("<source>")
     assert source < context.index("</source>") < context.index("<article>")

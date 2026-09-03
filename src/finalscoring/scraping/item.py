@@ -227,12 +227,12 @@ class RawItem(BaseModel):
     outlet_slug: str | None = None
 
     # Structured metadata from web standards
-    og_site_name: str | None = None  # og:site_name, often the outlet name
+    site_name: str | None = None  # og:site_name, often the outlet name
     oembed: dict[str, Any] | None = None
     schema_org: list[dict[str, Any]] = Field(default_factory=list)
 
     # Upstream payloads kept only for reprocessing / debugging; nothing reads specific keys
-    extra: dict[str, Any] = Field(default_factory=dict)
+    raw_metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("url", "spider_slug", "raw_text")
     @classmethod
@@ -242,7 +242,7 @@ class RawItem(BaseModel):
         return v
 
     @field_validator(
-        "canonical_url", "source_host", "known_critic_name", "og_site_name", mode="before"
+        "canonical_url", "source_host", "known_critic_name", "site_name", mode="before"
     )
     @classmethod
     def blank_to_none(cls, v: Any) -> Any:

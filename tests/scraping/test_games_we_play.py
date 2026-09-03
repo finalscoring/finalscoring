@@ -134,7 +134,7 @@ def test_the_graphic_becomes_the_editorial_rating():
 
 def test_every_verdict_on_the_page_is_captured():
     """He rates six ways at once and the prose states none of them."""
-    ratings = _item(MODERN).extra["ratings"]
+    ratings = _item(MODERN).raw_metadata["ratings"]
 
     assert ratings["graphic"] == {"points": 5, "max": 6, "alt": "5 von 6"}
     assert ratings["microdata"] == {"value": 8, "max": 10}
@@ -165,7 +165,7 @@ def test_every_verdict_reaches_the_model_structured():
 
 def test_the_signature_keeps_its_die_and_arrow_verbatim():
     """They mean something to him; guessing would be worse than passing them on."""
-    signature = _item(MODERN).extra["ratings"]["signature"]
+    signature = _item(MODERN).raw_metadata["ratings"]["signature"]
 
     assert "\u2684" in signature
     assert "\u21d7" in signature
@@ -175,9 +175,9 @@ def test_a_legacy_review_states_its_difficulty_only_in_alt_text():
     """No microdata and no signature line; the grade is a picture's alt."""
     item = _item(LEGACY, "https://gamesweplay.de/attika.html")
 
-    assert item.extra["ratings"]["difficulty"] == {"label": "einfach (ab ca. 10 Jahre)"}
-    assert "microdata" not in item.extra["ratings"]
-    assert "signature" not in item.extra["ratings"]
+    assert item.raw_metadata["ratings"]["difficulty"] == {"label": "einfach (ab ca. 10 Jahre)"}
+    assert "microdata" not in item.raw_metadata["ratings"]
+    assert "signature" not in item.raw_metadata["ratings"]
     (review,) = item.reviews
     assert [r.system for r in review.ratings] == [RatingSystem.editorial]
     assert review.game is not None
@@ -189,7 +189,7 @@ def test_the_outlet_and_critic_are_known_at_scrape_time():
 
     assert item.outlet_slug == "games-we-play"
     assert item.known_critic_name == "Harald Schrapers"
-    assert item.og_site_name == "games we play"
+    assert item.site_name == "games we play"
     assert item.tags == []  # the site files no topic tags
 
 
@@ -218,7 +218,7 @@ def test_latin1_text_survives_decoding():
 
 def test_the_masthead_is_not_mistaken_for_a_rating():
     """Every page opens with the logo image before any rating graphic."""
-    assert _item(MODERN).extra["ratings"]["graphic"]["points"] == 5
+    assert _item(MODERN).raw_metadata["ratings"]["graphic"]["points"] == 5
 
 
 # Six images, four with alt — the shape that dropped 27 reviews when src and
@@ -240,8 +240,8 @@ def test_a_rating_graphic_after_an_image_without_alt_is_still_found():
     item = _item(SPARSE_ALT, "https://gamesweplay.de/tikal.html")
 
     assert item is not None
-    assert item.extra["ratings"]["graphic"]["points"] == 5
-    assert item.extra["ratings"]["difficulty"] == {"label": "mittel (ab ca. 12 Jahre)"}
+    assert item.raw_metadata["ratings"]["graphic"]["points"] == 5
+    assert item.raw_metadata["ratings"]["difficulty"] == {"label": "mittel (ab ca. 12 Jahre)"}
 
 
 def test_a_page_with_no_body_content_is_skipped():

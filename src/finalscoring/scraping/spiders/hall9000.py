@@ -19,7 +19,7 @@ Interaktion, Einfluss, Spielreiz). None of it is in the prose, so each scored
 note becomes one review hint — its critic, its date, its comment kept verbatim,
 and its five axes as `SourceRating`s. The prose review is one more hint under
 its own author when that author left no note. The rounded site overall is an
-aggregate across those critics, not a review, so it stays in `extra` only.
+aggregate across those critics, not a review, so it stays in `raw_metadata` only.
 Nothing is converted onto the 0-100 scale — that is a load-step decision.
 
 The site is a custom CMS: no sitemap, no feed, no REST. Discovery walks the
@@ -207,8 +207,8 @@ class Hall9000Spider(ReviewSpider):
                 tags=self.game_tags(response),
                 reviews=self.review_hints(info, notes_raw, game),
                 outlet_slug=self.outlet_slug,
-                og_site_name="H@LL9000",
-                extra=self.extra(info, notes_raw),
+                site_name="H@LL9000",
+                raw_metadata=self.raw_metadata(info, notes_raw),
             ),
         )
 
@@ -326,7 +326,7 @@ class Hall9000Spider(ReviewSpider):
             game=game,
         )
 
-    def extra(
+    def raw_metadata(
         self, info: dict[str, str | list[str]], ratings: list[dict[str, Any]]
     ) -> dict[str, Any]:
         collected: dict[str, Any] = {"info": info} if info else {}

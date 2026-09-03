@@ -104,7 +104,7 @@ class ReviewLinksSpider(ReviewSpider):
 
     files: tuple[str, ...] | str = ()
     url_column: str = "review_url"
-    # Row fields kept in extra["source_rows"]; None keeps every field but url_column.
+    # Row fields kept in raw_metadata["source_rows"]; None keeps every field but url_column.
     context_fields: tuple[str, ...] | None = None
     # Row fields whose values are folded into RawItem.tags (the game name, so the
     # model can match a review with no bgg_id to a game).
@@ -241,8 +241,8 @@ class ReviewLinksSpider(ReviewSpider):
                 categories=list(document.categories or []),
                 reviews=review_hints,
                 bylines=[document.author] if document.author else [],
-                og_site_name=document.sitename or None,
-                extra={
+                site_name=document.sitename or None,
+                raw_metadata={
                     "source_rows": rows,
                     "trafilatura": {
                         "author": document.author,
