@@ -24,9 +24,11 @@ the odd buyer's guide and awards round-up. That is a coarse cut, matching
 space-biff. So `reviews` stays empty and the verdict is the model's to read.
 
 Unlike space-biff it is multi-writer, so there is no `known_critic_name`. The
-theme's byline is often the migration placeholder "webdeveloper" with the real
-name only in the prose ("Quinns:"); when it is a real name it goes in
-`bylines`, a weaker signal than a spider-level critic.
+theme used to print a byline span in the meta strip — the migration
+placeholder "webdeveloper", or a real name kept out of `bylines` — but a
+theme update has since dropped that span from the markup entirely, leaving
+the writer's name only in the prose ("Quinns:"). The selector stays for
+whatever posts still carry it; `bylines` is empty otherwise.
 """
 
 import re
@@ -153,7 +155,9 @@ class ShutUpAndSitDownSpider(ReviewSpider):
             self.logger.warning("No article content at %s", response.url)
             return None
 
-        category_links = content.xpath(f"./span[{_cls('meta-category')}]//a")
+        category_links = content.xpath(
+            f"./div[{_cls('entry-meta')}]//span[{_cls('meta-category')}]//a"
+        )
         categories = [c.strip() for c in category_links.xpath("text()").getall() if c.strip()]
         category_slugs = {
             slug for href in category_links.xpath("@href").getall() if (slug := category_slug(href))
@@ -162,11 +166,12 @@ class ShutUpAndSitDownSpider(ReviewSpider):
             self.logger.debug("Not in the reviews category (%s): %s", categories, response.url)
             return None
 
-        # The entry-date / author / category / comment spans and the tag list are
-        # the theme's meta strip, injected at the top of entry-content; drop them.
+        # The entry-meta (date/category) div and the tag list are the theme's meta
+        # strip, injected at the top of entry-content; drop them.
         body_html = "".join(
             content.xpath(
-                f"./node()[not(self::span) and not(self::div[{_cls('meta-tags')}])]"
+                f"./node()[not(self::div[{_cls('entry-meta')}])"
+                f" and not(self::div[{_cls('meta-tags')}])]"
             ).getall()
         )
         raw_text = html_to_text(body_html)
@@ -180,7 +185,7 @@ class ShutUpAndSitDownSpider(ReviewSpider):
             for t in content.xpath(f"./div[{_cls('meta-tags')}]//a/text()").getall()
             if t.strip()
         ]
-        author = content.xpath(f"./span[{_cls('author')}]/text()").get()
+        author = content.xpath(f"./div[{_cls('entry-meta')}]//span[{_cls('author')}]/text()").get()
         image_url = response.xpath("//meta[@property='og:image']/@content").get()
 
         return (
@@ -192,7 +197,9 @@ class ShutUpAndSitDownSpider(ReviewSpider):
                 title=self.title(response),
                 description=response.xpath("//meta[@name='description']/@content").get(),
                 published_at=published_at(
-                    content.xpath(f"./span[{_cls('entry-date')}]/text()").get()
+                    content.xpath(
+                        f"./div[{_cls('entry-meta')}]//span[{_cls('meta-date-posted')}]/text()"
+                    ).get()
                 ),
                 language=self.language,
                 locale=response.xpath("//meta[@property='og:locale']/@content").get(),

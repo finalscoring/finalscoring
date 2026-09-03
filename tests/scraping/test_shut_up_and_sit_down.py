@@ -35,10 +35,12 @@ REVIEW_HTML = f"""
     <div class="fun-tags"> poseidon the god of jerks, apollo the god of extra bits</div>
   </header>
   <div class="entry-content" itemprop="text">
-    <span class="entry-date">April 23, 2015</span>
-    <span class="author">webdeveloper</span>
-    <span class="meta-category"> <a href="{BASE_URL}category/reviews/" rel="tag">Reviews</a></span>
-    <span class="comment-counts"><a href="{REVIEW_URL}#comments">92 comment(s)</a></span>
+    <div class="entry-meta">
+      <span class="meta-date-posted">April 23, 2015</span>
+      <span class="author">webdeveloper</span>
+      <span class="meta-category"> <a href="{BASE_URL}category/reviews/" rel="tag">Reviews</a></span>
+      <span class="comment-counts"><a href="{REVIEW_URL}#comments">92 comment(s)</a></span>
+    </div>
     <div class="meta-tags"> <a href="{BASE_URL}tag/elysium/" rel="tag">Elysium</a>
       <a href="{BASE_URL}tag/heavy-games/" rel="tag">Heavy Games</a></div>
     <p><strong>Quinns:</strong> So you walk into your local board game shop.</p>
