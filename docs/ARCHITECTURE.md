@@ -74,10 +74,18 @@ and knowing which is which is most of the mental model.
   Pydantic model, not a table; batches of them are written as JSON
   Lines. Deliberately fat: `raw_text` is what the model reads, while
   `raw_html` and the og/oembed/schema.org fields are kept so a page can
-  be re-extracted under a new prompt without re-crawling it.
+  be re-extracted under a new prompt without re-crawling it. It also
+  carries `reviews: list[RawReviewHint]` — the (game, reviewer) pairs a
+  spider could read from the page structure (a scored note, a listicle
+  section, a linked row), each with its own `SourceRating`s and
+  `RawGameHint`, so a stated score or a `bgg_id` never depends on the
+  model re-deriving it from prose. Empty when the page had nothing
+  structured to offer.
 - **`ExtractedReview`** / **`ExtractionResult`** (`extraction/schema.py`)
   — extraction → load. Also plain Pydantic, also JSON Lines. One article
-  can yield many: the unit is a (game, reviewer) pair, not a page.
+  can yield many: the unit is a (game, reviewer) pair, not a page. The
+  spider-side `RawReviewHint` is the deliberate counterpart of this
+  shape, minus the parts only the model produces.
 - **The SQLModel tables** (`models/`) — `games`, `outlets`, `critics`,
   `reviews`, `game_aggregates`. Only these are persisted. Everything
   upstream of them is an intermediate artifact: reproducible, gitignored,
