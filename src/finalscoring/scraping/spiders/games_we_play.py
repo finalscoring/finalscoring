@@ -18,10 +18,13 @@ across the archive: a graphic whose *filename* is the score, schema.org
 microdata out of ten, a signature line pairing a number with a die face and a
 trend arrow, a difficulty grade carrying an age recommendation, a packaging
 mark, and a "TOPspiel" badge. Most live in markup the plain text throws away —
-a filename, an `alt` attribute — so all of them are collected here and phrased
-into `tags`, which is what actually reaches the model. Nothing is reconciled or
-converted: which of his scales becomes a score is a load-step decision, and the
-extractor is meant to weigh them itself.
+a filename, an `alt` attribute. Each scored verdict becomes a `SourceRating` on
+the page's one review hint, the difficulty goes on the game hint, and the
+packaging mark and badge become editorial flags. Nothing is reconciled or
+converted: which of his scales becomes the score is a load-step decision. The
+raw parse stays in `extra` alongside.
+
+He is the sole critic, so `known_critic_name` carries Harald Schrapers.
 """
 
 import re
@@ -33,7 +36,8 @@ from scrapy import Request
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
 
-from finalscoring.scraping.item import RawItem
+from finalscoring.models import RatingSystem
+from finalscoring.scraping.item import RawGameHint, RawItem, RawReviewHint, SourceRating
 from finalscoring.scraping.spider import ReviewSitemapSpider
 from finalscoring.scraping.text import html_to_text
 
@@ -55,7 +59,17 @@ _RATING_IMAGE = re.compile(rf"({'|'.join(RATING_POINTS)})\.(?:png|gif)$", re.IGN
 _INDEX_PAGE = re.compile(r"^index\d*\.html?$", re.IGNORECASE)
 # "Rating: 8/10 ⚄ ⇗" — number, die face, trend arrow, on the newest reviews only.
 _SIGNATURE = re.compile(r"Rating:\s*\d+\s*/\s*\d+[^\n<]{0,20}")
+_SIGNATURE_SCORE = re.compile(r"(\d+)\s*/\s*(\d+)")
 _FILLED, _EMPTY = "◼", "◻"  # ◼ ◻ — the difficulty squares
+
+
+def _complexity_label(difficulty: dict[str, Any] | None) -> str | None:
+    """The difficulty grade as a string: "2 von 4" from squares, or the alt text."""
+    if not difficulty:
+        return None
+    if "filled" in difficulty:
+        return f"{difficulty['filled']} von {difficulty['max']}"
+    return difficulty.get("label")
 
 
 def rating_from_image(src: str | None) -> int | None:
@@ -83,6 +97,7 @@ class GamesWePlaySpider(ReviewSitemapSpider):
     sitemap_rules = ((r"\.html?$", "parse_review"),)
 
     outlet_slug = "games-we-play"
+    known_critic_name = "Harald Schrapers"
     # Nowhere in the markup; the masthead is an image whose alt text says it.
     site_name = "games we play"
     language = "de"
@@ -117,7 +132,7 @@ class GamesWePlaySpider(ReviewSitemapSpider):
 
         @url https://gamesweplay.de/dewan.html
         @returns items 1 1
-        @populated url spider_slug raw_text outlet_slug language title tags
+        @populated url spider_slug raw_text outlet_slug known_critic_name language title reviews
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -139,6 +154,7 @@ class GamesWePlaySpider(ReviewSitemapSpider):
             return None
 
         image_url = response.xpath("//meta[@property='og:image']/@content").get()
+        hint = self.review_hint(response, ratings)
 
         return (
             RawItem(
@@ -150,7 +166,8 @@ class GamesWePlaySpider(ReviewSitemapSpider):
                 language=self.language,
                 # Relative on this site — "dewani.jpg", not an address.
                 image_url=response.urljoin(image_url) if image_url else None,
-                tags=self.rating_tags(ratings),
+                reviews=[hint] if hint is not None else [],
+                known_critic_name=self.known_critic_name,
                 outlet_slug=self.outlet_slug,
                 og_site_name=self.site_name,
                 extra={"ratings": ratings} if ratings else {},
@@ -213,29 +230,60 @@ class GamesWePlaySpider(ReviewSitemapSpider):
         )
         return {"label": alt} if alt else None
 
-    def rating_tags(self, ratings: dict[str, Any]) -> list[str]:
-        """The verdicts, phrased so they survive into the model's context.
+    def review_hint(self, response: TextResponse, ratings: dict[str, Any]) -> RawReviewHint | None:
+        """The page's verdicts, structured. The prose states none of them.
 
-        The prose states none of them: the score is a picture, the difficulty is
-        a picture, the badge is a picture. Without this the review reaches
-        extraction carrying no verdict at all.
+        One hint per page — he reviews one game per file. The graphic, the
+        microdata and the signature line are three readings of the same verdict
+        on different scales, kept as three `SourceRating`s for the load step to
+        choose between.
         """
-        tags = []
+        scores: list[SourceRating] = []
         if graphic := ratings.get("graphic"):
-            tags.append(f"Wertung: {graphic['points']} von {graphic['max']} Punkten")
-        if micro := ratings.get("microdata"):
-            best = micro["max"]
-            tags.append(f"Rating: {micro['value']}/{best}" if best else f"Rating: {micro['value']}")
-        if signature := ratings.get("signature"):
-            tags.append(signature)
-        if difficulty := ratings.get("difficulty"):
-            tags.append(
-                f"Schwierigkeit: {difficulty['filled']} von {difficulty['max']}"
-                if "filled" in difficulty
-                else f"Schwierigkeit: {difficulty['label']}"
+            scores.append(
+                SourceRating(
+                    system=RatingSystem.editorial,
+                    value=graphic["points"],
+                    scale_min=0,
+                    scale_max=graphic["max"],
+                    verbatim=graphic["alt"],
+                )
             )
+        if micro := ratings.get("microdata"):
+            scores.append(
+                SourceRating(
+                    system=RatingSystem.schema_org, value=micro["value"], scale_max=micro["max"]
+                )
+            )
+        if signature := ratings.get("signature"):
+            match = _SIGNATURE_SCORE.search(signature)
+            scores.append(
+                SourceRating(
+                    system=RatingSystem.signature,
+                    value=int(match.group(1)) if match else None,
+                    scale_max=int(match.group(2)) if match else None,
+                    verbatim=signature,
+                )
+            )
+
+        flags: list[str] = []
         if packaging := ratings.get("packaging"):
-            tags.append(f"Verpackung: {packaging}")
+            flags.append(f"Verpackung: {packaging}")
         if badge := ratings.get("badge"):
-            tags.append(badge)
-        return tags
+            flags.append(badge)
+
+        name = response.xpath("normalize-space(//p[@class='head'])").get() or ""
+        complexity = _complexity_label(ratings.get("difficulty"))
+        game = (
+            RawGameHint(
+                titles=[name] if name else [],
+                complexity_label=complexity,
+                source="games we play page",
+            )
+            if name or complexity
+            else None
+        )
+
+        if not scores and not flags and game is None:
+            return None
+        return RawReviewHint(ratings=scores, editorial_flags=flags, game=game)
