@@ -14,19 +14,24 @@ The theme states the rating twice. A `rating-container` element's `title`
 reads "4.0 / 5 stars — Great - Would recommend." — value, scale and tier in
 one string — and a JSON-LD `Review` node repeats the number. They disagree on
 the older video reviews, where the JSON-LD number is 0.0 and the title string
-is right, so the title string is the one trusted; the JSON-LD value is kept
-alongside it for cross-checking. Nothing is converted to the 0-100 scale — that
-is a load-step decision.
+is right, so both become `SourceRating`s (a `star_label` and a `schema_org`)
+and the load step picks. Nothing is converted to the 0-100 scale.
+
+One review per page by one named critic, so the `<meta name=author>` byline
+goes on the review hint. The theme's per-post taxonomy — designers, publishers,
+mechanisms, release year — feeds the game hint as match evidence.
 """
 
 import json
 import re
+from datetime import date
 from typing import Any
 
 from scrapy.http.response import Response
 from scrapy.http.response.text import TextResponse
 
-from finalscoring.scraping.item import RawItem
+from finalscoring.models import RatingSystem
+from finalscoring.scraping.item import RawGameHint, RawItem, RawReviewHint, SourceRating
 from finalscoring.scraping.spider import ReviewSitemapSpider
 from finalscoring.scraping.text import html_to_text
 from finalscoring.scraping.timestamps import parse_iso
@@ -37,6 +42,15 @@ BASE_URL = "https://www.meeplemountain.com/"
 _STAR_TITLE = re.compile(r"^\s*([\d.]+)\s*/\s*([\d.]+)\s*stars?\s*—\s*(.+?)\.?\s*$")
 # The theme prefixes every taxonomy term onto the <article> class with its kind.
 _TAXONOMY = re.compile(r"^(category|mechanisms|designers|publishers|artists|release_year)-(.+)$")
+# "Azul Game Review" / "Azul Review" -> "Azul"; the game name is what is left.
+_REVIEW_SUFFIX = re.compile(r"\s+(?:Game\s+)?Review$", re.IGNORECASE)
+
+
+def _float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except TypeError, ValueError:
+        return None
 
 
 def star_rating(title: str | None) -> dict[str, str] | None:
@@ -81,7 +95,7 @@ class MeepleMountainSpider(ReviewSitemapSpider):
 
         @url https://www.meeplemountain.com/reviews/azul/
         @returns items 1 1
-        @populated url spider_slug raw_text outlet_slug language title tags
+        @populated url spider_slug raw_text outlet_slug language title reviews
         """
         if not isinstance(response, TextResponse):
             self.logger.error("Non-text response from %s", response.url)
@@ -98,6 +112,7 @@ class MeepleMountainSpider(ReviewSitemapSpider):
         rating = star_rating(response.xpath('//li[@class="rating"]/@title').get())
         schema_rating = schema_org_rating(response)
         taxonomy = self.taxonomy(response)
+        author = response.xpath("//meta[@name='author']/@content").get()
         # og:title and <title> both carry a "Meeple Mountain" suffix; the h1 does not.
         heading = response.xpath(
             "normalize-space(//h1[contains(concat(' ', normalize-space(@class), ' '),"
@@ -118,10 +133,12 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                 language=self.language,
                 locale=response.xpath("//meta[@property='og:locale']/@content").get(),
                 image_url=response.xpath("//meta[@property='og:image']/@content").get(),
-                tags=self.rating_tags(rating) + taxonomy.get("category", []),
+                categories=taxonomy.get("category", []),
+                taxonomy=taxonomy,
+                reviews=self.review_hints(author, rating, schema_rating, heading, taxonomy),
                 outlet_slug=self.outlet_slug,
                 og_site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
-                extra=self.extra(response, rating, schema_rating, taxonomy),
+                extra=self.extra(rating, schema_rating),
             ),
         )
 
@@ -135,32 +152,80 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                 grouped.setdefault(match.group(1), []).append(match.group(2))
         return grouped
 
-    def rating_tags(self, rating: dict[str, str] | None) -> list[str]:
-        """The verdict phrased so it survives into the model's context.
-
-        The score is theme markup, not prose — without this the review reaches
-        extraction carrying no verdict at all.
-        """
-        if not rating:
-            return []
-        return [
-            f"Meeple Mountain rating: {rating['value']} / {rating['best']}",
-            rating["tier"],
-        ]
-
-    def extra(
+    def review_hints(
         self,
-        response: TextResponse,
+        author: str | None,
         rating: dict[str, str] | None,
         schema_rating: dict[str, Any] | None,
+        heading: str | None,
         taxonomy: dict[str, list[str]],
+    ) -> list[RawReviewHint]:
+        """The page's one review — its critic, its verdict, and the game it names.
+
+        The score is theme markup, not prose; without the SourceRatings the
+        review would reach extraction with no verdict at all.
+        """
+        scores: list[SourceRating] = []
+        if rating:
+            scores.append(
+                SourceRating(
+                    system=RatingSystem.star_label,
+                    value=_float(rating["value"]),
+                    scale_max=_float(rating["best"]),
+                    label=rating["tier"],
+                )
+            )
+        if schema_rating and schema_rating.get("ratingValue") is not None:
+            scores.append(
+                SourceRating(
+                    system=RatingSystem.schema_org,
+                    value=_float(schema_rating.get("ratingValue")),
+                    scale_min=_float(schema_rating.get("worstRating")),
+                    scale_max=_float(schema_rating.get("bestRating")),
+                )
+            )
+
+        game = self.game_hint(heading, taxonomy)
+        if not (author or scores or game):
+            return []
+        return [
+            RawReviewHint(
+                critic_names=[author] if author else [],
+                ratings=scores,
+                game=game,
+            )
+        ]
+
+    def game_hint(self, heading: str | None, taxonomy: dict[str, list[str]]) -> RawGameHint | None:
+        """The game the theme's taxonomy names — as slugs, still match evidence."""
+        max_year = date.today().year + 2
+        year = next(
+            (
+                int(y)
+                for y in taxonomy.get("release_year", [])
+                if y.isdigit() and 1900 <= int(y) <= max_year
+            ),
+            None,
+        )
+        name = _REVIEW_SUFFIX.sub("", heading).strip() if heading else ""
+        designers = taxonomy.get("designers", [])
+        publishers = taxonomy.get("publishers", [])
+        mechanics = taxonomy.get("mechanisms", [])
+        if not (name or designers or publishers or mechanics or year):
+            return None
+        return RawGameHint(
+            titles=[name] if name else [],
+            designers=designers,
+            publishers=publishers,
+            mechanics=mechanics,
+            year_published=year,
+            source="meeple mountain taxonomy",
+        )
+
+    def extra(
+        self, rating: dict[str, str] | None, schema_rating: dict[str, Any] | None
     ) -> dict[str, Any]:
-        collected: dict[str, Any] = {}
-        author = response.xpath("//meta[@name='author']/@content").get()
-        if author:
-            collected["author"] = author
+        # The raw parse, for cross-checking the two ratings the load step gets.
         if rating or schema_rating:
-            collected["rating"] = {**(rating or {}), "schema_org": schema_rating}
-        if taxonomy:
-            collected["taxonomy"] = taxonomy
-        return collected
+            return {"rating": {**(rating or {}), "schema_org": schema_rating}}
+        return {}
