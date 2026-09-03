@@ -7,7 +7,8 @@ import pytest
 from pydantic import ValidationError
 from scrapy.utils.spider import iterate_spider_output
 
-from finalscoring.scraping.item import RawItem, language_from_locale
+from finalscoring.models import Medium, RatingSystem
+from finalscoring.scraping.item import RawGameHint, RawItem, SourceRating, language_from_locale
 
 
 def _item(**kwargs: Any) -> RawItem:
@@ -35,6 +36,26 @@ def test_minimal_valid_item():
     assert item.oembed is None
     assert item.schema_org == []
     assert item.extra == {}
+    assert item.canonical_url is None
+    assert item.modified_at is None
+    assert item.categories == []
+    assert item.taxonomy == {}
+    assert item.editorial_flags == []
+    assert item.ratings == []
+    assert item.game is None
+    assert item.bylines == []
+    assert item.known_critic_name is None
+    assert item.medium is None
+
+
+def test_source_host_defaults_to_the_url_host():
+    assert _item().source_host == "example.com"
+    assert _item(url="https://spielbox.de/rezensionen/catan").source_host == "spielbox.de"
+
+
+def test_source_host_is_kept_when_the_spider_sets_it():
+    item = _item(url="https://aggregator.example/link/123", source_host="fairplay.de")
+    assert item.source_host == "fairplay.de"
 
 
 def test_full_item():
@@ -54,6 +75,16 @@ def test_full_item():
         oembed={"type": "rich", "title": "Review of Catan"},
         schema_org=[{"@type": "Review", "name": "Catan"}],
         extra={"wp_json": {"id": 42}},
+        canonical_url="https://example.com/catan",
+        modified_at=datetime(2025, 7, 1, tzinfo=UTC),
+        categories=["reviews"],
+        taxonomy={"mechanics": ["trading", "dice-rolling"]},
+        editorial_flags=["TOPspiel"],
+        ratings=[{"system": "editorial", "value": 5, "scale_max": 6}],
+        game={"title": "Catan", "designers": ["Klaus Teuber"], "bgg_id": 13},
+        bylines=["Tom Werneck"],
+        known_critic_name="Tom Werneck",
+        medium="text",
     )
     assert item.raw_html == "<article>Catan is excellent.</article>"
     assert item.language == "de"
@@ -63,6 +94,17 @@ def test_full_item():
     assert item.oembed == {"type": "rich", "title": "Review of Catan"}
     assert item.schema_org == [{"@type": "Review", "name": "Catan"}]
     assert item.extra == {"wp_json": {"id": 42}}
+    assert item.canonical_url == "https://example.com/catan"
+    assert item.categories == ["reviews"]
+    assert item.taxonomy == {"mechanics": ["trading", "dice-rolling"]}
+    assert item.editorial_flags == ["TOPspiel"]
+    assert item.ratings[0].system is RatingSystem.editorial
+    assert item.ratings[0].value == 5.0  # the int 5 is coerced to float
+    assert isinstance(item.ratings[0].value, float)
+    assert item.game == RawGameHint(title="Catan", designers=["Klaus Teuber"], bgg_id=13)
+    assert item.bylines == ["Tom Werneck"]
+    assert item.known_critic_name == "Tom Werneck"
+    assert item.medium is Medium.text
 
 
 def test_scraped_at_defaults_to_utc_now():
@@ -148,3 +190,81 @@ def test_a_raw_item_is_never_returned_bare():
 
     assert len(list(iterate_spider_output(item))) > 1
     assert list(iterate_spider_output((item,))) == [item]
+
+
+def test_string_lists_drop_blank_entries():
+    item = _item(
+        tags=["strategy", "  ", ""],
+        categories=[" reviews ", None],
+        editorial_flags=["", "TOPspiel"],
+        bylines=["  Tom Werneck  "],
+    )
+    assert item.tags == ["strategy"]
+    assert item.categories == ["reviews"]
+    assert item.editorial_flags == ["TOPspiel"]
+    assert item.bylines == ["Tom Werneck"]
+
+
+def test_blank_known_critic_name_becomes_none():
+    assert _item(known_critic_name="   ").known_critic_name is None
+
+
+def test_invalid_medium_rejected():
+    with pytest.raises(ValidationError):
+        _item(medium="tweet")
+
+
+# --- SourceRating -----------------------------------------------------------
+
+
+def test_source_rating_requires_a_system():
+    with pytest.raises(ValidationError):
+        SourceRating.model_validate({"value": 5})
+
+
+def test_source_rating_rejects_an_unknown_system():
+    with pytest.raises(ValidationError):
+        SourceRating.model_validate({"system": "vibes"})
+
+
+def test_source_rating_normalises_the_german_decimal_comma():
+    """The overall score reads "4,5 H@LL9000"; verbatim keeps the original string."""
+    rating = SourceRating.model_validate(
+        {"system": "overall", "value": "4,5", "verbatim": "4,5 H@LL9000"}
+    )
+    assert rating.value == 4.5
+    assert rating.verbatim == "4,5 H@LL9000"
+
+
+def test_source_rating_blank_strings_become_none():
+    rating = SourceRating.model_validate({"system": "axis", "axis": "Spielreiz", "note": "  "})
+    assert rating.axis == "Spielreiz"
+    assert rating.note is None
+
+
+def test_source_rating_rejects_reversed_scale_bounds():
+    with pytest.raises(ValidationError):
+        SourceRating.model_validate({"system": "star_label", "scale_min": 5, "scale_max": 1})
+
+
+# --- RawGameHint -----------------------------------------------------------
+
+
+def test_game_hint_drops_blank_names():
+    hint = RawGameHint.model_validate(
+        {"designers": ["Klaus Teuber", "  ", ""], "publishers": ["Kosmos", None]}
+    )
+    assert hint.designers == ["Klaus Teuber"]
+    assert hint.publishers == ["Kosmos"]
+
+
+@pytest.mark.parametrize("year", [1899, 3000])
+def test_game_hint_rejects_an_implausible_year(year: int):
+    with pytest.raises(ValidationError):
+        RawGameHint.model_validate({"year_published": year})
+
+
+def test_game_hint_keeps_a_plausible_year_and_bgg_id():
+    hint = RawGameHint.model_validate({"year_published": 1995, "bgg_id": 13})
+    assert hint.year_published == 1995
+    assert hint.bgg_id == 13
