@@ -13,7 +13,7 @@ Always use model_validate() in ingestion and scoring code.
 """
 
 from finalscoring.models.critic import Critic
-from finalscoring.models.enums import Medium, RatingSystem, Sentiment
+from finalscoring.models.enums import Medium, RatingDirection, RatingSystem, Sentiment
 from finalscoring.models.game import Game
 from finalscoring.models.game_aggregate import GameAggregate
 from finalscoring.models.outlet import Outlet
@@ -26,6 +26,7 @@ __all__ = [
     "GameAggregate",
     "Medium",
     "Outlet",
+    "RatingDirection",
     "RatingSystem",
     "Review",
     "Sentiment",

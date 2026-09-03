@@ -7,8 +7,14 @@ import pytest
 from pydantic import ValidationError
 from scrapy.utils.spider import iterate_spider_output
 
-from finalscoring.models import Medium, RatingSystem
-from finalscoring.scraping.item import RawGameHint, RawItem, SourceRating, language_from_locale
+from finalscoring.models import Medium, RatingDirection, RatingSystem
+from finalscoring.scraping.item import (
+    RawGameHint,
+    RawItem,
+    RawReviewHint,
+    SourceRating,
+    language_from_locale,
+)
 
 
 def _item(**kwargs: Any) -> RawItem:
@@ -40,9 +46,7 @@ def test_minimal_valid_item():
     assert item.modified_at is None
     assert item.categories == []
     assert item.taxonomy == {}
-    assert item.editorial_flags == []
-    assert item.ratings == []
-    assert item.game is None
+    assert item.reviews == []
     assert item.bylines == []
     assert item.known_critic_name is None
     assert item.medium is None
@@ -79,9 +83,14 @@ def test_full_item():
         modified_at=datetime(2025, 7, 1, tzinfo=UTC),
         categories=["reviews"],
         taxonomy={"mechanics": ["trading", "dice-rolling"]},
-        editorial_flags=["TOPspiel"],
-        ratings=[{"system": "editorial", "value": 5, "scale_max": 6}],
-        game={"title": "Catan", "designers": ["Klaus Teuber"], "bgg_id": 13},
+        reviews=[
+            {
+                "game": {"titles": ["Catan"], "designers": ["Klaus Teuber"], "bgg_id": 13},
+                "critic_names": ["Tom Werneck"],
+                "editorial_flags": ["TOPspiel"],
+                "ratings": [{"system": "editorial", "value": 5, "scale_max": 6}],
+            }
+        ],
         bylines=["Tom Werneck"],
         known_critic_name="Tom Werneck",
         medium="text",
@@ -97,11 +106,13 @@ def test_full_item():
     assert item.canonical_url == "https://example.com/catan"
     assert item.categories == ["reviews"]
     assert item.taxonomy == {"mechanics": ["trading", "dice-rolling"]}
-    assert item.editorial_flags == ["TOPspiel"]
-    assert item.ratings[0].system is RatingSystem.editorial
-    assert item.ratings[0].value == 5.0  # the int 5 is coerced to float
-    assert isinstance(item.ratings[0].value, float)
-    assert item.game == RawGameHint(title="Catan", designers=["Klaus Teuber"], bgg_id=13)
+    review = item.reviews[0]
+    assert review.game == RawGameHint(titles=["Catan"], designers=["Klaus Teuber"], bgg_id=13)
+    assert review.critic_names == ["Tom Werneck"]
+    assert review.editorial_flags == ["TOPspiel"]
+    assert review.ratings[0].system is RatingSystem.editorial
+    assert review.ratings[0].value == 5.0  # the int 5 is coerced to float
+    assert isinstance(review.ratings[0].value, float)
     assert item.bylines == ["Tom Werneck"]
     assert item.known_critic_name == "Tom Werneck"
     assert item.medium is Medium.text
@@ -196,12 +207,10 @@ def test_string_lists_drop_blank_entries():
     item = _item(
         tags=["strategy", "  ", ""],
         categories=[" reviews ", None],
-        editorial_flags=["", "TOPspiel"],
         bylines=["  Tom Werneck  "],
     )
     assert item.tags == ["strategy"]
     assert item.categories == ["reviews"]
-    assert item.editorial_flags == ["TOPspiel"]
     assert item.bylines == ["Tom Werneck"]
 
 
@@ -237,14 +246,94 @@ def test_source_rating_normalises_the_german_decimal_comma():
 
 
 def test_source_rating_blank_strings_become_none():
-    rating = SourceRating.model_validate({"system": "axis", "axis": "Spielreiz", "note": "  "})
+    rating = SourceRating.model_validate({"system": "axis", "axis": "Spielreiz", "label": "  "})
     assert rating.axis == "Spielreiz"
-    assert rating.note is None
+    assert rating.label is None
+
+
+def test_source_rating_defaults_to_higher_is_better():
+    assert (
+        SourceRating.model_validate({"system": "editorial"}).direction
+        is RatingDirection.higher_is_better
+    )
+
+
+def test_source_rating_direction_inverts_for_a_rank():
+    rating = SourceRating.model_validate(
+        {"system": "rank", "value": 1, "direction": "lower_is_better"}
+    )
+    assert rating.direction is RatingDirection.lower_is_better
 
 
 def test_source_rating_rejects_reversed_scale_bounds():
     with pytest.raises(ValidationError):
         SourceRating.model_validate({"system": "star_label", "scale_min": 5, "scale_max": 1})
+
+
+@pytest.mark.parametrize("bad", ["inf", "-inf", "nan"])
+def test_source_rating_rejects_non_finite_values(bad: str):
+    """A malformed scrape must fail here, not in a formatter or the scoring maths."""
+    with pytest.raises(ValidationError):
+        SourceRating.model_validate({"system": "editorial", "value": bad})
+
+
+# --- RawReviewHint -------------------------------------------------------------
+
+
+def test_review_hint_carries_the_cited_reviews_own_provenance():
+    """For a roundup the outlet, url and date are the critic's, not the page's."""
+    hint = RawReviewHint.model_validate(
+        {
+            "critic_names": ["Udo Bartsch"],
+            "outlet_name": "Rezensionen für Millionen",
+            "medium": "text",
+            "published_in": "Spielbox 3/2024, S. 42",
+            "review_url": "https://example.com/critic/review",
+            "published_at": datetime(2024, 3, 1, tzinfo=UTC),
+            "language": "de",
+            "ratings": [{"system": "star_label", "value": 4, "label": "solide"}],
+            "editorial_flags": ["", "TOPspiel"],
+        }
+    )
+    assert hint.outlet_name == "Rezensionen für Millionen"
+    assert hint.medium is Medium.text
+    assert hint.published_in == "Spielbox 3/2024, S. 42"
+    assert hint.editorial_flags == ["TOPspiel"]
+    assert hint.ratings[0].label == "solide"
+
+
+def test_review_hint_defaults_to_an_empty_shell():
+    hint = RawReviewHint()
+    assert hint.game is None
+    assert hint.critic_names == []
+    assert hint.ratings == []
+    assert hint.editorial_flags == []
+
+
+def test_review_hint_keeps_both_names_of_a_co_written_review():
+    """One verdict by two people — "Nico Wagner und Stephan Kessler" is in the corpus."""
+    hint = RawReviewHint.model_validate({"critic_names": ["Nico Wagner", "Stephan Kessler", "  "]})
+    assert hint.critic_names == ["Nico Wagner", "Stephan Kessler"]
+
+
+def test_review_hint_rejects_a_bad_language_code():
+    with pytest.raises(ValidationError):
+        RawReviewHint.model_validate({"language": "deutsch"})
+
+
+def test_a_listicle_is_one_item_with_several_review_hints():
+    """One post, two games, one reviewer — RFM's two-star posts already do this."""
+    item = _item(
+        known_critic_name="Udo Bartsch",
+        reviews=[
+            {"game": {"titles": ["Azul"]}, "ratings": [{"system": "star_label", "value": 5}]},
+            {"game": {"titles": ["Sagrada"]}, "ratings": [{"system": "star_label", "value": 4}]},
+        ],
+    )
+    games = [r.game for r in item.reviews]
+    assert all(g is not None for g in games)
+    assert [g.titles for g in games if g] == [["Azul"], ["Sagrada"]]
+    assert [r.ratings[0].value for r in item.reviews] == [5.0, 4.0]
 
 
 # --- RawGameHint -----------------------------------------------------------
@@ -256,6 +345,12 @@ def test_game_hint_drops_blank_names():
     )
     assert hint.designers == ["Klaus Teuber"]
     assert hint.publishers == ["Kosmos"]
+
+
+def test_game_hint_keeps_every_title_the_source_names():
+    """A German review names both the local edition and the original."""
+    hint = RawGameHint.model_validate({"titles": ["Astrobienen", "Apiary", "  "]})
+    assert hint.titles == ["Astrobienen", "Apiary"]
 
 
 @pytest.mark.parametrize("year", [1899, 3000])

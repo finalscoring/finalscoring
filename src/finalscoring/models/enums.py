@@ -38,3 +38,15 @@ class RatingSystem(StrEnum):
     star_label = "star_label"  # a star rating, often paired with a word
     schema_org = "schema_org"  # schema.org / JSON-LD Rating microdata
     signature = "signature"  # a scored sign-off line
+    rank = "rank"  # a position in an ordered list ("#1 game of 2024")
+
+
+class RatingDirection(StrEnum):
+    """Whether a higher `SourceRating.value` means a better verdict.
+
+    True for almost everything (scores, stars, /10, /6); a rank or a German
+    Schulnote runs the other way, and the load step cannot tell without this.
+    """
+
+    higher_is_better = "higher_is_better"
+    lower_is_better = "lower_is_better"  # ranks (#1 is best), grade scales (1 or A is best)

@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from finalscoring.models import Medium, RatingSystem
+from finalscoring.models import Medium, RatingDirection, RatingSystem
 
 _ISO_639_1 = re.compile(r"^[a-z]{2}$")
 _LOCALE = re.compile(r"^[a-z]{2}(-[A-Za-z0-9]{2,8})*$")
@@ -19,6 +19,12 @@ def language_from_locale(locale: str | None) -> str | None:
         return None
     code = locale.replace("-", "_").split("_", 1)[0].strip().lower()
     return code if _ISO_639_1.match(code) else None
+
+
+def _iso_639_1(v: str | None) -> str | None:
+    if v is not None and not _ISO_639_1.match(v):
+        raise ValueError("language must be an ISO 639-1 two-letter code, e.g. 'en'")
+    return v
 
 
 def _blank_to_none(v: Any) -> Any:
@@ -36,23 +42,25 @@ class SourceRating(BaseModel):
     """One verdict a source states, verbatim and un-normalised.
 
     Faithful to the page: nothing is converted to the 0-100 scale — that is a
-    load-step decision — and there is one entry per (system, critic, axis) the
-    page actually shows. games-we-play states three at once; hall9000 states one
-    per critic per axis.
+    load-step decision — and there is one entry per (system, axis) a single
+    review shows. games-we-play states three systems at once; hall9000 states
+    one per axis plus an overall. Which critic gave it is on the RawReviewHint
+    that owns it.
     """
 
     system: RatingSystem
-    critic_name: str | None = None  # set only where the page attributes the rating
+    direction: RatingDirection = RatingDirection.higher_is_better  # is a higher value better?
     axis: str | None = None  # a sub-dimension; None is the overall verdict
-    value: float | None = None  # a number; "4,5" is normalised to 4.5, verbatim keeps it
-    scale_min: float | None = None  # 0.5 for half-star scales, schema.org worstRating
-    scale_max: float | None = None
+    # "4,5" is normalised to 4.5, verbatim keeps the original; inf/nan rejected so a
+    # malformed scrape fails here, not later in a formatter or the scoring maths.
+    value: float | None = Field(default=None, allow_inf_nan=False)
+    scale_min: float | None = Field(default=None, allow_inf_nan=False)  # 0.5 for half-star scales
+    scale_max: float | None = Field(default=None, allow_inf_nan=False)
     label: str | None = None  # a verbal verdict: "solide", "Great - Would recommend"
-    note: str | None = None  # the critic's own words tied to this rating (hall9000 notes)
     stated_at: date | None = None  # when this rating was given, if distinct from the page
     verbatim: str | None = None  # the exact source string, kept for audit
 
-    @field_validator("critic_name", "axis", "label", "note", "verbatim", mode="before")
+    @field_validator("axis", "label", "verbatim", mode="before")
     @classmethod
     def blank_to_none(cls, v: Any) -> Any:
         return _blank_to_none(v)
@@ -80,7 +88,9 @@ class RawGameHint(BaseModel):
     and luding's `bgg_id` settles a match outright.
     """
 
-    title: str | None = None  # the source's own metadata title, if it differs from the page
+    # Every surface form the source names — a local edition plus the original
+    # ("Astrobienen", "Apiary") — since each is matching evidence for BGG resolution.
+    titles: list[str] = Field(default_factory=list)
     designers: list[str] = Field(default_factory=list)
     publishers: list[str] = Field(default_factory=list)  # co-editions are normal
     artists: list[str] = Field(default_factory=list)
@@ -98,12 +108,14 @@ class RawGameHint(BaseModel):
     complexity_label: str | None = None  # "mittel", "sehr einfach" — an attribute, not a verdict
     source: str | None = None  # where the hint came from ("hall9000 info box", "luding row")
 
-    @field_validator("title", "bgg_url", "complexity_label", "source", mode="before")
+    @field_validator("bgg_url", "complexity_label", "source", mode="before")
     @classmethod
     def blank_to_none(cls, v: Any) -> Any:
         return _blank_to_none(v)
 
-    @field_validator("designers", "publishers", "artists", "categories", "mechanics", mode="before")
+    @field_validator(
+        "titles", "designers", "publishers", "artists", "categories", "mechanics", mode="before"
+    )
     @classmethod
     def drop_blanks(cls, v: Any) -> Any:
         return _drop_blank_strings(v)
@@ -120,6 +132,54 @@ class RawGameHint(BaseModel):
         if not 1900 <= v <= max_year:
             raise ValueError(f"year_published must be between 1900 and {max_year}")
         return v
+
+
+class RawReviewHint(BaseModel):
+    """One (game, reviewer) pair the spider could pick out of the page structure.
+
+    The spider-side counterpart of `ExtractedReview` — the same identity and
+    provenance, minus the parts only the model produces (sentiment, quote, the
+    inferred rating). A page carries a list: one for an ordinary review, one per
+    cited critic for a roundup, one per game for a listicle, sometimes both. An
+    empty list means the page had nothing structured to offer and it is all on
+    the model.
+
+    For a meta-source these fields describe the *cited* review, which is not the
+    page the spider fetched: `outlet_name`, `review_url` and `published_at` are
+    the critic's own, not the roundup's.
+
+    Where a field (`critic_names`, `medium`, `language`) also exists on
+    `RawItem`, the hint value wins when set and the page value is the fallback.
+    """
+
+    game: RawGameHint | None = None
+    # A co-written review is one verdict by two people ("Nico Wagner und Stephan
+    # Kessler"), not two reviews — a compound string resolves against no critic.
+    critic_names: list[str] = Field(default_factory=list)
+    outlet_name: str | None = None  # where this review appeared, when the page names it
+    medium: Medium | None = None  # this review's medium, when it differs from the page's
+    published_in: str | None = None  # a place, not a date: "Spielbox 3/2024, S. 42"
+    review_url: str | None = None  # the critic's own review, when cited — not the page
+    published_at: datetime | None = None  # when the cited review appeared
+    language: str | None = None  # ISO 639-1 of this review, when it differs from the page
+    ratings: list[SourceRating] = Field(default_factory=list)
+    editorial_flags: list[str] = Field(default_factory=list)  # "TOPspiel" — per game, verbatim
+    note: str | None = None  # a short comment the source ties to this review (hall9000)
+
+    @field_validator("outlet_name", "published_in", "review_url", "note", mode="before")
+    @classmethod
+    def blank_to_none(cls, v: Any) -> Any:
+        return _blank_to_none(v)
+
+    @field_validator("critic_names", "editorial_flags", mode="before")
+    @classmethod
+    def drop_blanks(cls, v: Any) -> Any:
+        return _drop_blank_strings(v)
+
+    @field_validator("language")
+    @classmethod
+    def valid_language_code(cls, v: str | None) -> str | None:
+        return _iso_639_1(v)
 
 
 class RawItem(BaseModel):
@@ -145,21 +205,22 @@ class RawItem(BaseModel):
     image_url: str | None = None  # og:image / thumbnail
     duration_seconds: int | None = None  # audio / video content
 
-    # Editorial classification, as the source applied it
+    # Editorial classification, as the source applied it to the whole page
     tags: list[str] = Field(default_factory=list)  # free-form topic labels, nothing else
     categories: list[str] = Field(default_factory=list)  # the source's section taxonomy
     taxonomy: dict[str, list[str]] = Field(default_factory=dict)  # richer per-kind terms
-    editorial_flags: list[str] = Field(default_factory=list)  # marks like "TOPspiel", verbatim
 
-    # The verdict(s) the source states, structured and un-normalised
-    ratings: list[SourceRating] = Field(default_factory=list)
+    # The (game, reviewer) pairs the spider read from the page structure — one
+    # for a plain review, one per cited critic for a roundup, one per game for a
+    # listicle. Empty when the page offered nothing structured.
+    reviews: list[RawReviewHint] = Field(default_factory=list)
 
-    # What the spider knows about the game and who wrote the review
-    game: RawGameHint | None = None
+    # Page-level authorship, when the review hints do not name their own
     bylines: list[str] = Field(default_factory=list)  # names credited on the page
     known_critic_name: str | None = None  # a single-critic source's sole reviewer
 
-    # Review medium, when the spider is certain (a video host, a print roundup)
+    # The medium this source publishes in, when the spider is certain (a video
+    # channel, a podcast). A review hint overrides it for a differently-published cite.
     medium: Medium | None = None
 
     # Outlet hint — when identifiable at scrape time (e.g. from domain)
@@ -187,7 +248,7 @@ class RawItem(BaseModel):
     def blank_to_none(cls, v: Any) -> Any:
         return _blank_to_none(v)
 
-    @field_validator("tags", "categories", "editorial_flags", "bylines", mode="before")
+    @field_validator("tags", "categories", "bylines", mode="before")
     @classmethod
     def drop_blanks(cls, v: Any) -> Any:
         return _drop_blank_strings(v)
@@ -195,9 +256,7 @@ class RawItem(BaseModel):
     @field_validator("language")
     @classmethod
     def valid_language_code(cls, v: str | None) -> str | None:
-        if v is not None and not _ISO_639_1.match(v):
-            raise ValueError("language must be an ISO 639-1 two-letter code, e.g. 'en'")
-        return v
+        return _iso_639_1(v)
 
     @field_validator("locale")
     @classmethod
