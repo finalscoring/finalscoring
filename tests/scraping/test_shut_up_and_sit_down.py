@@ -146,6 +146,13 @@ def test_the_outlet_and_language_are_known_at_scrape_time():
     assert item.og_site_name == "Shut Up & Sit Down"
 
 
+def test_it_is_multi_writer_with_no_structured_verdict():
+    item = _item()
+
+    assert item.known_critic_name is None  # Quinns, Matt, guests — not one person
+    assert item.reviews == []  # conversational prose, no score to lift
+
+
 def test_the_theme_meta_strip_never_reaches_the_text():
     """entry-date / author / category / comment spans sit at the top of the body."""
     item = _item()
@@ -156,20 +163,20 @@ def test_the_theme_meta_strip_never_reaches_the_text():
     assert "April 23, 2015" not in item.raw_text
 
 
-def test_tags_carry_the_post_tags_the_categories_and_the_joke_subtitle():
+def test_post_tags_and_categories_are_split_and_the_joke_subtitle_stays_out_of_tags():
     item = _item()
 
-    assert "Elysium" in item.tags
-    assert "Heavy Games" in item.tags
-    assert "Reviews" in item.tags
-    assert "poseidon the god of jerks, apollo the god of extra bits" in item.tags
+    assert item.tags == ["Elysium", "Heavy Games"]
+    assert item.categories == ["Reviews"]
+    assert "poseidon" not in " ".join(item.tags)
+    assert item.extra["fun_tags"] == "poseidon the god of jerks, apollo the god of extra bits"
 
 
-def test_a_migrated_byline_is_dropped_but_a_real_one_is_kept():
-    assert "author" not in _item().extra
+def test_a_migrated_byline_is_dropped_but_a_real_one_reaches_bylines():
+    assert _item().bylines == []
 
     html = REVIEW_HTML.replace(">webdeveloper<", ">Quintin Smith<")
-    assert _item(html).extra["author"] == "Quintin Smith"
+    assert _item(html).bylines == ["Quintin Smith"]
 
 
 def test_a_post_outside_the_reviews_category_is_skipped():
