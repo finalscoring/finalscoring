@@ -225,6 +225,49 @@ def test_an_empty_review_list_is_a_valid_answer():
     assert record.result.reviews == []
 
 
+def _with_quote(quote: str) -> str:
+    review = dict(ONE_REVIEW["reviews"][0], quote=quote)
+    return json.dumps({"reviews": [review]})
+
+
+def test_a_verbatim_quote_is_kept():
+    extractor, _stub = _extractor(_with_quote("Catan fand ich richtig gut"))
+
+    record = extractor.extract(_item(raw_text="Jane Doe: „Catan fand ich richtig gut.“"))
+
+    assert record.result.reviews[0].quote == "Catan fand ich richtig gut"
+
+
+def test_a_quote_stays_when_only_its_surrounding_marks_differ():
+    """The prompt says to drop the wrapping quotes; a model that keeps them is not wrong."""
+    extractor, _stub = _extractor(_with_quote("'Catan is a classic'"))
+
+    record = extractor.extract(_item(raw_text="Jane Doe wrote: Catan is a classic, still."))
+
+    assert record.result.reviews[0].quote == "'Catan is a classic'"
+
+
+def test_a_spliced_quote_is_dropped():
+    """Two fragments joined across the article author's narration is not one quote."""
+    extractor, _stub = _extractor(_with_quote("Catan is a classic and I would recommend it"))
+
+    record = extractor.extract(
+        _item(raw_text='"Catan is a classic", she says. "And I would recommend it."')
+    )
+
+    assert record.result.reviews[0].quote is None
+
+
+def test_a_paraphrased_quote_is_dropped_not_retried():
+    """The model rewrote the sentence; the quote is optional, so it is nulled."""
+    extractor, stub = _extractor(_with_quote("Catan ist ein tolles Spiel"))
+
+    record = extractor.extract(_item(raw_text="Jane Doe fand Catan wirklich gut."))
+
+    assert record.result.reviews[0].quote is None
+    assert len(stub.calls) == 1  # not a retry — the rest of the record stands
+
+
 def _not_found() -> NotFoundError:
     request = httpx2.Request("POST", "http://localhost:11434/v1/chat/completions")
     response = httpx2.Response(404, request=request, json={"error": {"message": "no model"}})
