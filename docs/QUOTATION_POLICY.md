@@ -105,6 +105,18 @@ against it. 300 characters is roughly 45–50 words — one to two sentences
 — which sits comfortably within "to the extent required by the specific
 purpose" and matches accepted practice.
 
+A second guardrail runs after extraction. `_drop_unverbatim_quotes` in
+`extraction/llm.py` checks each quote against the exact text the model
+was shown and discards — logging it, leaving `quote` null — anything that
+is not a substring of that text: a paraphrase, two fragments spliced
+together, a sentence truncated mid-word, a fragment silently translated.
+A null quote is a normal, acceptable outcome, so this is a filter, not a
+retry. It matters here because a misquote attributed to a named critic is
+a worse misrepresentation than no quote at all. The same check doubles as
+a model-quality signal — on the first `qwen3:30b` run, 14 of 48 quotes
+failed it — and `LLM_SETUP.md` uses the pass rate to compare extraction
+models.
+
 One known gap: **`Review.quote` is uncapped.** The limit exists only on
 the extraction schema, so the guarantee does not survive into the
 persisted record that actually ships to readers. The cap belongs at both
