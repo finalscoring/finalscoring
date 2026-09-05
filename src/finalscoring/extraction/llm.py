@@ -11,6 +11,7 @@ into more retries, never into silently wrong data.
 
 import json
 import logging
+import re
 from typing import Any
 
 from openai import (
@@ -68,6 +69,50 @@ class ExtractionFailed(Exception):
     """Extraction did not produce a validated result."""
 
 
+# Curly/straight quotes, the dash variants and nbsp all vary between the page
+# and what a model echoes back; none of them change whether a quote is verbatim.
+_QUOTE_NOISE = str.maketrans(
+    {
+        "\u2019": "'",
+        "\u2018": "'",  # right / left single quote
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u201e": '"',  # left / right / low double quote
+        "\u00ab": '"',
+        "\u00bb": '"',  # guillemets
+        "\u2013": "-",
+        "\u2014": "-",  # en / em dash
+        "\u00a0": " ",  # nbsp
+    }
+)
+_WHITESPACE = re.compile(r"\s+")
+_MARKUP = re.compile(r"<[^>]+>")
+
+
+def _normalise_quote(text: str) -> str:
+    # Markup is stripped so a prose quote still matches when the context it is
+    # checked against kept its tags ("Vorgänger <a href=…>Kardinal</a> …").
+    # Only the surrounding quote marks are removed — the prompt says not to
+    # include them, but a model that does should not fail the check for it.
+    bare = _WHITESPACE.sub(" ", _MARKUP.sub("", text).translate(_QUOTE_NOISE))
+    return bare.strip().strip("'\"").strip().casefold()
+
+
+def _drop_unverbatim_quotes(result: ExtractionResult, context: str, url: str) -> None:
+    """Null any quote that is not a substring of the text the model was shown.
+
+    The prompt asks for a character-for-character copy; smaller models paraphrase
+    ("Das Spiel packt mich" -> "Es packt mich") or, worse, translate a fragment.
+    A quote is optional, so a bad one is dropped rather than retried — losing the
+    whole page over one field is the worse trade.
+    """
+    haystack = _normalise_quote(context)
+    for review in result.reviews:
+        if review.quote and _normalise_quote(review.quote) not in haystack:
+            LOGGER.warning("discarding non-verbatim quote for %s: %r", url, review.quote)
+            review.quote = None
+
+
 class ReviewExtractor:
     def __init__(
         self,
@@ -96,6 +141,7 @@ class ReviewExtractor:
         try:
             context = build_context(item, markup=self.settings.llm_context == "html")
             result = self._call_with_retries(context)
+            _drop_unverbatim_quotes(result, context, item.url)
         except RetryError as exc:
             message = (
                 f"extraction failed for {item.url} after {self.settings.llm_max_attempts} attempts"

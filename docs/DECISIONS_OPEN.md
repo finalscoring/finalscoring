@@ -99,8 +99,39 @@ let the maintainer choose. This list is the boundary between "agreed"
 
 - Specific local model, serving stack (e.g. vLLM, Ollama, llama.cpp),
   and structured-output/constrained-decoding mechanism are not decided.
+  The first real run used `qwen3:30b` on Ollama — the Qwen3-30B **A3B**
+  mixture-of-experts, 3B active parameters — and the output showed the
+  cost: 14 of 48 quotes were non-verbatim (paraphrase, splice, mid-word
+  truncation, one fragment leaking Chinese); a `published_at` supplied by
+  a `<review>` block was dropped on most hall9000 reviews; and a
+  `year_published` and publisher were confabulated where the source
+  stated neither. Candidates to evaluate against it, all ~15–20 GB at
+  4-bit and in the Ollama library: **Gemma 3 27B** (broad multilingual,
+  no thinking mode), **Qwen3-32B** (the dense model, far more active
+  compute, prompt unchanged), **Mistral Small 3.2** (Apache-2.0, tuned
+  for instruction adherence). Evaluate by re-running extraction on a
+  fixed set of raw items and scoring the verbatim-quote pass rate and
+  whether `<review>`-block facts carry through — see `LLM_SETUP.md`,
+  "Comparing models". Also open: whether to prefer a serving stack with
+  token-level constrained decoding (vLLM, llama.cpp grammar) over
+  Ollama's schema-as-hint.
 - Whether any step ever calls a hosted endpoint instead of local is not
-  decided.
+  decided. It is possible in principle — the client is already a plain
+  OpenAI-compatible one, so Anthropic, OpenAI and Google (via their
+  OpenAI-compatible endpoints) need only `FS_LLM_BASE_URL`, a real
+  `FS_LLM_API_KEY` from an environment secret, and `FS_LLM_MODEL` set to
+  their model name. The blockers are policy, not code: review text and
+  quotes would leave the machine (the "no review text leaves the
+  machine" line in `LLM_SETUP.md` would no longer hold), the provider's
+  terms would need checking against the copyright analysis in
+  `QUOTATION_POLICY.md`, and a hosted model still has to pass the same
+  quote-fidelity and fact-carry checks before it is trusted. Cost is
+  small either way: ~5k input plus ~1k output tokens per page, so a
+  weekly incremental run of a few hundred pages is cents on a cheap
+  hosted model (Gemini Flash, GPT mini class, Claude Haiku) and a euro
+  or two on a frontier one; a one-time full backfill of ~10k pages is
+  under €50 on the cheap tier and roughly €100–350 on a frontier model,
+  less with prompt caching of the static system prompt.
 
 ## Frontend
 

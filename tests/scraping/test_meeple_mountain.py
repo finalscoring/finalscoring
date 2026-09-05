@@ -42,6 +42,22 @@ REVIEW_HTML = """
     <h1 class="entry-title h1">Tales of the Arabian Nights Game Review</h1>
     <div class="entry-content herald-entry-content">
       <p>This beautiful mess still doesn't make a lick of sense.</p>
+      <ul>
+        <li>Designer:
+          <a class="taxonomy-link" href="https://www.meeplemountain.com/designers/eric-goldberg/">Eric Goldberg</a>
+        </li>
+        <li>Publishers:
+          <a class="taxonomy-link" href="https://www.meeplemountain.com/publishers/devir/">Devir</a>,
+          <a class="taxonomy-link" href="https://www.meeplemountain.com/publishers/z-man-games/">Z-Man Games</a>
+        </li>
+        <li>Release Date:
+          <a class="taxonomy-link" href="https://www.meeplemountain.com/release_year/2009/">2009</a>
+        </li>
+        <li>Mechanism(s):
+          <a class="taxonomy-link" href="https://www.meeplemountain.com/mechanisms/dice-rolling/">Dice Rolling</a>
+        </li>
+        <li>More articles about <a href="https://www.meeplemountain.com/boardgame/tales/">Tales</a>.</li>
+      </ul>
       <div class="board-game-meta herald-mod-wrap">
         <div class="rating-container standalone">
           <h5>AUTHOR RATING</h5>
@@ -163,18 +179,23 @@ def test_a_placeholder_json_ld_score_is_dropped_not_ingested():
     assert review.ratings[0].value == 4.0
 
 
-def test_the_taxonomy_feeds_categories_and_the_game_hint():
+def test_categories_come_from_the_article_class():
     item = _item()
 
     assert item.categories == ["adventure-board-games", "fantasy-board-games"]
     assert item.taxonomy["mechanisms"] == ["dice-rolling"]
-    game = item.reviews[0].game
+
+
+def test_the_info_box_feeds_the_game_hint_with_names_not_slugs():
+    """The <article> class carries the same terms as slugs; the info box names them."""
+    game = _item().reviews[0].game
+
     assert game is not None
     assert game.titles == ["Tales of the Arabian Nights"]  # the " Game Review" suffix is stripped
-    assert game.designers == ["eric-goldberg"]
-    assert game.publishers == ["devir"]
-    assert game.mechanics == ["dice-rolling"]
-    assert game.year_published is None  # release_year-1247 is not a plausible year
+    assert game.designers == ["Eric Goldberg"]
+    assert game.publishers == ["Devir", "Z-Man Games"]
+    assert game.mechanics == ["Dice Rolling"]
+    assert game.year_published == 2009  # the info box link, not the release_year-1247 term id
 
 
 def test_a_review_without_a_rating_still_produces_an_item():

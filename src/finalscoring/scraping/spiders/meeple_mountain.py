@@ -19,8 +19,11 @@ On reviews with no numeric score — mostly video — the JSON-LD still carries
 verdict, and is dropped. Nothing is converted to the 0-100 scale.
 
 One review per page by one named critic, so the `<meta name=author>` byline
-goes on the review hint. The theme's per-post taxonomy — designers, publishers,
-mechanisms, release year — feeds the game hint as match evidence.
+goes on the review hint. The info box — designers, publishers, mechanisms,
+release year, each a link whose text is the display name — feeds the game hint
+as match evidence; the `<article>` class carries the same terms only as slugs
+(and the release year as an unusable term id), so it is kept for `taxonomy` but
+not trusted for names.
 """
 
 import json
@@ -43,6 +46,9 @@ BASE_URL = "https://www.meeplemountain.com/"
 _STAR_TITLE = re.compile(r"^\s*([\d.]+)\s*/\s*([\d.]+)\s*stars?\s*—\s*(.+?)\.?\s*$")
 # The theme prefixes every taxonomy term onto the <article> class with its kind.
 _TAXONOMY = re.compile(r"^(category|mechanisms|designers|publishers|artists|release_year)-(.+)$")
+# The info box repeats each term as a link — /designers/reiner-knizia/ with
+# "Reiner Knizia" as its text. The href says the kind, the text is the name.
+_TAXONOMY_HREF = re.compile(r"/(designers|publishers|artists|mechanisms|release_year)/[^/]+/?$")
 # "Azul Game Review" / "Azul Review" -> "Azul"; the game name is what is left.
 _REVIEW_SUFFIX = re.compile(r"\s+(?:Game\s+)?Review$", re.IGNORECASE)
 
@@ -113,6 +119,7 @@ class MeepleMountainSpider(ReviewSitemapSpider):
         rating = star_rating(response.xpath('//li[@class="rating"]/@title').get())
         schema_rating = schema_org_rating(response)
         taxonomy = self.taxonomy(response)
+        info_box = self.info_box(response)
         author = response.xpath("//meta[@name='author']/@content").get()
         # og:title and <title> both carry a "Meeple Mountain" suffix; the h1 does not.
         heading = response.xpath(
@@ -136,7 +143,7 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                 image_url=response.xpath("//meta[@property='og:image']/@content").get(),
                 categories=taxonomy.get("category", []),
                 taxonomy=taxonomy,
-                reviews=self.review_hints(author, rating, schema_rating, heading, taxonomy),
+                reviews=self.review_hints(author, rating, schema_rating, heading, info_box),
                 outlet_slug=self.outlet_slug,
                 site_name=response.xpath("//meta[@property='og:site_name']/@content").get(),
                 raw_metadata=self.raw_metadata(rating, schema_rating),
@@ -153,13 +160,34 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                 grouped.setdefault(match.group(1), []).append(match.group(2))
         return grouped
 
+    def info_box(self, response: TextResponse) -> dict[str, list[str]]:
+        """The game's metadata as the info box names it — human-readable, not slugs.
+
+        The theme repeats every taxonomy term here as a link whose href states
+        the kind (`/publishers/999-games/`) and whose text is the display name
+        ("999 Games"). Preferred over the `<article>` class slugs so the game
+        hint carries names a reader and the model recognise.
+        """
+        grouped: dict[str, list[str]] = {}
+        links = response.xpath(
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' entry-content ')]"
+            "//a[contains(concat(' ', normalize-space(@class), ' '), ' taxonomy-link ')]"
+        )
+        for link in links:
+            href = link.xpath("@href").get() or ""
+            match = _TAXONOMY_HREF.search(href)
+            name = (link.xpath("normalize-space(.)").get() or "").strip()
+            if match and name:
+                grouped.setdefault(match.group(1), []).append(name)
+        return grouped
+
     def review_hints(
         self,
         author: str | None,
         rating: dict[str, str] | None,
         schema_rating: dict[str, Any] | None,
         heading: str | None,
-        taxonomy: dict[str, list[str]],
+        info_box: dict[str, list[str]],
     ) -> list[RawReviewHint]:
         """The page's one review — its critic, its verdict, and the game it names.
 
@@ -195,7 +223,7 @@ class MeepleMountainSpider(ReviewSitemapSpider):
                 )
             )
 
-        game = self.game_hint(heading, taxonomy)
+        game = self.game_hint(heading, info_box)
         if not (author or scores or game):
             return []
         return [
@@ -206,30 +234,32 @@ class MeepleMountainSpider(ReviewSitemapSpider):
             )
         ]
 
-    def game_hint(self, heading: str | None, taxonomy: dict[str, list[str]]) -> RawGameHint | None:
-        """The game the theme's taxonomy names — as slugs, still match evidence."""
+    def game_hint(self, heading: str | None, info_box: dict[str, list[str]]) -> RawGameHint | None:
+        """The game the info box names, as match evidence for BGG resolution."""
         max_year = date.today().year + 2
         year = next(
             (
                 int(y)
-                for y in taxonomy.get("release_year", [])
+                for y in info_box.get("release_year", [])
                 if y.isdigit() and 1900 <= int(y) <= max_year
             ),
             None,
         )
         name = _REVIEW_SUFFIX.sub("", heading).strip() if heading else ""
-        designers = taxonomy.get("designers", [])
-        publishers = taxonomy.get("publishers", [])
-        mechanics = taxonomy.get("mechanisms", [])
-        if not (name or designers or publishers or mechanics or year):
+        designers = info_box.get("designers", [])
+        publishers = info_box.get("publishers", [])
+        artists = info_box.get("artists", [])
+        mechanics = info_box.get("mechanisms", [])
+        if not (name or designers or publishers or artists or mechanics or year):
             return None
         return RawGameHint(
             titles=[name] if name else [],
             designers=designers,
             publishers=publishers,
+            artists=artists,
             mechanics=mechanics,
             year_published=year,
-            source="meeple mountain taxonomy",
+            source="meeple mountain info box",
         )
 
     def raw_metadata(
