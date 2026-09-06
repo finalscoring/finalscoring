@@ -30,13 +30,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 def default_output(settings: Settings) -> Path:
-    """A fresh file per run, in its own directory under the results dir.
+    """A fresh file per run, in the extraction directory.
 
     Deliberately not alongside the raw items: the load step finds those by
-    globbing, and an extraction record is not a raw item.
+    globbing the scraping directory, and an extraction record is not a raw item.
     """
     stamp = datetime.now(UTC).replace(microsecond=0).isoformat().replace(":", "-")
-    return settings.results_dir / "extraction" / f"extraction-{stamp}.jl"
+    return settings.extraction_dir / f"extraction-{stamp}.jl"
 
 
 def _source_url(line: str) -> str | None:
@@ -156,7 +156,7 @@ def main(argv: list[str]) -> int:
         "-o",
         "--output",
         type=Path,
-        help="file to append records to (default: a fresh one under FS_RESULTS_DIR/extraction)",
+        help="file to append records to (default: a fresh one under FS_EXTRACTION_DIR)",
     )
     parser.add_argument("-n", "--limit", type=int, help="stop after this many new extractions")
     parser.add_argument(

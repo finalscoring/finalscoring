@@ -26,7 +26,8 @@ SETTINGS = Settings(
     scraper_user_agent="TestBot/1.0",
     scraper_delay=0.0,
     scraper_concurrency=1,
-    results_dir=Path("/tmp/results"),
+    scraping_dir=Path("/tmp/scraping"),
+    extraction_dir=Path("/tmp/extraction"),
     jobs_dir=Path("/tmp/jobs"),
     db_path=Path("/tmp/fs.db"),
 )

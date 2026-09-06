@@ -14,7 +14,8 @@ ENV_KEYS = (
     "FS_SCRAPER_USER_AGENT",
     "FS_SCRAPER_DELAY",
     "FS_SCRAPER_CONCURRENCY",
-    "FS_RESULTS_DIR",
+    "FS_SCRAPING_DIR",
+    "FS_EXTRACTION_DIR",
     "FS_JOBS_DIR",
     "FS_DB_PATH",
 )
@@ -30,7 +31,8 @@ def test_settings_reads_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FS_SCRAPER_USER_AGENT", "TestBot/1.0")
     monkeypatch.setenv("FS_SCRAPER_DELAY", "2.5")
     monkeypatch.setenv("FS_SCRAPER_CONCURRENCY", "8")
-    monkeypatch.setenv("FS_RESULTS_DIR", "/data/out")
+    monkeypatch.setenv("FS_SCRAPING_DIR", "/data/out")
+    monkeypatch.setenv("FS_EXTRACTION_DIR", "/data/extract")
     monkeypatch.setenv("FS_JOBS_DIR", "/data/state")
     monkeypatch.setenv("FS_DB_PATH", "/data/fs.db")
 
@@ -45,7 +47,8 @@ def test_settings_reads_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.scraper_user_agent == "TestBot/1.0"
     assert s.scraper_delay == 2.5
     assert s.scraper_concurrency == 8
-    assert s.results_dir == Path("/data/out")
+    assert s.scraping_dir == Path("/data/out")
+    assert s.extraction_dir == Path("/data/extract")
     assert s.jobs_dir == Path("/data/state")
     assert s.db_path == Path("/data/fs.db")
     assert isinstance(s.db_path, Path)
@@ -67,21 +70,22 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.scraper_user_agent == DEFAULT_USER_AGENT
     assert s.scraper_delay == 1.0
     assert s.scraper_concurrency == 4
-    assert s.results_dir == Path("data/results")
+    assert s.scraping_dir == Path("data/scraping")
+    assert s.extraction_dir == Path("data/extraction")
     assert s.jobs_dir == Path("data/jobs")
     assert s.db_path == Path("data/finalscoring.db")
 
 
-def test_database_is_not_written_into_the_results_directory(
+def test_database_is_not_written_into_the_scraping_directory(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Results holds regenerable intermediates; the database is the build's product."""
+    """Scraping holds regenerable intermediates; the database is the build's product."""
     for key in ENV_KEYS:
         monkeypatch.delenv(key, raising=False)
 
     s = load_settings()
 
-    assert s.results_dir not in s.db_path.parents
+    assert s.scraping_dir not in s.db_path.parents
 
 
 def test_default_user_agent_names_the_project_and_a_contact(

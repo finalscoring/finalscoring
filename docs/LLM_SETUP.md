@@ -36,7 +36,7 @@ import json
 from finalscoring.scraping.item import RawItem
 from finalscoring.extraction import ReviewExtractor
 
-with open("data/results/<the file the crawl wrote>.jl") as f:
+with open("data/scraping/<the file the crawl wrote>.jl") as f:
     item = RawItem.model_validate(json.loads(f.readline()))
 
 record = ReviewExtractor().extract(item)
