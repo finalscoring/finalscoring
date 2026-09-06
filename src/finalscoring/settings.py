@@ -18,7 +18,8 @@ class Settings:
     scraper_user_agent: str
     scraper_delay: float
     scraper_concurrency: int
-    results_dir: Path
+    scraping_dir: Path
+    extraction_dir: Path
     jobs_dir: Path
     db_path: Path
 
@@ -52,7 +53,8 @@ def load_settings() -> Settings:
         scraper_user_agent=os.environ.get("FS_SCRAPER_USER_AGENT", DEFAULT_USER_AGENT),
         scraper_delay=float(os.environ.get("FS_SCRAPER_DELAY", "1.0")),
         scraper_concurrency=int(os.environ.get("FS_SCRAPER_CONCURRENCY", "4")),
-        results_dir=Path(os.environ.get("FS_RESULTS_DIR", "data/results")),
+        scraping_dir=Path(os.environ.get("FS_SCRAPING_DIR", "data/scraping")),
+        extraction_dir=Path(os.environ.get("FS_EXTRACTION_DIR", "data/extraction")),
         jobs_dir=Path(os.environ.get("FS_JOBS_DIR", "data/jobs")),
         db_path=Path(os.environ.get("FS_DB_PATH", "data/finalscoring.db")),
     )

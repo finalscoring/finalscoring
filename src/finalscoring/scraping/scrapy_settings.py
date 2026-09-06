@@ -43,7 +43,7 @@ def scrapy_settings(spider_name: str, settings: Settings | None = None) -> dict[
         "DUPEFILTER_CLASS": SitemapAwareDupeFilter,
         "FEED_EXPORT_BATCH_ITEM_COUNT": FEED_BATCH_ITEM_COUNT,
         "FEEDS": {
-            str(settings.results_dir / FEED_TEMPLATE): {
+            str(settings.scraping_dir / FEED_TEMPLATE): {
                 "format": "jsonlines",
                 "overwrite": False,
                 "store_empty": False,

@@ -16,17 +16,12 @@ dist/
 # Environment
 .env
 
-# Scraping artifacts — intermediate build inputs, rebuilt by re-running
-# the pipeline. The READMEs are tracked so the directories exist in
-# fresh clones.
-data/jobs/*
-!data/jobs/README.md
-data/results/*
-!data/results/README.md
-
-# The built database — the product of a build, not an input to one. Rebuilt
-# from sources every time, never edited in place.
-data/*.db
+# Everything under data/ is a build artifact — raw items, extraction
+# records, Scrapy resume state, and the built database. All rebuilt by
+# re-running the pipeline; the code creates the directories it needs.
+# Only the README is tracked.
+data/*
+!data/README.md
 
 # Claude
 .claude/

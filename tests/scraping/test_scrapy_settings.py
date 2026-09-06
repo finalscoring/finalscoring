@@ -19,7 +19,8 @@ SETTINGS = Settings(
     scraper_user_agent="TestBot/1.0 (+https://example.com/)",
     scraper_delay=2.5,
     scraper_concurrency=8,
-    results_dir=Path("/data/out"),
+    scraping_dir=Path("/data/out"),
+    extraction_dir=Path("/data/extract"),
     jobs_dir=Path("/data/state"),
     db_path=Path("/data/fs.db"),
 )
@@ -47,7 +48,7 @@ def test_job_directory_is_per_spider():
     assert first != second
 
 
-def test_feed_writes_json_lines_into_the_results_directory():
+def test_feed_writes_json_lines_into_the_scraping_directory():
     feeds = scrapy_settings("spiel-des-jahres", SETTINGS)["FEEDS"]
 
     ((uri, options),) = feeds.items()

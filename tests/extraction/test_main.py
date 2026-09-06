@@ -187,10 +187,10 @@ def test_extracted_sources_ignores_unreadable_lines(tmp_path):
 
 
 def test_the_default_output_is_not_next_to_the_raw_items():
-    """A `*.jl` glob over the results dir must not pick up extraction records."""
+    """A `*.jl` glob over the scraping dir must not pick up extraction records."""
     output = default_output(SETTINGS)
 
-    assert output.parent == SETTINGS.results_dir / "extraction"
+    assert output.parent == SETTINGS.extraction_dir
     assert output.suffix == ".jl"
 
 
