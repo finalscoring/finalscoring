@@ -25,6 +25,27 @@ FEED_BATCH_ITEM_COUNT = 10_000
 
 FEED_TEMPLATE = "%(name)s-%(time)s-%(batch_id)05d.jl"
 
+# Rate-limit signals: back off harder on these than plain AutoThrottle latency
+# tuning would, since a 429/503 means the site is asking us to slow down, not
+# just responding slowly.
+THROTTLE_HTTP_CODES = (429, 503)
+
+LOG_FORMATTER = "scrapy_extensions.QuietLogFormatter"
+
+DOWNLOADER_MIDDLEWARES = {
+    # Replaces the default RetryMiddleware slot (550) so rate-limit responses
+    # are retried after a backoff delay instead of immediately.
+    "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,
+    "scrapy_extensions.DelayedRetryMiddleware": 550,
+}
+
+EXTENSIONS = {
+    # Replaces the default AutoThrottle extension so it also backs off on
+    # THROTTLE_HTTP_CODES, not just response latency.
+    "scrapy.extensions.throttle.AutoThrottle": None,
+    "scrapy_extensions.NicerAutoThrottle": 0,
+}
+
 
 def scrapy_settings(spider_name: str, settings: Settings | None = None) -> dict[str, Any]:
     """Build the Scrapy settings for one spider.
@@ -49,4 +70,11 @@ def scrapy_settings(spider_name: str, settings: Settings | None = None) -> dict[
                 "store_empty": False,
             },
         },
+        "LOG_FORMATTER": LOG_FORMATTER,
+        "DOWNLOADER_MIDDLEWARES": DOWNLOADER_MIDDLEWARES,
+        "DELAYED_RETRY_HTTP_CODES": THROTTLE_HTTP_CODES,
+        "DELAYED_RETRY_BACKOFF": True,
+        "AUTOTHROTTLE_ENABLED": True,
+        "EXTENSIONS": EXTENSIONS,
+        "AUTOTHROTTLE_HTTP_CODES": THROTTLE_HTTP_CODES,
     }

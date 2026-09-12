@@ -5,6 +5,7 @@ from pathlib import Path
 from finalscoring.scraping.dupefilter import SitemapAwareDupeFilter
 from finalscoring.scraping.scrapy_settings import (
     FEED_TEMPLATE,
+    THROTTLE_HTTP_CODES,
     scrapy_settings,
 )
 from finalscoring.settings import Settings
@@ -75,3 +76,37 @@ def test_sitemap_aware_dupefilter_is_used():
     assert (
         scrapy_settings("spiel-des-jahres", SETTINGS)["DUPEFILTER_CLASS"] is SitemapAwareDupeFilter
     )
+
+
+def test_quiet_log_formatter_replaces_the_default():
+    assert scrapy_settings("spiel-des-jahres", SETTINGS)["LOG_FORMATTER"] == (
+        "scrapy_extensions.QuietLogFormatter"
+    )
+
+
+def test_retry_middleware_is_replaced_with_the_delayed_variant():
+    middlewares = scrapy_settings("spiel-des-jahres", SETTINGS)["DOWNLOADER_MIDDLEWARES"]
+
+    assert middlewares["scrapy.downloadermiddlewares.retry.RetryMiddleware"] is None
+    assert middlewares["scrapy_extensions.DelayedRetryMiddleware"] == 550
+
+
+def test_delayed_retry_backs_off_on_rate_limit_codes():
+    s = scrapy_settings("spiel-des-jahres", SETTINGS)
+
+    assert s["DELAYED_RETRY_HTTP_CODES"] == THROTTLE_HTTP_CODES
+    assert s["DELAYED_RETRY_BACKOFF"] is True
+
+
+def test_autothrottle_extension_is_replaced_with_the_nicer_variant():
+    extensions = scrapy_settings("spiel-des-jahres", SETTINGS)["EXTENSIONS"]
+
+    assert extensions["scrapy.extensions.throttle.AutoThrottle"] is None
+    assert extensions["scrapy_extensions.NicerAutoThrottle"] == 0
+
+
+def test_autothrottle_is_enabled_and_backs_off_on_rate_limit_codes():
+    s = scrapy_settings("spiel-des-jahres", SETTINGS)
+
+    assert s["AUTOTHROTTLE_ENABLED"] is True
+    assert s["AUTOTHROTTLE_HTTP_CODES"] == THROTTLE_HTTP_CODES
