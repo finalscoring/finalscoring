@@ -30,6 +30,7 @@ SETTINGS = Settings(
     extraction_dir=Path("/tmp/extraction"),
     jobs_dir=Path("/tmp/jobs"),
     db_path=Path("/tmp/fs.db"),
+    bgg_game_data_path=Path("/tmp/bgg_GameItem.jl"),
 )
 
 ONE_REVIEW = {

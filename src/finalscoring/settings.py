@@ -22,6 +22,7 @@ class Settings:
     extraction_dir: Path
     jobs_dir: Path
     db_path: Path
+    bgg_game_data_path: Path
 
 
 DEFAULT_USER_AGENT = "FinalScoring/0.0.1 (+https://finalscoring.games/)"
@@ -57,4 +58,10 @@ def load_settings() -> Settings:
         extraction_dir=Path(os.environ.get("FS_EXTRACTION_DIR", "data/extraction")),
         jobs_dir=Path(os.environ.get("FS_JOBS_DIR", "data/jobs")),
         db_path=Path(os.environ.get("FS_DB_PATH", "data/finalscoring.db")),
+        bgg_game_data_path=Path(
+            os.environ.get(
+                "FS_BGG_GAME_DATA_PATH",
+                str(Path.home() / "Recommend.Games/board-game-data/scraped/bgg_GameItem.jl"),
+            )
+        ),
     )

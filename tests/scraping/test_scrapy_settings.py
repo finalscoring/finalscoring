@@ -24,6 +24,7 @@ SETTINGS = Settings(
     extraction_dir=Path("/data/extract"),
     jobs_dir=Path("/data/state"),
     db_path=Path("/data/fs.db"),
+    bgg_game_data_path=Path("/data/bgg_GameItem.jl"),
 )
 
 
