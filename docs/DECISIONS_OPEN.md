@@ -7,28 +7,10 @@ let the maintainer choose. This list is the boundary between "agreed"
 
 ## Loading reviews
 
-- How an `ExtractedReview` becomes a `Review` is not decided. The
-  extractor emits `rating` (1–10, the model's read of the verdict) and
-  `raw_score` (the score verbatim, e.g. "4/5", "sehr gut"); the table
-  stores `declared_score` and `inferred_score`, both 0–100. The intended
-  routing is `raw_score` → declared and `rating` → inferred, but nothing
-  states it and nothing implements it.
-- Parsing `raw_score` needs the critic's native scale, which is not
-  always in the string. "4/5" carries it, "4 Sterne" does not, and "sehr
-  gut" carries none at all. Whether that scale lives on the outlet, is
-  inferred per review, or makes the score unusable is not decided.
-- **There is no uniqueness rule on `reviews` at all.** `url unique` was
-  the only one and it was wrong — one scraped page yields many reviews —
-  so it was removed. The replacement is an upsert on
-  `(critic_id, game_bgg_id)` in D2, but neither the key nor the
-  which-one-wins rule is decided. Options discussed: prefer a direct
-  source over a meta-source, prefer a declared score over an inferred
-  one, take the most recent, or keep every row and resolve at scoring
-  time. Note `critic_id` is nullable, so unresolved critics need a
-  fallback and must not be merged silently. This matters more than it
-  looks: one critic counted twice moves a game's aggregate *and* pads
-  that critic's own distribution, skewing their normalization. See
-  `SDJ_PIPELINE_NOTES.md` gap #7. Settle before D2.
+*The `ExtractedReview` → `Review` mapping, `raw_score`/`rating` routing,
+and the dedupe key + which-one-wins rule are now decided — see
+`PROJECT.md`, "`ExtractedReview` → `Review` load mapping (D2)".*
+
 - Translated quotes are not handled. When a German roundup cites an
   English-language critic, the jury renders their words in German, so
   the "verbatim" quote is a translation attributed to that critic —
@@ -46,12 +28,9 @@ let the maintainer choose. This list is the boundary between "agreed"
 
 ## Recommend.Games integration
 
-- Recommend.Games has comprehensive BGG game data that Final Scoring
-  will need for title → BGG id resolution. The matching logic itself
-  must be built here; the open question is how to access the R.G. game
-  data. Options discussed but not chosen: shared database, periodic
-  import/snapshot, shared library/internal API, or building it into the
-  SQLite bake step. No choice has been made.
+*Data access for D1 (title → BGG id resolution) is now decided — see
+`PROJECT.md`, "Game data access (D1)". The matching logic itself still
+needs to be built.*
 
 ## Scoring methodology details
 

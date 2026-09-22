@@ -122,6 +122,25 @@ These have been explicitly agreed by the maintainer.
   no such threshold exists, and what actually protects the project is
   attribution, linking to the source review, and one quote per review.
   See `QUOTATION_POLICY.md`.
+- **Game data access (D1):** for now, Final Scoring reads Recommend.Games'
+  scraped data files directly off disk (e.g. `bgg_GameItem.jl`) rather
+  than a shared database, API, or bake-step integration. The path(s) are
+  a config value, not hardcoded. Confirmed by the maintainer on
+  2026-09-22; may be revisited later.
+- **`ExtractedReview` → `Review` load mapping (D2), confirmed
+  2026-09-22:**
+  - `rating` (1–10) → `inferred_score` via `rating * 10`.
+    `declared_score` is left `None` for the MVP — `raw_score` (e.g.
+    "4/5", "sehr gut") is not parsed; the freeform scale problem is
+    deferred rather than solved.
+  - Dedupe/upsert key: `(critic_id, game_bgg_id)` when `critic_id`
+    resolved; falls back to `(outlet_slug, game_bgg_id)` when it isn't;
+    a review with neither resolvable is skipped (logged, not inserted).
+  - Which-one-wins on a key collision, in order: (1) direct source over
+    secondhand — determined by comparing `Review.source_url`'s host
+    against the resolved `Outlet.url`'s host, same host wins; (2)
+    `declared_score` present beats inferred-only; (3) most recent
+    `published_at`; (4) most recent `scraped_at`.
 
 ## Existing assets the maintainer already has
 
